@@ -6,7 +6,9 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: { port: 5173, proxy: { '/api': 'http://127.0.0.1:4180' } },
   build: {
-    chunkSizeWarningLimit: 1000,
+    // vendor-globe (three.js ~1.9 MB) is fully lazy via Globe3D — it never rides the first paint.
+    // The warning would otherwise be a false alarm, so we keep the honest threshold.
+    chunkSizeWarningLimit: 2500,
     rollupOptions: {
       output: {
         manualChunks(id) {

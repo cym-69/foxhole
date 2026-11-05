@@ -341,3 +341,25 @@ assert.equal(feedItem.eventId, 'demo:hormuz', 'event id is carried');
 assert.deepEqual(feedItem.tickers, ['USO', 'STNG'], 'linked tickers are carried');
 assert.equal(feedItem.text, 'Hormuz tension', 'event title becomes the text');
 console.log('PASS: an event becomes a feed item with its kind, eventId and tickers');
+
+// H1 regression: SPA fallback must not swallow unknown /api/* routes.
+// Assumes a live server on 127.0.0.1:4180; skips honestly when it is not running.
+{
+  let res;
+  try {
+    res = await fetch('http://127.0.0.1:4180/api/__foxhole_404_check__', { headers: { accept: 'application/json' } });
+  } catch (e) {
+    if (e?.cause?.code === 'ECONNREFUSED' || e?.cause?.code === 'ENOTFOUND') {
+      console.log('SKIP: live-API 404 check — server not running on 127.0.0.1:4180');
+    } else {
+      throw e;
+    }
+  }
+  if (res) {
+    assert.equal(res.status, 404, 'unknown /api/* route returns 404, not the SPA fallback');
+    assert.ok((res.headers.get('content-type') || '').includes('application/json'), 'unknown /api/* route returns JSON');
+    const body = await res.json();
+    assert.equal(body.error, 'Not found.', 'unknown /api/* route returns the JSON error body');
+    console.log('PASS: unknown /api/* route returns 404 JSON, not SPA HTML');
+  }
+}

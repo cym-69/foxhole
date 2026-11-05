@@ -173,7 +173,7 @@ export default function App() {
     const t = setTimeout(compute, 1000);
     window.addEventListener('resize', compute);
     return () => { clearTimeout(t); window.removeEventListener('resize', compute); };
-  }, [selected?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selected?.id, load]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // The headline stream is only useful on a wide window.
   const [wide, setWide] = useState(() => typeof window === 'undefined' || window.innerWidth >= 1100);

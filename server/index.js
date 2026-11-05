@@ -312,6 +312,13 @@ if (process.env.FOXHOLE_TEST === '1') {
 const dist = path.join(ROOT, 'dist');
 if (fs.existsSync(dist)) {
   app.use(express.static(dist));
+  // SPA fallback — must not swallow /api/* (e.g. /api/typo), /__test/*, or /stream.
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api/') || req.path === '/api' || req.path.startsWith('/__test/') || req.path === '/stream') {
+      return res.status(404).json({ error: 'Not found.' });
+    }
+    next();
+  });
   app.get('*', (_req, res) => res.sendFile(path.join(dist, 'index.html')));
 } else {
   app.get('/', (_req, res) => res.type('text').send('Foxhole API is running. Run "npm run build" to serve the app here, or use "npm run dev" and open http://localhost:5173'));
