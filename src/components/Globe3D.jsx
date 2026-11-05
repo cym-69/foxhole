@@ -2,7 +2,7 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 
 import Globe from 'globe.gl';
 import { feature } from 'topojson-client';
 import world from 'world-atlas/countries-110m.json';
-import { ICONS } from '../lib/icons.js';
+import { ICON_SHAPES } from '../lib/icons.js';
 import { altFraction } from '../lib/sats.js';
 
 const land = feature(world, world.objects.countries).features;
@@ -81,7 +81,16 @@ const Globe3D = forwardRef(function Globe3D({ events, context = [], selectedId, 
         el.style.cursor = 'pointer';
         const dot = document.createElement('div');
         dot.className = 'fx-dot';
-        dot.innerHTML = `<svg viewBox="0 0 24 24">${ICONS[ev.layer] || ICONS.conflict}</svg>`;
+        const svgNs = 'http://www.w3.org/2000/svg';
+        const svgEl = document.createElementNS(svgNs, 'svg');
+        svgEl.setAttribute('viewBox', '0 0 24 24');
+        const shapes = Object.hasOwn(ICON_SHAPES, ev.layer) ? ICON_SHAPES[ev.layer] : ICON_SHAPES.conflict;
+        for (const shape of shapes) {
+          const shapeEl = document.createElementNS(svgNs, shape.tag);
+          for (const [attr, value] of Object.entries(shape.props)) shapeEl.setAttribute(attr, value);
+          svgEl.appendChild(shapeEl);
+        }
+        dot.appendChild(svgEl);
         el.appendChild(dot);
         const label = document.createElement('span');
         label.className = 'fx-label';
@@ -217,7 +226,7 @@ const Globe3D = forwardRef(function Globe3D({ events, context = [], selectedId, 
     const ro = new ResizeObserver(resize);
     ro.observe(el);
     sync();
-    return () => { ro.disconnect(); try { g._destructor(); } catch {} el.innerHTML = ''; gl.current = null; };
+    return () => { ro.disconnect(); try { g._destructor(); } catch { /* globe may already be torn down */ } el.replaceChildren(); gl.current = null; };
   }, [sync]);
 
   useEffect(() => { sync(); }, [events, context, selectedId, sync]);

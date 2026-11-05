@@ -4,7 +4,7 @@ import { DATA_DIR } from './config.js';
 
 const FILE = path.join(DATA_DIR, 'ai.json');
 let conf = null;
-try { conf = JSON.parse(fs.readFileSync(FILE, 'utf8')); } catch {}
+try { conf = JSON.parse(fs.readFileSync(FILE, 'utf8')); } catch { /* intentional: missing file → defaults */ }
 let lastError = '';
 let failures = 0;
 let pausedUntil = 0;
@@ -49,7 +49,7 @@ async function callOnce(c, system, user, maxTokens) {
   });
   const raw = await r.text();
   let j = {};
-  try { j = JSON.parse(raw); } catch {}
+  try { j = JSON.parse(raw); } catch { /* intentional: non-JSON reply → {} */ }
   if (!r.ok) {
     const m = j?.error?.message || (typeof j?.error === 'string' ? j.error : '') || j?.message || raw.slice(0, 160);
     throw new Error(`The provider said: ${m || 'HTTP ' + r.status}`);
@@ -112,7 +112,7 @@ export async function listModels(src) {
   }
   const raw = await r.text();
   let j = {};
-  try { j = JSON.parse(raw); } catch {}
+  try { j = JSON.parse(raw); } catch { /* intentional: non-JSON reply → {} */ }
   if (!r.ok) throw new Error(`The provider said: ${j?.error?.message || j?.message || raw.slice(0, 120) || 'HTTP ' + r.status}`);
   const arr = Array.isArray(j) ? j : j.data || j.models || [];
   if (!Array.isArray(arr) || !arr.length) throw new Error('This address did not return a model list.');
@@ -132,7 +132,7 @@ export async function listModels(src) {
 }
 
 export function disconnect() {
-  conf = null; try { fs.unlinkSync(FILE); } catch {}
+  conf = null; try { fs.unlinkSync(FILE); } catch { /* intentional: file may already be gone */ }
   cache.clear(); pending.clear(); brief.text = '';
   return publicInfo();
 }

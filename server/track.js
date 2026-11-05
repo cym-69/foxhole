@@ -4,8 +4,8 @@ import { DATA_DIR } from './config.js';
 
 const FILE = path.join(DATA_DIR, 'track.json');
 let db = { open: [], closed: [], stats: {} };
-try { db = { ...db, ...JSON.parse(fs.readFileSync(FILE, 'utf8')) }; } catch {}
-const save = () => { try { fs.writeFileSync(FILE, JSON.stringify(db)); } catch {} };
+try { db = { ...db, ...JSON.parse(fs.readFileSync(FILE, 'utf8')) }; } catch { /* intentional: missing file → defaults */ }
+const save = () => { try { fs.writeFileSync(FILE, JSON.stringify(db)); } catch { /* intentional: persist is best-effort */ } };
 
 export const getStats = () => db.stats;
 export const getTrack = () => ({ open: db.open.length, closed: db.closed.length, stats: db.stats, recent: db.closed.slice(-20) });

@@ -10,7 +10,7 @@ export const live = {
 
 const listeners = new Set();
 export const onChange = (fn) => { listeners.add(fn); return () => listeners.delete(fn); };
-const emit = (name) => { for (const fn of listeners) { try { fn(name); } catch {} } };
+const emit = (name) => { for (const fn of listeners) { try { fn(name); } catch { /* intentional: listener failures must not break emit */ } } };
 
 async function getJSON(url, ms = 20000) {
   const r = await fetch(url, { headers: { 'User-Agent': UA, Accept: 'application/json' }, signal: AbortSignal.timeout(ms) });

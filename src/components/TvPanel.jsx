@@ -8,12 +8,12 @@ export default function TvPanel({ open, onClose }) {
     try {
       const v = localStorage.getItem(TV_LAST_KEY);
       if (v && TV_CHANNELS.some((c) => c.id === v)) return v;
-    } catch {}
+    } catch { /* intentional: storage may be unavailable → default channel */ }
     return TV_CHANNELS[0].id;
   });
 
   useEffect(() => {
-    try { localStorage.setItem(TV_LAST_KEY, sel); } catch {}
+    try { localStorage.setItem(TV_LAST_KEY, sel); } catch { /* intentional: storage may be unavailable */ }
   }, [sel]);
 
   if (!open) return null;

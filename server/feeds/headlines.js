@@ -140,7 +140,7 @@ export function onHeadline(fn) { listeners.add(fn); return () => listeners.delet
 function publish(item) {
   items.push(item);
   if (items.length > 40) items.splice(0, items.length - 40);
-  for (const fn of listeners) { try { fn(item); } catch {} }
+  for (const fn of listeners) { try { fn(item); } catch { /* intentional: listener failures must not break publish */ } }
 }
 
 export function pushTestHeadline(body) {

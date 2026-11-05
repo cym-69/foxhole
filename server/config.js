@@ -2,10 +2,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+try { process.umask(0o077); } catch { /* intentional: umask unsupported on some platforms */ }
+
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const ROOT = path.resolve(here, '..');
 export const DATA_DIR = path.join(ROOT, 'data');
-fs.mkdirSync(DATA_DIR, { recursive: true });
+fs.mkdirSync(DATA_DIR, { recursive: true, mode: 0o700 });
+try { fs.chmodSync(DATA_DIR, 0o700); } catch { /* intentional: chmod is a no-op on Windows */ }
 
 // Tiny .env loader (no extra dependency)
 try {
@@ -13,11 +16,11 @@ try {
     const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
     if (m && !(m[1] in process.env)) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
   }
-} catch {}
+} catch { /* intentionally optional: .env may be absent */ }
 
 const keysFile = path.join(DATA_DIR, 'keys.json');
 let saved = {};
-try { saved = JSON.parse(fs.readFileSync(keysFile, 'utf8')); } catch {}
+try { saved = JSON.parse(fs.readFileSync(keysFile, 'utf8')); } catch { /* intentionally optional: keys file may be absent or empty */ }
 
 export const cfg = {
   port: Number(process.env.PORT) || 4180,
@@ -30,5 +33,6 @@ export const cfg = {
 
 export function saveKey(name, value) {
   saved[name] = value;
-  fs.writeFileSync(keysFile, JSON.stringify(saved, null, 2));
+  fs.writeFileSync(keysFile, JSON.stringify(saved, null, 2), { mode: 0o600 });
+  try { fs.chmodSync(keysFile, 0o600); } catch { /* intentional: chmod is a no-op on Windows */ }
 }

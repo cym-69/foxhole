@@ -2,6 +2,43 @@
 // Only flags real bugs; ignores legacy patterns already in the tree.
 import js from '@eslint/js';
 
+// Inline replacements for eslint-plugin-react helpers (plugin not installed).
+// Keep zero-dependency: mark JSX identifiers as used so `no-unused-vars`
+// does not false-positive on components, and stub `react-hooks/exhaustive-deps`
+// so existing `eslint-disable-line` comments stay valid.
+const jsxUsesVarsRule = {
+  meta: { type: 'suggestion', docs: { description: 'Mark JSX variables as used' }, schema: [] },
+  create(context) {
+    const sourceCode = context.sourceCode;
+    const mark = (node, refNode) => {
+      if (!node) return;
+      if (node.type === 'JSXIdentifier') sourceCode.markVariableAsUsed(node.name, refNode || node);
+      else if (node.type === 'JSXMemberExpression') mark(node.object, refNode);
+      else if (node.type === 'JSXNamespacedName') mark(node.namespace, refNode);
+    };
+    return {
+      JSXOpeningElement(node) { mark(node.name, node); },
+      JSXElement(node) { mark(node.openingElement.name, node.openingElement); },
+    };
+  },
+};
+const jsxUsesReactRule = {
+  meta: { type: 'suggestion', docs: { description: 'Mark React as used when JSX is present' }, schema: [] },
+  create(context) {
+    const mark = (node) => {
+      context.sourceCode.markVariableAsUsed('React', node);
+    };
+    return {
+      JSXElement(node) { mark(node); },
+      JSXFragment(node) { mark(node); },
+    };
+  },
+};
+const exhaustiveDepsStubRule = {
+  meta: { type: 'suggestion', docs: { description: 'Stub for react-hooks/exhaustive-deps (plugin not installed)' }, schema: [] },
+  create() { return {}; },
+};
+
 export default [
   js.configs.recommended,
   {
@@ -63,6 +100,75 @@ export default [
         clearTimeout: 'readonly',
         clearInterval: 'readonly',
       },
+    },
+  },
+  {
+    linterOptions: { reportUnusedDisableDirectives: 'off' },
+  },
+  {
+    files: ['src/**/*.{js,jsx}'],
+    languageOptions: {
+      ecmaVersion: 2023,
+      sourceType: 'module',
+      globals: {
+        document: 'readonly',
+        window: 'readonly',
+        localStorage: 'readonly',
+        sessionStorage: 'readonly',
+        location: 'readonly',
+        navigator: 'readonly',
+        history: 'readonly',
+        fetch: 'readonly',
+        Image: 'readonly',
+        URL: 'readonly',
+        URLSearchParams: 'readonly',
+        JSON: 'readonly',
+        Math: 'readonly',
+        Set: 'readonly',
+        Map: 'readonly',
+        console: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        requestAnimationFrame: 'readonly',
+        cancelAnimationFrame: 'readonly',
+        matchMedia: 'readonly',
+        ResizeObserver: 'readonly',
+        IntersectionObserver: 'readonly',
+        MutationObserver: 'readonly',
+        performance: 'readonly',
+        EventSource: 'readonly',
+        CSS: 'readonly',
+        getComputedStyle: 'readonly',
+        HTMLElement: 'readonly',
+        Element: 'readonly',
+        Node: 'readonly',
+        Event: 'readonly',
+        CustomEvent: 'readonly',
+        AbortSignal: 'readonly',
+        AbortController: 'readonly',
+        Blob: 'readonly',
+        File: 'readonly',
+        FormData: 'readonly',
+        TextEncoder: 'readonly',
+        TextDecoder: 'readonly',
+        queueMicrotask: 'readonly',
+      },
+      parserOptions: { ecmaFeatures: { jsx: true } },
+    },
+    plugins: {
+      'jsx-uses': { rules: { 'jsx-uses-vars': jsxUsesVarsRule, 'jsx-uses-react': jsxUsesReactRule } },
+      'react-hooks': { rules: { 'exhaustive-deps': exhaustiveDepsStubRule } },
+    },
+    rules: {
+      'no-undef': 'error',
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_|^e$', varsIgnorePattern: '^_', caughtErrors: 'none' }],
+      'prefer-const': 'error',
+      'no-empty': ['error', { allowEmptyCatch: true }],
+      'jsx-uses/jsx-uses-vars': 'error',
+      'jsx-uses/jsx-uses-react': 'error',
+      'react-hooks/exhaustive-deps': 'error',
     },
   },
   {

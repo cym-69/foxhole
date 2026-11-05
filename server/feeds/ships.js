@@ -311,6 +311,6 @@ export function stopShips() {
   clearTimeout(subTimer);
   clearInterval(sweepTimer);
   sweepTimer = null;
-  try { if (sock) sock.close(); } catch {}
+  try { if (sock) sock.close(); } catch { /* intentional: already closed */ }
   sock = null;
 }

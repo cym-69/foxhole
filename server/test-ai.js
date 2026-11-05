@@ -65,5 +65,5 @@ try {
   console.log('all AI tests passed');
 } finally {
   srv.close();
-  try { fs.unlinkSync(path.join(DATA_DIR, 'ai.json')); } catch {}
+  try { fs.unlinkSync(path.join(DATA_DIR, 'ai.json')); } catch { /* intentional: cleanup is best-effort */ }
 }

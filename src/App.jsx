@@ -100,12 +100,12 @@ export default function App() {
   // no-link checkbox. Saved in localStorage, read in an effect only.
   const [mapLayers, setMapLayers] = useState({ quakes: true, storms: true, military: true, ships: true, sats: false, feed: true, noLink: true });
   const [activeProfile, setActiveProfile] = useState(null);
-  const saveLayers = (n) => { try { localStorage.setItem('foxhole.mapLayers', JSON.stringify(n)); } catch {} return n; };
+  const saveLayers = (n) => { try { localStorage.setItem('foxhole.mapLayers', JSON.stringify(n)); } catch { /* intentional: storage may be unavailable */ } return n; };
   useEffect(() => {
     try {
       const v = JSON.parse(localStorage.getItem('foxhole.mapLayers') || 'null');
       if (v) setMapLayers((p) => { const n = saveLayers({ ...p, ...v }); setActiveProfile(matchProfile(n)?.id ?? null); return n; });
-    } catch {}
+    } catch { /* intentional: corrupt saved layers → defaults */ }
   }, []);
   const toggleMap = (k) => setMapLayers((p) => { const n = saveLayers({ ...p, [k]: !p[k] }); setActiveProfile(null); return n; });
   const applyProfile = (id) => setMapLayers((p) => {
@@ -126,7 +126,7 @@ export default function App() {
         const tle = await (await fetch('/api/sats')).json();
         if (!alive) return;
         setSatRecs(tle.map((t) => ({ name: t.name, rec: satrecOf(t) })).filter((x) => x.rec));
-      } catch {}
+      } catch { /* intentional: sats fetch failed → keep previous */ }
     })();
     return () => { alive = false; };
   }, [mapLayers.sats]);

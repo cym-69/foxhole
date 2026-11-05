@@ -112,6 +112,52 @@ function buildState() {
 const app = express();
 app.use(express.json({ limit: '50kb' }));
 
+app.use((_req,res,next)=>{
+  res.set({
+    'X-Content-Type-Options':'nosniff',
+    'X-Frame-Options':'SAMEORIGIN',
+    'Referrer-Policy':'no-referrer',
+    'Cross-Origin-Opener-Policy':'same-origin',
+    'Content-Security-Policy':"default-src 'none'; sandbox",
+  });
+  next();
+});
+
+const rate = new Map();
+function rateLimit(windowMs, max, pathPrefix) {
+  return (req,res,next)=>{
+    if (!req.path.startsWith(pathPrefix)) return next();
+    const now=Date.now();
+    const key=`${req.ip||'x'}:${req.path}`;
+    const entry=rate.get(key);
+    if (!entry || now-entry.start>=windowMs) { rate.set(key,{start:now,count:1}); return next(); }
+    entry.count+=1;
+    if (entry.count>max) return res.status(429).json({error:'Too many requests.'});
+    return next();
+  };
+}
+setInterval(()=>{ const now=Date.now(); for (const [k,v] of rate) if (now-v.start>=60000) rate.delete(k); },60000).unref();
+
+const postRate=rateLimit(60000,30,'/api/');
+const testRate=rateLimit(60000,30,'/__test/');
+const stateRate=rateLimit(60000,120,'/api/state');
+const streamRate=rateLimit(60000,30,'/stream');
+app.use((req,res,next)=>{ if (req.method!=='POST') return next(); if (req.path.startsWith('/__test/')) return testRate(req,res,next); return postRate(req,res,next); });
+app.use(stateRate);
+app.use(streamRate);
+
+app.use((req,res,next)=>{
+  if (req.method!=='GET') return next();
+  const o=req.headers.origin;
+  if (!o) return next();
+  try {
+    const u=new URL(o);
+    const ok=u.host===req.headers.host || ['localhost:5173','127.0.0.1:5173'].includes(u.host);
+    if (ok) res.set('Access-Control-Allow-Origin',o);
+  } catch { /* intentional: malformed Origin gets no CORS header */ }
+  next();
+});
+
 // Block other websites from posting to your local server (it stores your keys).
 app.use((req, res, next) => {
   if (req.method === 'GET') return next();
@@ -121,7 +167,7 @@ app.use((req, res, next) => {
     const u = new URL(o);
     const ok = u.host === req.headers.host || ['localhost:5173', '127.0.0.1:5173'].includes(u.host);
     if (ok) return next();
-  } catch {}
+  } catch { /* intentional: malformed Origin → blocked */ }
   res.status(403).json({ error: 'Blocked origin.' });
 });
 
