@@ -1,18 +1,22 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Globe3D from './components/Globe3D.jsx';
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import TopBar from './components/TopBar.jsx';
 import BestSignals from './components/BestSignals.jsx';
 import EventList from './components/EventList.jsx';
-import Chain from './components/Chain.jsx';
 import AssetStrip from './components/AssetStrip.jsx';
-import Lines from './components/Lines.jsx';
-import Setup from './components/Setup.jsx';
-import TvPanel from './components/TvPanel.jsx';
 import FeedStream from './components/FeedStream.jsx';
 import { fetchState } from './api.js';
 import { LAYERS } from './lib/icons.js';
 import { PROFILES, matchProfile } from './lib/profiles.js';
 import { satrecOf, satPosition } from './lib/sats.js';
+
+const Globe3D = lazy(() => import('./components/Globe3D.jsx'));
+const Chain = lazy(() => import('./components/Chain.jsx'));
+const Lines = lazy(() => import('./components/Lines.jsx'));
+const Setup = lazy(() => import('./components/Setup.jsx'));
+const TvPanel = lazy(() => import('./components/TvPanel.jsx'));
+
+const PanelsFallback = () => <div className="grid place-items-center py-16 text-sm text-mute">Loading panel…</div>;
+const GlobeFallback = () => <div className="grid place-items-center py-16 text-sm text-mute">Loading globe…</div>;
 
 const PRESETS = [
   { label: 'Global', lat: 20, lng: 10, alt: 2.4 },
@@ -198,7 +202,9 @@ export default function App() {
         <EventList events={visible} contextCount={state.context.length} total={state.events.length} layers={layers} onToggle={toggle} selectedId={selectedId} onSelect={select} now={state.now} />
 
         <section className="relative min-h-0 overflow-hidden" style={{ background: 'radial-gradient(ellipse at 50% 45%, #16201C 0%, #0E1412 70%)' }}>
-          <Globe3D ref={globe} events={visible.filter((e) => mapLayerOn(e, mapLayers))} context={visibleCtx} selectedId={selectedId} onSelect={(id) => (id ? select(id) : setSelectedId(null))} aircraft={mapLayers.military ? live.aircraft : []} ships={mapLayers.ships ? live.ships : []} shipNames={live.shipNames} sats={mapLayers.sats ? sats : []} pulse={live.pulse} />
+          <Suspense fallback={GlobeFallback}>
+            <Globe3D ref={globe} events={visible.filter((e) => mapLayerOn(e, mapLayers))} context={visibleCtx} selectedId={selectedId} onSelect={(id) => (id ? select(id) : setSelectedId(null))} aircraft={mapLayers.military ? live.aircraft : []} ships={mapLayers.ships ? live.ships : []} shipNames={live.shipNames} sats={mapLayers.sats ? sats : []} pulse={live.pulse} />
+          </Suspense>
           <div className="absolute left-4 top-3 flex flex-col gap-1.5 pr-[220px]">
             <div className="flex flex-wrap items-center gap-2 text-xs text-mute">
               {PROFILES.map((p) => (
@@ -237,15 +243,21 @@ export default function App() {
               <p>{state.context.length ? 'Quiet right now. Nothing live links to a tradable asset, so there are no signals.' : 'No live events yet.'}<br />{state.context.length ? 'The dim dots are real events with no trade link.' : 'New ones appear here as they come in.'}</p>
             </div>
           )}
-          <TvPanel open={tvOpen} onClose={() => setTvOpen(false)} />
+          <Suspense fallback={null}>
+            <TvPanel open={tvOpen} onClose={() => setTvOpen(false)} />
+          </Suspense>
         </section>
 
-        <Chain event={selected} signals={selectedSignals} trad={state.trad} crypto={state.crypto} now={state.now} />
+        <Suspense fallback={PanelsFallback}>
+          <Chain event={selected} signals={selectedSignals} trad={state.trad} crypto={state.crypto} now={state.now} />
+        </Suspense>
       </main>
 
       <AssetStrip trad={state.trad} crypto={state.crypto} signals={state.signals} selectedSignals={selectedSignals} />
-      <Lines lines={lines} />
-      <Setup open={setupOpen} state={state} onClose={closeSetup} onChanged={load} />
+      <Suspense fallback={null}>
+        <Lines lines={lines} />
+        <Setup open={setupOpen} state={state} onClose={closeSetup} onChanged={load} />
+      </Suspense>
     </div>
   );
 }
