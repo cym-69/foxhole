@@ -1,0 +1,92 @@
+[
+  {
+    "id": "war",
+    "name": "War & Conflict",
+    "description": "Armed conflict, missile strikes, maritime chokepoints and oil disruption.",
+    "threshold": 6,
+    "keywords": [
+      { "term": "Iran", "weight": 3 },
+      { "term": "Houthi", "weight": 3 },
+      { "term": "Red Sea", "weight": 3 },
+      { "term": "oil", "weight": 2 },
+      { "term": "missile", "weight": 3 },
+      { "term": "strike", "weight": 2 },
+      { "term": "sanctions", "weight": 1 }
+    ],
+    "exclude": ["celebrity", "sports"],
+    "sources": ["bbc", "aljazeera", "dw", "guardian", "npr", "bbcbiz", "marketwatch"],
+    "accent": "#e11d48"
+  },
+  {
+    "id": "markets",
+    "name": "Markets",
+    "description": "Rates, central banks, equities and recession risk.",
+    "threshold": 6,
+    "keywords": [
+      { "term": "Fed", "weight": 3 },
+      { "term": "rates", "weight": 3 },
+      { "term": "SPY", "weight": 2 },
+      { "term": "recession", "weight": 3 },
+      { "term": "inflation", "weight": 2 },
+      { "term": "earnings", "weight": 2 },
+      { "term": "stock", "weight": 1 }
+    ],
+    "exclude": ["crypto", "meme"],
+    "sources": ["bbcbiz", "marketwatch", "npr"],
+    "accent": "#2563eb"
+  },
+  {
+    "id": "tech",
+    "name": "Tech",
+    "description": "AI, semiconductors, big tech and cyber security.",
+    "threshold": 6,
+    "keywords": [
+      { "term": "AI", "weight": 3 },
+      { "term": "chips", "weight": 3 },
+      { "term": "Nvidia", "weight": 3 },
+      { "term": "cyber", "weight": 2 },
+      { "term": "semiconductor", "weight": 2 },
+      { "term": "software", "weight": 1 },
+      { "term": "data breach", "weight": 2 }
+    ],
+    "exclude": ["sports", "celebrity"],
+    "sources": ["bbcbiz", "marketwatch", "npr", "bbc"],
+    "accent": "#7c3aed"
+  },
+  {
+    "id": "cinema",
+    "name": "Cinema",
+    "description": "Box office, premieres, streaming and auteurs.",
+    "threshold": 4,
+    "keywords": [
+      { "term": "box office", "weight": 3 },
+      { "term": "premiere", "weight": 3 },
+      { "term": "streaming", "weight": 2 },
+      { "term": "Tarantino", "weight": 3 },
+      { "term": "film", "weight": 1 },
+      { "term": "director", "weight": 2 },
+      { "term": "festival", "weight": 2 }
+    ],
+    "exclude": ["sports", "politics"],
+    "sources": ["bbc", "npr", "guardian", "dw"],
+    "accent": "#d97706"
+  },
+  {
+    "id": "crypto",
+    "name": "Crypto",
+    "description": "Bitcoin, ETFs, stablecoins and digital assets.",
+    "threshold": 6,
+    "keywords": [
+      { "term": "Bitcoin", "weight": 3 },
+      { "term": "ETF", "weight": 3 },
+      { "term": "stablecoin", "weight": 3 },
+      { "term": "crypto", "weight": 3 },
+      { "term": "Ethereum", "weight": 2 },
+      { "term": "blockchain", "weight": 2 },
+      { "term": "token", "weight": 1 }
+    ],
+    "exclude": ["sports", "celebrity"],
+    "sources": ["bbcbiz", "marketwatch", "npr"],
+    "accent": "#0891b2"
+  }
+]

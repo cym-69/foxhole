@@ -1,3 +1,5 @@
+import LiveTicker from './LiveTicker.jsx';
+
 const DOT = { live: 'bg-up', demo: 'bg-warn', error: 'bg-down', none: 'bg-mute' };
 
 function Chip({ label, mode, title }) {
@@ -38,6 +40,7 @@ export default function TopBar({ state, online, onSetup, tvOpen, onTv }) {
         </button>
       )}
       <div className="ml-auto flex items-center gap-2">
+        <LiveTicker />
         {ai?.connected ? (
           <button onClick={onSetup} className="flex items-center gap-1.5 rounded-full border border-accent/50 px-3 py-1 text-xs text-accent hover:bg-accent/10" title={`Model: ${ai.model}`}>
             <span className="h-1.5 w-1.5 rounded-full bg-accent" /> AI on

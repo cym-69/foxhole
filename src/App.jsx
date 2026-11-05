@@ -14,6 +14,10 @@ const Chain = lazy(() => import('./components/Chain.jsx'));
 const Lines = lazy(() => import('./components/Lines.jsx'));
 const Setup = lazy(() => import('./components/Setup.jsx'));
 const TvPanel = lazy(() => import('./components/TvPanel.jsx'));
+const CinemaRail = lazy(() => import('./components/CinemaRail.jsx'));
+const HorizonPanel = lazy(() => import('./components/HorizonPanel.jsx'));
+const LiveWatchPanel = lazy(() => import('./components/LiveWatchPanel.jsx'));
+const XFeedPanel = lazy(() => import('./components/XFeedPanel.jsx'));
 
 const PanelsFallback = () => <div className="grid place-items-center py-16 text-sm text-mute">Loading panel…</div>;
 const GlobeFallback = () => <div className="grid place-items-center py-16 text-sm text-mute">Loading globe…</div>;
@@ -45,6 +49,8 @@ export default function App() {
   const [setupOpen, setSetupOpen] = useState(false);
   const [lines, setLines] = useState([]);
   const [tvOpen, setTvOpen] = useState(false);
+  const [railTab, setRailTab] = useState('signals');
+  const [liveCount, setLiveCount] = useState(0);
   const globe = useRef(null);
   const firstLoad = useRef(true);
 
@@ -199,7 +205,22 @@ export default function App() {
       <BestSignals signals={state.signals} top={state.top} ai={state.ai} onPick={select} onSetup={() => setSetupOpen(true)} />
 
       <main className="grid min-h-0 grid-cols-[290px_minmax(0,1fr)_370px]">
-        <EventList events={visible} contextCount={state.context.length} total={state.events.length} layers={layers} onToggle={toggle} selectedId={selectedId} onSelect={select} now={state.now} />
+        <div className="flex min-h-0 flex-col border-r border-line">
+          <div className="flex flex-wrap items-center gap-1 border-b border-line px-2 py-1.5">
+            {[['signals', 'Signals'], ['cinema', 'Cinema'], ['horizon', 'Horizon'], ['live', `Live${liveCount > 0 ? ` ${liveCount}` : ''}`], ['x', 'X']].map(([id, label]) => (
+              <button key={id} onClick={() => setRailTab(id)} className={`rounded-full border px-2.5 py-1 text-xs ${railTab === id ? 'border-accent/60 bg-accent/10 text-ink' : 'border-line text-mute hover:text-ink'}`}>{label}</button>
+            ))}
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <Suspense fallback={<div className="grid place-items-center py-8 text-sm text-mute">Loading…</div>}>
+              {railTab === 'signals' && <EventList events={visible} contextCount={state.context.length} total={state.events.length} layers={layers} onToggle={toggle} selectedId={selectedId} onSelect={select} now={state.now} />}
+              {railTab === 'cinema' && <CinemaRail />}
+              {railTab === 'horizon' && <HorizonPanel />}
+              {railTab === 'live' && <LiveWatchPanel onLiveChange={setLiveCount} />}
+              {railTab === 'x' && <XFeedPanel />}
+            </Suspense>
+          </div>
+        </div>
 
         <section className="relative min-h-0 overflow-hidden" style={{ background: 'radial-gradient(ellipse at 50% 45%, #16201C 0%, #0E1412 70%)' }}>
           <Suspense fallback={GlobeFallback}>

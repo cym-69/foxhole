@@ -1,0 +1,10 @@
+[
+  { "id": "ko-candaceowens", "platform": "kick", "handle": "candaceowens", "name": "Candace Owens (Kick)", "url": "https://kick.com/candaceowens", "enabled": true },
+  { "id": "ko-adinross", "platform": "kick", "handle": "adinross", "name": "Adin Ross (Kick)", "url": "https://kick.com/adinross", "enabled": true },
+  { "id": "rumble-candaceowens", "platform": "rumble", "handle": "candaceowens", "name": "Candace Owens (Rumble)", "url": "https://rumble.com/candaceowens", "enabled": true },
+  { "id": "yt-candaceowens", "platform": "youtube", "handle": "CandaceOwens", "name": "Candace Owens (YouTube)", "url": "https://www.youtube.com/@CandaceOwens", "enabled": true },
+  { "id": "yt-lexfridman", "platform": "youtube", "handle": "LexFridman", "name": "Lex Fridman (YouTube)", "url": "https://www.youtube.com/@LexFridman", "enabled": true },
+  { "id": "yt-joerogan", "platform": "youtube", "handle": "joerogan", "name": "Joe Rogan (YouTube)", "url": "https://www.youtube.com/@joerogan", "enabled": true },
+  { "id": "yt-dw", "platform": "youtube", "handle": "thedailywire", "name": "The Daily Wire (YouTube)", "url": "https://www.youtube.com/@thedailywire", "enabled": true },
+  { "id": "yt-charliekirk", "platform": "youtube", "handle": "CharlieKirk", "name": "Charlie Kirk (YouTube)", "url": "https://www.youtube.com/@CharlieKirk", "enabled": true }
+]

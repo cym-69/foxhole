@@ -1,0 +1,7 @@
+[
+  { "handle": "Reuters", "label": "Reuters" },
+  { "handle": "BBCBreaking", "label": "BBC Breaking" },
+  { "handle": "APNews", "label": "AP" },
+  { "handle": "USGS_Quakes", "label": "USGS" },
+  { "handle": "Polymarket", "label": "Polymarket" }
+]

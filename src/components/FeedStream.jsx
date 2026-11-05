@@ -13,12 +13,31 @@ const AGE_TICK = 1000;
 
 // Left border colour per item kind. News stays neutral grey.
 const KIND_COLOR = {
-  news: '#7C8C84',
+  news: '#7C8C84', x: '#7FE3F2', live: '#E5706B', cinema: '#E0B45A',
   conflict: '#E5706B', trade: '#E0B45A', policy: '#8FA89B', nature: '#5FD39A', crypto: '#A9BFD6',
   blockade: '#E0B45A', sanction: '#8FA89B',
   quake: '#5FD39A', storm: '#5FD39A', wildfire: '#E0B45A', volcano: '#5FD39A', flood: '#5FD39A', drought: '#5FD39A',
   cluster: '#7FE3F2',
 };
+
+const FILTER_TABS = [
+  { id: 'all', label: 'All' },
+  { id: 'war', label: 'War' },
+  { id: 'markets', label: 'Markets' },
+  { id: 'cinema', label: 'Cinema' },
+  { id: 'x', label: 'X' },
+  { id: 'live', label: 'Live' },
+];
+
+function matchesFilter(it, filter) {
+  if (filter === 'all') return true;
+  if (filter === 'x') return it.srcName === 'x' || it.srcName === 'x/News' || it.kind === 'x';
+  if (filter === 'live') return it.kind === 'live' || /kick|rumble|twitch|youtube/i.test(it.srcName || '');
+  if (filter === 'cinema') return /cinema|movie|tmdb|box office/i.test(`${it.srcName || ''} ${it.text || ''}`);
+  if (filter === 'war') return ['conflict', 'blockade'].includes(it.kind) || /war|strike|missile|iran|houthi|red sea/i.test(it.text || '');
+  if (filter === 'markets') return ['trade', 'crypto'].includes(it.kind) || /fed|rate|spy|recession|nvidia|bitcoin/i.test(it.text || '');
+  return true;
+}
 const colorOf = (kind) => KIND_COLOR[kind] || '#7C8C84';
 const ageLabel = (ts) => {
   const m = Math.max(0, Math.round((Date.now() - ts) / 60000));
@@ -29,6 +48,7 @@ export default function FeedStream({ incoming = [], onPickEvent, wide = true }) 
   const [shown, setShown] = useState([]);
   const [hover, setHover] = useState(false);
   const [tick, setTick] = useState(0);
+  const [filter, setFilter] = useState('all');
   const queue = useRef([]);
   const seen = useRef(new Set());
   const lastAt = useRef(0);
@@ -39,6 +59,7 @@ export default function FeedStream({ incoming = [], onPickEvent, wide = true }) 
     if (!Array.isArray(incoming) || !incoming.length) return;
     for (const it of incoming) {
       if (!it || seen.current.has(it.id)) continue;
+      if (!matchesFilter(it, filter)) continue;
       seen.current.add(it.id);
       queue.current.push({ ...it, _at: Date.now() }); // _at = when it entered the stream
     }
@@ -90,6 +111,16 @@ export default function FeedStream({ incoming = [], onPickEvent, wide = true }) 
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
+      <div className="mb-2 flex flex-wrap gap-1" style={{ pointerEvents: 'auto' }}>
+        {FILTER_TABS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setFilter(t.id)}
+            className={`rounded-full border px-2 py-0.5 text-[10px] ${filter === t.id ? 'border-accent/60 bg-accent/10 text-ink' : 'border-line bg-panel/55 text-mute hover:text-ink'}`}
+          >{t.label}</button>
+        ))}
+      </div>
       <ul className="flex flex-col gap-2">
         <AnimatePresence initial={false}>
           {shown.map((it) => {

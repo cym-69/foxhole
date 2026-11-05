@@ -15,6 +15,10 @@ import { live, onChange, startLivePollers, liveEvents, addTestEvent } from './fe
 import { startShips, shipBoxes, shipsSnapshot } from './feeds/ships.js';
 import { startSats, satsRows } from './feeds/sats.js';
 import { startHeadlines, headlineItems, headlineStatus, onHeadline, pushTestHeadline, seedEvents, feedEvent } from './feeds/headlines.js';
+import { cinemaSnapshot, startCinema } from './feeds/cinema.js';
+import { liveNowSnapshot, startLiveWatchlist } from './feeds/livewatch.js';
+import { xFeedSnapshot, startXFeed } from './feeds/xfeed.js';
+import { profiles, profilesSummary, profileFeed } from './horizon/engine.js';
 
 const HOUR = 3600000;
 const src = {
@@ -142,9 +146,17 @@ const postRate=rateLimit(60000,30,'/api/');
 const testRate=rateLimit(60000,30,'/__test/');
 const stateRate=rateLimit(60000,120,'/api/state');
 const streamRate=rateLimit(60000,30,'/stream');
+const cinemaRate=rateLimit(60000,30,'/api/cinema');
+const horizonRate=rateLimit(60000,90,'/api/horizon');
+const liveNowRate=rateLimit(60000,60,'/api/live/now');
+const xRate=rateLimit(60000,60,'/api/x');
 app.use((req,res,next)=>{ if (req.method!=='POST') return next(); if (req.path.startsWith('/__test/')) return testRate(req,res,next); return postRate(req,res,next); });
 app.use(stateRate);
 app.use(streamRate);
+app.use(cinemaRate);
+app.use(horizonRate);
+app.use(liveNowRate);
+app.use(xRate);
 
 app.use((req,res,next)=>{
   if (req.method!=='GET') return next();
@@ -187,6 +199,15 @@ function liveStatus() {
 }
 app.get('/api/live', (_req, res) => res.json({ sources: liveStatus(), aircraft: live.aircraft.data, headlines: headlineStatus() }));
 app.get('/api/sats', (_req, res) => res.json(satsRows()));
+// Cinema tracker (TMDB-backed when TMDB_API_KEY is set; honest empty lists otherwise).
+app.get('/api/cinema/trending', (_req, res) => res.json(cinemaSnapshot()));
+app.get('/api/cinema/now', (_req, res) => res.json(cinemaSnapshot()));
+// Horizon topic radar: profile summaries plus per-profile scored headline feed.
+app.get('/api/horizon/profiles', (_req, res) => res.json({ ok: true, profiles: profilesSummary(headlineItems(), { allProfiles: profiles }) }));
+app.get('/api/horizon/feed', (req, res) => res.json(profileFeed(String(req.query.profile || ''), headlineItems(), { allProfiles: profiles })));
+// LIVE NOW watchlist and X (Twitter) feed snapshots.
+app.get('/api/live/now', (_req, res) => res.json(liveNowSnapshot()));
+app.get('/api/x/feed', (_req, res) => res.json(xFeedSnapshot()));
 
 // Live stream (Server-Sent Events). Snapshot on connect, then small change messages.
 const clients = new Set();
@@ -329,6 +350,9 @@ async function start() {
   startShips();
   startSats();
   startHeadlines();
+  startCinema();
+  startLiveWatchlist();
+  startXFeed();
   await Promise.allSettled([refreshSimple(), markets.refreshTrad(TRAD, 0), markets.refreshCrypto(), refreshSentiment()]);
   setInterval(refreshSimple, 60000);
   setInterval(() => markets.refreshTrad(TRAD, 19000).catch(() => {}), 20000);
