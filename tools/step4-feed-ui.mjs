@@ -5,7 +5,7 @@ const { chromium } = __req('C:/Users/debih/AppData/Roaming/npm/node_modules/play
 const CHROME_PATH = 'C:/Users/debih/AppData/Local/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-win64/chrome-headless-shell.exe';
 const BASE = process.env.PAGE_URL || 'http://127.0.0.1:4180';
 const MOCK_URL = 'http://127.0.0.1:9200/a.xml';
-const MODE = process.argv[2] || 'all';
+const _MODE = process.argv[2] || 'all';
 
 const browser = await chromium.launch({ executablePath: CHROME_PATH, headless: true });
 const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });

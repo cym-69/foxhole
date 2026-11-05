@@ -10,7 +10,6 @@ const UA = 'Foxhole/1.0 (personal project)';
 const SNAPSHOT_ITEMS = 15;
 const SNAPSHOT_EVENTS = 8;
 const SEEN_MAX = 3000;
-const FIRST_FETCH_MAX = 20;
 const FIRST_FETCH_PER_SOURCE = 3;
 const FIRST_FETCH_HOURS = 6;
 
@@ -29,7 +28,7 @@ function sourceList() {
   const env = String(process.env.FOXHOLE_RSS_URLS || '').split(',').map((s) => s.trim()).filter(Boolean);
   if (!env.length) return SOURCES.slice();
   return env.map((url, i) => {
-    let host = url.replace(/^https?:\/\//, '').split('/')[0];
+    const host = url.replace(/^https?:\/\//, '').split('/')[0];
     return { id: 'env' + i, name: host, url };
   });
 }
@@ -39,7 +38,6 @@ const EVENT_SRC = {
   quake: 'Quake', storm: 'Storm', wildfire: 'Fire', volcano: 'Fire', flood: 'Storm', drought: 'Storm',
   cluster: 'Aircraft', blockade: 'Sanction', sanction: 'Sanction', conflict: 'Conflict', crypto: 'Crypto',
 };
-const KNOWN_KINDS = new Set(['news', ...Object.values(EVENT_SRC)]);
 
 const parser = new XMLParser({
   ignoreAttributes: false, attributeNamePrefix: '@_', parseTagValue: true, trimValues: true,

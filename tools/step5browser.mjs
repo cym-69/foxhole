@@ -25,7 +25,7 @@ console.log('LAYER_SWITCHES=' + sw.join(' | '));
 // TV tabs.
 await page.locator('button', { hasText: 'TV' }).first().click();
 await page.waitForTimeout(2000);
-const tabs = await page.$$eval('iframe[src*="youtube"]', () => []);
+const _tabs = await page.$$eval('iframe[src*="youtube"]', () => []);
 const tabText = await page.$$eval('button', (els) => els.map((e) => e.textContent.trim()).filter((t) => /Al Jazeera|DW News|France 24|Sky News|Bloomberg|Euronews|TRT|Channel NewsAsia/.test(t)));
 console.log('TV_TABS=' + tabText.join(' | '));
 await page.screenshot({ path: 'C3-tv-final.png', fullPage: false });

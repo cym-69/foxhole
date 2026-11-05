@@ -96,7 +96,6 @@ export function liveEvents() {
   const boxes = RULES.filter((r) => r.match.box).map((r) => ({ id: r.id, box: r.match.box, title: r.title }));
   for (const b of boxes) {
     if (b.id === 'box-gulf-mexico' || b.id === 'box-midwest') continue;
-    const inside = live.aircraft.data.filter((a) => a.lat >= b.box[0] && a.lat <= b.box[1] && a.lon >= b.box[2] && a.lon >= b.box[3] ? false : (a.lat >= b.box[0] && a.lat <= b.box[1] && a.lon >= b.box[2] && a.lon <= b.box[3]));
     const inside2 = live.aircraft.data.filter((a) => a.lat >= b.box[0] && a.lat <= b.box[1] && a.lon >= b.box[2] && a.lon <= b.box[3]);
     if (inside2.length >= MIL_THRESH) {
       const lat = inside2.reduce((s, a) => s + a.lat, 0) / inside2.length;

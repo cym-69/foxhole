@@ -94,12 +94,12 @@ export async function connect(next) {
 
 // Ask the provider which models it offers (OpenAI-style GET /models, or Anthropic's /v1/models).
 const FREE_RE = /(:|-)free$/i;
-const THINK_RE = /think|reason|(^|[\/-])r1\b|\bo[134]\b/i;
+const THINK_RE = /think|reason|(^|[/-])r1\b|\bo[134]\b/i;
 export async function listModels(src) {
   const saved = src.useSaved && conf ? conf : null;
   const kind = (saved?.kind || src.kind) === 'anthropic' ? 'anthropic' : 'openai';
   const apiKey = String(saved?.apiKey ?? src.apiKey ?? '').trim();
-  let baseUrl = String(saved?.baseUrl ?? src.baseUrl ?? '').trim().replace(/\/+$/, '');
+  const baseUrl = String(saved?.baseUrl ?? src.baseUrl ?? '').trim().replace(/\/+$/, '');
   let r;
   if (kind === 'anthropic') {
     if (!apiKey) throw new Error('Paste your API key to see the models.');

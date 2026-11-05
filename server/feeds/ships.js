@@ -218,7 +218,6 @@ export function startShips(opts = {}) {
   const url = opts.url || envUrl || DEFAULT_AIS_URL;
   const logFn = opts.log ?? log;
   const wsFactory = opts.wsFactory ?? WebSocket;
-  const override = opts.url ?? envUrl;
   const wsOpts = { perMessageDeflate: opts.perMessageDeflate ?? true };
 
   stopped = false;

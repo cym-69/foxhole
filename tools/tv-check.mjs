@@ -31,7 +31,7 @@ console.log('PANEL_16x9=' + (Math.abs(box.width / box.height - 16 / 9) < 0.05));
 for (const c of CHANNELS) {
   await page.locator('button', { hasText: /Al Jazeera|DW News|France 24|Sky News/ }).filter({ hasText: c.id === 'dw' ? 'DW News' : (c.id === 'sky' ? 'Sky News' : (c.id === 'france24' ? 'France 24' : 'Al Jazeera')) }).first().click();
   await page.waitForTimeout(8000);
-  const iframe = page.locator('iframe[src*="youtube"]');
+  const _iframe = page.locator('iframe[src*="youtube"]');
   let state = 'no iframe';
   try {
     state = 'player present';

@@ -13,7 +13,7 @@ import * as track from './track.js';
 import * as ai from './ai.js';
 import { live, onChange, startLivePollers, liveEvents, addTestEvent } from './feeds/live.js';
 import { startShips, shipBoxes, shipsSnapshot } from './feeds/ships.js';
-import { startSats, fetchSats, satsRows } from './feeds/sats.js';
+import { startSats, satsRows } from './feeds/sats.js';
 import { startHeadlines, headlineItems, headlineStatus, onHeadline, pushTestHeadline, seedEvents, feedEvent } from './feeds/headlines.js';
 
 const HOUR = 3600000;
@@ -67,7 +67,7 @@ function compute() {
   return cached.v;
 }
 
-function buildState(focus = []) {
+function buildState() {
   const { col, result, sent } = compute();
   const topSignals = result.top.map((id) => result.signals.find((s) => s.id === id)).filter(Boolean);
 
@@ -128,7 +128,7 @@ app.use((req, res, next) => {
 app.get('/api/state', async (req, res) => {
   const focus = String(req.query.focus || '').split(',').filter((s) => TRAD.includes(s)).slice(0, 8);
   if (focus.length && cfg.finnhubKey) await markets.refreshTrad(focus, 8000).catch(() => {});
-  res.json(buildState(focus));
+  res.json(buildState());
 });
 app.get('/api/track', (_req, res) => res.json(track.getTrack()));
 
@@ -160,7 +160,6 @@ app.get('/stream', (req, res) => {
 const eventOut = ({ id, kind, layer, title, place, lat, lng, size, sources, ts, impact, assets }) => ({ id, kind, layer, title, place, lat, lng, size, sources, ts, impact, assets });
 
 // Push changes to clients. Events are checked each time the state is computed.
-let lastSent = '';
 let feedBooted = false;
 // First state with events: the 8 newest existing events become the first feed items.
 function bootFeed(result) {
@@ -196,7 +195,6 @@ function pushChanges(name) {
     }
     c.lastKey = new Map(result.events.map((e) => [e.id, `${e.impact}|${e.assets.map((a) => a.a + a.d).join(',')}`]));
   }
-  lastSent = name;
   feedNewEvents(result);
 }
 // Aircraft: sent on each 15 s aircraft poll (onChange). Status: on each source change.

@@ -6,7 +6,7 @@ const reader = res.body.getReader();
 const dec = new TextDecoder();
 let buf = '';
 const seen = [];
-const done = (async () => {
+
   while (true) {
     const { value, done: d } = await reader.read();
     if (d) break;
@@ -19,7 +19,8 @@ const done = (async () => {
       if (ev === 'feed') console.log('FEED ' + (p.match(/^data: (.*)$/m) || [])[1]?.slice(0, 160));
     }
   }
-})();
+
+
 await new Promise((r) => setTimeout(r, 4000));
 console.log('EVENTS_SO_FAR=' + seen.join(','));
 const r2 = await fetch(BASE + '/__test/event', {

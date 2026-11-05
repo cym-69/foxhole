@@ -6,11 +6,9 @@ import zlib from 'node:zlib';
 const UA = { 'User-Agent': 'Foxhole/0.1 (personal dashboard)' };
 const BASES = ['https://data.gdeltproject.org/gdeltv2/', 'http://data.gdeltproject.org/gdeltv2/'];
 const WINDOW_FILES = 24;   // 6 hours of files kept
-const BACKFILL = 24;       // load all WINDOW_FILES on first start
 export const COL = { baseCode: 27, rootCode: 28, mentions: 31, sources: 32, geoType: 51, geoName: 52, lat: 56, lng: 57, added: 59, url: 60, minCols: 58 };
 
 const LAYER = { conflict: 'conflict', blockade: 'trade', sanction: 'policy' };
-const LABEL = { conflict: 'Armed conflict reports', blockade: 'Blockade or movement restriction', sanction: 'Sanctions or embargo' };
 
 // Whole-word relevance list (single array). Optional trailing "s" allowed.
 export const GDELT_WORDS = [
@@ -28,7 +26,6 @@ export function relevant(title, url, kind) {
   return GDELT_RE.test(`${title || ''} ${url || ''}`.toLowerCase());
 }
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // CAMEO codes. Fighting (19, 20) and bombings only. Crime-type assaults (18x) are skipped on purpose.
 export function kindOf(root, base) {

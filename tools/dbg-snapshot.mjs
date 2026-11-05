@@ -6,7 +6,7 @@ const reader = res.body.getReader();
 const dec = new TextDecoder();
 let buf = '';
 let snap = null;
-const items = [];
+const _items = [];
 while (!snap) {
   const { value, done } = await reader.read();
   if (done) break;

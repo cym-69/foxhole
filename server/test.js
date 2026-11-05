@@ -131,12 +131,12 @@ live.aircraft.data = acGulf;
 live.aircraft.lastUpdated = NOW2;
 live.quakes.data = [];
 live.eonet.data = [];
-let outGulf = liveEvents();
+const outGulf = liveEvents();
 assert.ok(!outGulf.some(e => e.kind === 'cluster' && e.place === 'Gulf of Mexico'), '5 aircraft in the Gulf box: not linked');
 
 live.aircraft.data = acHormuz;
 live.aircraft.lastUpdated = NOW2;
-let outHormuz = liveEvents();
+const outHormuz = liveEvents();
 assert.ok(outHormuz.some(e => e.kind === 'cluster' && e.place === 'Strait of Hormuz'), '3 aircraft in the Hormuz box: linked');
 
 // Print one PASS line per case (Phase 1e / 1d requirement).

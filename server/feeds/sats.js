@@ -73,7 +73,7 @@ export async function fetchSats(options = {}) {
     live.sats.lastUpdated = cached.at;
     return { sats: cached.sats, notes: ['cache is ' + Math.round(age / 60000) + ' minutes old, no fetch'] };
   }
-  let sats = [];
+  const sats = [];
   for (const g of SAT_GROUPS) {
     try { sats.push(...await fetchGroup(g)); }
     catch (e) { notes.push('skipped ' + g.id + ': ' + e.message); }

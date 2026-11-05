@@ -8,7 +8,9 @@
     "build": "vite build",
     "start": "node server/index.js",
     "demo": "node server/index.js --demo",
-    "test": "node server/test.js && node server/test-ai.js && node server/test-gdelt.js"
+    "test": "node server/test.js && node server/test-ai.js && node server/test-gdelt.js",
+    "lint": "eslint . --max-warnings=0",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.1.0",
@@ -28,6 +30,8 @@
     "@tailwindcss/vite": "^4.0.0",
     "@vitejs/plugin-react": "^4.3.0",
     "concurrently": "^9.0.0",
+    "eslint": "^9.39.5",
+    "prettier": "^3.9.10",
     "tailwindcss": "^4.0.0",
     "vite": "^6.0.0"
   }

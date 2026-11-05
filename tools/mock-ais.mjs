@@ -3,7 +3,7 @@
 import { WebSocketServer } from 'ws';
 
 const PORT = Number(process.env.MOCK_AIS_PORT || 9100);
-const HORMUZ = [[24, 54], [27.5, 57.5]];
+const _HORMUZ = [[24, 54], [27.5, 57.5]];
 const TYPES = ['PositionReport', 'ShipStaticData'];
 
 const wss = new WebSocketServer({ host: '127.0.0.1', port: PORT });
