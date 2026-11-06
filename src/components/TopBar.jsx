@@ -1,6 +1,6 @@
 import LiveTicker from './LiveTicker.jsx';
 
-const DOT = { live: 'bg-up', demo: 'bg-warn', error: 'bg-down', none: 'bg-mute' };
+const DOT = { live: 'bg-up', demo: 'bg-warn', error: 'bg-down', none: 'bg-mute', 'missing-key': 'bg-mute' };
 
 function Chip({ label, mode, title }) {
   return (
@@ -15,6 +15,14 @@ export default function TopBar({ state, online, onSetup, tvOpen, onTv }) {
   const s = state?.status;
   const ai = state?.ai;
   const anyDemo = s && (s.events.mode === 'demo' || s.markets.mode === 'demo' || s.crypto.prices.mode === 'demo');
+  const chips = s ? [
+    { label: 'Events', mode: s.events.mode, title: `${s.events.counts.linked} of ${s.events.counts.seen} linked.\n${s.events.detail.join('\n')}` },
+    { label: 'Prices', mode: s.markets.mode, title: s.markets.note || 'Live prices from Finnhub' },
+    { label: 'Sentiment', mode: s.crypto.sentiment, title: s.crypto.prices.note || 'cryptocurrency.cv' },
+    { label: 'Cinema', mode: s.cinema || 'none', title: s.cinema === 'live' ? 'TMDB live' : s.cinema === 'missing-key' ? 'Add TMDB_API_KEY for trending movies/TV' : 'Cinema feed unavailable' },
+    { label: 'Live', mode: s.livewatch || 'none', title: s.livewatch === 'live' ? 'Watchlist poller live' : 'Watchlist poller error' },
+    { label: 'X', mode: s.xfeed || 'none', title: s.xfeed === 'live' ? 'X feed poller live' : 'X feed poller error' },
+  ] : [];
   return (
     <header className="flex h-12 items-center gap-3 border-b-2 border-black bg-paper px-4">
       <div className="flex items-center gap-2">
@@ -25,9 +33,9 @@ export default function TopBar({ state, online, onSetup, tvOpen, onTv }) {
       <div className="ml-4 flex items-center gap-2">
         {s && (
           <>
-            <Chip label={s.events.mode === 'live' ? `Events live, ${s.events.counts.linked} of ${s.events.counts.seen} linked` : 'Events demo'} mode={s.events.mode} title={`Only events a rule can link to an asset get signals.\n${s.events.detail.join('\n')}`} />
-            <Chip label={s.markets.mode === 'live' ? 'Prices live' : 'Prices demo'} mode={s.markets.mode} title={s.markets.note || 'Live prices from Finnhub'} />
-            <Chip label={s.crypto.sentiment === 'live' ? 'Crypto sentiment live' : s.crypto.sentiment === 'demo' ? 'Crypto sentiment demo' : 'No crypto sentiment'} mode={s.crypto.sentiment} title={s.crypto.prices.note || 'cryptocurrency.cv'} />
+            {chips.map((c) => (
+              <Chip key={c.label} label={c.label} mode={c.mode} title={c.title} />
+            ))}
           </>
         )}
         {!online && <span className="sb-chip px-2.5 py-1 text-xs" style={{ background: '#FF7A59' }}>Cannot reach the Foxhole server. Is it running?</span>}
