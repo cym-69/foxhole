@@ -91,7 +91,13 @@ export function liveEvents() {
       const ageDays = (Date.now() - ts) / (1000 * 60 * 60 * 24);
       if (ageDays > STORM_MAX_DAYS) continue;
     }
-    out.push({ id: 'eonet:' + e.id, kind, layer: 'nature', title: e.title, place: e.title, lat: e.lat, lng: e.lon, size: 0.4, sources: 1, ts, src: 'eonet' });
+    // EONET has no magnitude. Use title keywords as a severity proxy so
+    // box rules' minSize filters mean something across events.
+    const titleText = (e.title || '').toLowerCase();
+    const size = /cat(?:egory)?\s*[45]|major|severe|large expired/.test(titleText) ? 0.8
+      : /cat(?:egory)?\s*3|moderate|medium/.test(titleText) ? 0.5
+      : 0.3;
+    out.push({ id: 'eonet:' + e.id, kind, layer: 'nature', title: e.title, place: e.title, lat: e.lat, lng: e.lon, size, sources: 1, ts, src: 'eonet' });
   }
   const boxes = RULES.filter((r) => r.match.box).map((r) => ({ id: r.id, box: r.match.box, title: r.title }));
   for (const b of boxes) {
