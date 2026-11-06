@@ -35,7 +35,7 @@ export default function TvPanel({ open, onClose }) {
             </button>
           ))}
         </div>
-        <button onClick={onClose} title="Close TV" className="ml-1 rounded-full border-2 border-black bg-white px-2 py-0.5 text-[11px] font-black text-black hover:bg-[#FF7A59]">x</button>
+        <button onClick={onClose} aria-label="Close TV" title="Close TV" className="ml-1 rounded-full border-2 border-black bg-white px-2 py-0.5 text-[11px] font-black text-black hover:bg-[#FF7A59] focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-black">x</button>
       </div>
       <div className="relative aspect-video w-full bg-black">
         <iframe

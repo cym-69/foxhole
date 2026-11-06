@@ -113,13 +113,15 @@ export default function FeedStream({ incoming = [], onPickEvent, wide = true }) 
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
-      <div className="mb-2 flex flex-wrap gap-1" style={{ pointerEvents: 'auto' }}>
+      <div className="mb-2 flex flex-wrap gap-1" role="tablist" aria-label="Feed filter" style={{ pointerEvents: 'auto' }}>
         {FILTER_TABS.map((t) => (
           <button
             key={t.id}
             type="button"
+            role="tab"
+            aria-selected={filter === t.id}
             onClick={() => setFilter(t.id)}
-            className="sb-chip px-2 py-0.5 text-[10px]"
+            className="sb-chip px-2 py-0.5 text-[10px] focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
             style={{ background: filter === t.id ? '#111' : '#fff', color: filter === t.id ? '#fff' : '#111' }}
           >{t.label}</button>
         ))}
@@ -159,8 +161,8 @@ export default function FeedStream({ incoming = [], onPickEvent, wide = true }) 
                 style={{ borderLeft: `3px solid ${colorOf(it.kind)}`, pointerEvents: 'auto', opacity: gone ? 0 : faded ? 0.45 : 1, filter: faded ? 'grayscale(0.6)' : 'none', transition: 'opacity 1.2s ease, filter 1.2s ease' }}
               >
                 {news
-                  ? <a href={it.url} target="_blank" rel="noopener noreferrer" className={cls}>{body}</a>
-                  : <button type="button" data-feed-event={it.eventId || ''} onClick={() => it.eventId && onPickEvent(it.eventId)} className={`${cls} ${it.eventId ? 'cursor-pointer hover:border-accent/60' : 'cursor-default'}`}>{body}</button>}
+                  ? <a href={it.url} target="_blank" rel="noopener noreferrer" title={it.text} className={`${cls} focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-black`}>{body}</a>
+                  : <button type="button" data-feed-event={it.eventId || ''} onClick={() => it.eventId && onPickEvent(it.eventId)} aria-label={it.eventId ? `Focus ${it.text || 'event'}` : (it.text || 'Feed item')} className={`${cls} ${it.eventId ? 'cursor-pointer hover:bg-[#C6E265]/40' : 'cursor-default'} focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-black`}>{body}</button>}
               </motion.li>
             );
           })}
