@@ -35,6 +35,21 @@ export default function SignalKanban({ signals = [], onPick, selectedId }) {
   const [overrides, setOverrides] = useState({});
   const [dragId, setDragId] = useState(null);
 
+  if (signals.length === 0) {
+    return (
+      <section className="grid h-full place-items-center p-6">
+        <div className="sb-card max-w-sm p-5 text-center">
+          <p className="text-2xl font-black tracking-tight">No signals yet</p>
+          <p className="mt-2 text-sm leading-snug text-mute">
+            No live event currently matches any rule (chokepoints, grain,
+            chips, crypto). Prices are live — signals appear when news
+            crosses a threshold. Try Demo mode for the full board.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
   const grouped = useMemo(() => {
     const g = { WATCH: [], BUY: [], SELL: [] };
     for (const s of signals) {

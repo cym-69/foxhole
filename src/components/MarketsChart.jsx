@@ -54,8 +54,12 @@ export default function MarketsChart({ signals = [], trad = {}, crypto = {}, spa
   const all = series.flatMap((s) => s.pts);
   const min = all.length ? Math.min(...all) : 0;
   const max = all.length ? Math.max(...all) : 1;
+  // Pad the y-scale by 10% each side so a flat-ish line isn't a hard horizontal ruler.
+  const span = max - min || 1;
+  const lo = min - span * 0.1;
+  const hi = max + span * 0.1;
   const x = (i) => PAD + (i / 39) * (W - PAD * 2);
-  const y = (v) => PAD + ((max - v) / (max - min || 1)) * (H - PAD * 2);
+  const y = (v) => PAD + ((hi - v) / (hi - lo)) * (H - PAD * 2);
 
   return (
     <section className="sb-card flex h-full min-h-0 flex-col p-3">
@@ -108,6 +112,12 @@ export default function MarketsChart({ signals = [], trad = {}, crypto = {}, spa
         </svg>
       </div>
       <p className="num text-[11px] font-bold text-mute">{hover != null ? `t-${39 - hover} · ` : ''}{series.map((s) => `${s.id} ${hover != null ? s.pts[hover].toFixed(1) : s.pts[39].toFixed(1)}`).join(' · ') || 'no series'}{pending.length ? ` · hist building (${pending.join(', ')})` : ''}{spawnAlerts.length ? ` · ${spawnAlerts[0].label}` : ''}</p>
+
+      {series.length === 0 && (
+        <p className="mt-2 border-t-2 border-dashed border-black/40 pt-2 text-[12px] font-bold text-mute">
+          No price history yet — collecting live points. The board fills in as Finnhub/CoinGecko ticks arrive.
+        </p>
+      )}
     </section>
   );
 }
