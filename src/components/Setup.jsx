@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { connectAI, disconnectAI, saveFinnhub, listModels } from '../api.js';
+import { connectAI, disconnectAI, saveFinnhub, saveTmdb, listModels } from '../api.js';
 
 const PRESETS = [
   { id: 'gemini', name: 'Google Gemini', tag: 'Free', kind: 'openai', baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', model: 'gemini-2.5-flash', keyUrl: 'https://aistudio.google.com/apikey', needsKey: true },
@@ -98,6 +98,8 @@ export default function Setup({ open, state, onClose, onChanged }) {
   const [changing, setChanging] = useState(false);
   const [fkey, setFkey] = useState('');
   const [fmsg, setFmsg] = useState(null);
+  const [tkey, setTkey] = useState('');
+  const [tmsg, setTmsg] = useState(null);
 
   useEffect(() => { setForm({ apiKey: '', model: preset.model, baseUrl: preset.baseUrl }); setMsg(null); setChanging(false); }, [pid]);
   useEffect(() => {
@@ -122,6 +124,11 @@ export default function Setup({ open, state, onClose, onChanged }) {
     setFmsg(null);
     try { await saveFinnhub(fkey); setFmsg({ ok: true, text: 'Live prices are on.' }); setFkey(''); onChanged(); }
     catch (e) { setFmsg({ ok: false, text: e.message }); }
+  }
+  async function saveCinemaKey() {
+    setTmsg(null);
+    try { await saveTmdb(tkey); setTmsg({ ok: true, text: 'Cinema is on.' }); setTkey(''); onChanged(); }
+    catch (e) { setTmsg({ ok: false, text: e.message }); }
   }
 
   const showAddress = preset.id === 'local' || preset.id === 'agent';
@@ -184,6 +191,11 @@ export default function Setup({ open, state, onClose, onChanged }) {
                 </div>
               </>
             )}
+            {!msg && !busy && ai?.lastError && (
+              <p role="alert" className="mt-3 border-2 border-black px-3 py-2 text-sm font-bold shadow-[2px_2px_0_#111] bg-[#FF9B85] text-black">
+                {ai.lastError}
+              </p>
+            )}
             {msg && (
               <p role={msg.ok ? 'status' : 'alert'} className={`mt-3 border-2 border-black px-3 py-2 text-sm font-bold shadow-[2px_2px_0_#111] ${msg.ok ? 'bg-[#C6E265] text-black' : 'bg-[#FF9B85] text-black'}`}>
                 {msg.text}
@@ -205,6 +217,25 @@ export default function Setup({ open, state, onClose, onChanged }) {
               {fmsg && (
                 <p role={fmsg.ok ? 'status' : 'alert'} className={`mt-2 border-2 border-black px-3 py-1.5 text-sm font-bold shadow-[2px_2px_0_#111] ${fmsg.ok ? 'bg-[#C6E265] text-black' : 'bg-[#FF9B85] text-black'}`}>
                   {fmsg.text}
+                </p>
+              )}
+            </div>
+
+            <div className="mt-7 border-t-2 border-black pt-5">
+              <h3 className="text-sm font-black">Cinema</h3>
+              <p className="mt-1 text-xs leading-relaxed text-mute">
+                {state?.keys?.tmdb ? 'Live trending films and TV are on.' : 'Cinema is off until you add a TMDB key. The Cinema rail shows an empty state meanwhile.'}
+              </p>
+              {!state?.keys?.tmdb && (
+                <div className="mt-3 flex gap-2">
+                  <input className={inputCls} type="password" autoComplete="off" value={tkey} onChange={(e) => setTkey(e.target.value)} placeholder="TMDB API key" aria-label="TMDB API key" />
+                  <button onClick={saveCinemaKey} className="sb-btn shrink-0 rounded-lg px-4 text-sm font-bold">Save</button>
+                </div>
+              )}
+              {!state?.keys?.tmdb && <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noreferrer" className="mt-2 inline-block text-xs text-accent underline">Get a free TMDB key</a>}
+              {tmsg && (
+                <p role={tmsg.ok ? 'status' : 'alert'} className={`mt-2 border-2 border-black px-3 py-1.5 text-sm font-bold shadow-[2px_2px_0_#111] ${tmsg.ok ? 'bg-[#C6E265] text-black' : 'bg-[#FF9B85] text-black'}`}>
+                  {tmsg.text}
                 </p>
               )}
             </div>

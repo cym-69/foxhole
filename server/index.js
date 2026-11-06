@@ -111,7 +111,7 @@ function buildState() {
       xfeed: xFeedSnapshot().ok ? 'live' : 'error',
     },
     ai: { ...ai.publicInfo(), brief: ai.getBrief() },
-    keys: { finnhub: !!cfg.finnhubKey },
+    keys: { finnhub: !!cfg.finnhubKey, tmdb: !!cfg.tmdbKey },
     assets: ASSETS, events, context, signals: result.signals, top: result.top, trad, crypto,
   };
 }
@@ -291,6 +291,18 @@ app.post('/api/ai/models', async (req, res) => {
   catch (e) { res.status(400).json({ error: e.message || 'Could not load the models.' }); }
 });
 app.post('/api/ai/disconnect', (_req, res) => { cached.t = 0; res.json(ai.disconnect()); });
+app.post('/api/cinema/key', async (req, res) => {
+  const k = String(req.body?.tmdb || '').trim();
+  if (!k) return res.status(400).json({ error: 'Paste your TMDB API key.' });
+  try {
+    const r = await fetch(`https://api.themoviedb.org/3/configuration?api_key=${encodeURIComponent(k)}`, { signal: AbortSignal.timeout(10000) });
+    if (!r.ok) throw new Error(r.status === 401 ? 'TMDB rejected this key.' : 'TMDB returned an error.');
+  } catch (e) { return res.status(400).json({ error: e.message }); }
+  saveKey('tmdb', k);
+  process.env.TMDB_API_KEY = k;
+  cached.t = 0;
+  res.json({ ok: true });
+});
 app.post('/api/keys', async (req, res) => {
   const k = String(req.body?.finnhub || '').trim();
   if (!k) return res.status(400).json({ error: 'Paste your Finnhub key.' });

@@ -29,6 +29,7 @@ export const cfg = {
   finnhubBase: process.env.FINNHUB_BASE_URL || 'https://finnhub.io/api/v1',
   cryptoBase: process.env.CRYPTO_NEWS_BASE_URL || 'https://cryptocurrency.cv',
   get finnhubKey() { return saved.finnhub || process.env.FINNHUB_API_KEY || ''; },
+  get tmdbKey() { return saved.tmdb || process.env.TMDB_API_KEY || ''; },
 };
 
 export function saveKey(name, value) {

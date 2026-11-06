@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import '../config.js';
+import { cfg } from '../config.js';
 
 const IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
 const TMDB_BASE = 'https://api.themoviedb.org/3';
@@ -97,7 +97,7 @@ function makeSnapshot(status, fetchedAt, lists = {}) {
   };
 }
 
-let lastSnapshot = makeSnapshot(process.env.TMDB_API_KEY ? 'error' : 'missing-key', null);
+let lastSnapshot = makeSnapshot(cfg.tmdbKey ? 'error' : 'missing-key', null);
 let lastGoodSnapshot = null;
 
 export function cinemaSnapshot() {
@@ -127,7 +127,7 @@ function normalizeList(json, fallbackMediaType, filterToMediaTypes = false) {
 }
 
 export async function refreshCinema(fetchImpl = fetch) {
-  const key = process.env.TMDB_API_KEY;
+  const key = cfg.tmdbKey;
   if (!key) {
     lastSnapshot = makeSnapshot('missing-key', new Date().toISOString());
     return lastSnapshot;

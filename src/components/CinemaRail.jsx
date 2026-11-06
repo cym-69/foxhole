@@ -102,7 +102,7 @@ export default function CinemaRail() {
       <div className="px-3 py-2">
         <div className="text-[10px] font-black uppercase tracking-wide text-black">What&rsquo;s trending</div>
         {snapshot?.status === 'missing-key' ? (
-          <p className="mt-1 text-[12px] leading-snug text-mute">Add TMDB_API_KEY to .env to enable live trending</p>
+          <p role="status" className="mt-1 border-2 border-dashed border-black/30 px-2 py-1.5 text-[12px] font-bold leading-snug text-black">Cinema is off — add a TMDB key in Setup to enable live trending.</p>
         ) : trending.length === 0 ? (
           <p className="mt-1 text-[12px] text-mute">No trending titles right now.</p>
         ) : (

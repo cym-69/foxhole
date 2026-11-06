@@ -9,4 +9,5 @@ const post = (url, data) => j(url, { method: 'POST', headers: { 'content-type': 
 export const connectAI = (cfg) => post('/api/ai/connect', cfg);
 export const disconnectAI = () => post('/api/ai/disconnect');
 export const saveFinnhub = (finnhub) => post('/api/keys', { finnhub });
+export const saveTmdb = (tmdb) => post('/api/cinema/key', { tmdb });
 export const listModels = (cfg) => post('/api/ai/models', cfg);
