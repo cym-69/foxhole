@@ -202,8 +202,18 @@ export default function App() {
 
   if (!state) {
     return (
-      <div className="grid h-screen place-items-center text-sm text-mute">
-        {online ? 'Loading Foxhole...' : 'Cannot reach the Foxhole server. Start it with: npm start'}
+      <div className="grid min-h-screen place-items-center p-6 text-sm text-mute">
+        {online ? (
+          <div className="sb-card max-w-md p-5 text-center">
+            <p className="text-base font-black tracking-tight">Loading Foxhole…</p>
+            <p className="mt-1 text-xs font-bold">Pulling the first batch of events and prices.</p>
+          </div>
+        ) : (
+          <div className="sb-card max-w-md p-5 text-center">
+            <p className="text-base font-black tracking-tight">Cannot reach the Foxhole server</p>
+            <p className="mt-1 text-xs font-bold">Start it with <span className="num">npm start</span> and open it at <span className="num">http://localhost:4180</span>.</p>
+          </div>
+        )}
       </div>
     );
   }
