@@ -88,5 +88,5 @@ Stored only on your machine in the `data` folder. The server listens on 127.0.0.
 - Live-price history starts flat: `hist[]` begins at server start, so the Markets chart shows "history building" until enough ticks accumulate. The prefill point is hidden from the line but kept as the anchor.
 - GDELT events are grouped into half-degree map cells. Two reports on opposite sides of a cell edge can be counted as two smaller events. Event size comes from how many articles mention it, so big stories rank higher.
 - The board is desktop-first (`min-width: 1100px`); narrower screens stack the globe above the kanban.
-- cryptocurrency.cv can 403 with rate-limit abuse when polled too hard — the Events chip shows the detail on hover.
+- cryptocurrency.cv can 403 with rate-limit abuse when polled too hard — the server pauses sentiment pulls for 5 minutes after a full-403 batch. The Events chip shows the detail on hover.
 - Signals require a live rule match. A quiet news day genuinely produces "No signals yet".
