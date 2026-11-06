@@ -15,6 +15,7 @@ Open http://localhost:4180
 - Change the code and see it live: `npm run dev`, then open http://localhost:5173
 - Rebuild the screen after changes: `npm run build`
 - Check the signal logic: `npm test`
+- Check the code style: `npm run lint`
 
 ## First run
 
@@ -35,9 +36,32 @@ Anything not live is marked "demo" in the top bar.
 | Crypto events and sentiment | cryptocurrency.cv | none |
 | Stocks and commodity ETFs | Finnhub (what OpenStock uses) | free key |
 | Crypto prices and 24h volume | CoinGecko | none |
+| Flights | adsb.lol | none |
+| Ships | AISStream WebSocket | free key (`AISSTREAM_API_KEY`) — ships layer stays off without it |
+| Satellites | CelesTrak TLE | none |
+| Movies / TV trending | TMDB | free key (`TMDB_API_KEY`) — the Cinema tab shows a setup hint without it |
+| X / Twitter | Nitter RSS + Google News fallback | none |
+| Live streams checklist | Kick / YouTube / Rumble / Twitch web endpoints | none (YouTube, Rumble and Twitch report "unknown" — only Kick is polled) |
+| Horizon radar (keyword profiles) | GDELT + RSS merged locally | none |
 
 God's Eye View shows flights, ships, satellites and quakes. It is a viewer, not an events feed, so Foxhole does not read from it.
 Commodities use ETFs (USO for oil, GLD for gold, and so on) because free price APIs do not carry futures.
+
+## Signal Board — the four tabs
+
+The left rail has four tabs:
+
+- **Signals** — kanban board of rule matches (WATCH / BUY / SELL), draggable between columns.
+- **Cinema** — TMDB trending / now-playing / airing-today, plus a personal "what I'm tracking" list kept in `server/config/cinema-tracking.json`.
+- **Horizon** — radar profiles (War, Markets, Tech, Cinema, Crypto) that score headlines against keyword lists with fuzzy dedup.
+- **Live** / **X** — stream-watchlist status and the X/news feed.
+
+## Markets chart
+
+`server/feeds/markets.js` accumulates `hist[]` (last 60 prices) per symbol.
+The first price seen at server start is stored as `prefill` — the chart hides the
+flat prefill run so the line starts at real movement, keeping the prefill as the
+x=0 anchor. No synthetic series is drawn.
 
 ## How a signal is made (no AI needed)
 
@@ -61,6 +85,8 @@ Stored only on your machine in the `data` folder. The server listens on 127.0.0.
 
 ## Known limits
 
-- The live feeds were not reachable from where this was built. Demo mode and the logic tests were run. The GDELT headline parsing and the cryptocurrency.cv response shapes are written defensively but not checked against live replies. If a source shows an error in the top bar, hover the chip to see why.
-- Not tuned for phones. Desktop first.
+- Live-price history starts flat: `hist[]` begins at server start, so the Markets chart shows "history building" until enough ticks accumulate. The prefill point is hidden from the line but kept as the anchor.
 - GDELT events are grouped into half-degree map cells. Two reports on opposite sides of a cell edge can be counted as two smaller events. Event size comes from how many articles mention it, so big stories rank higher.
+- The board is desktop-first (`min-width: 1100px`); narrower screens stack the globe above the kanban.
+- cryptocurrency.cv can 403 with rate-limit abuse when polled too hard — the Events chip shows the detail on hover.
+- Signals require a live rule match. A quiet news day genuinely produces "No signals yet".
