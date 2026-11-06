@@ -4,8 +4,8 @@ const DOT = { live: 'bg-up', demo: 'bg-warn', error: 'bg-down', none: 'bg-mute' 
 
 function Chip({ label, mode, title }) {
   return (
-    <span title={title} className="flex items-center gap-1.5 rounded-full border border-line px-2.5 py-1 text-xs text-mute">
-      <span className={`h-1.5 w-1.5 rounded-full ${DOT[mode] || DOT.none}`} />
+    <span title={title} className="sb-chip flex items-center gap-1.5 px-2.5 py-1 text-xs text-ink">
+      <span className={`h-2 w-2 rounded-full border border-black ${DOT[mode] || DOT.none}`} />
       {label}
     </span>
   );
@@ -16,10 +16,11 @@ export default function TopBar({ state, online, onSetup, tvOpen, onTv }) {
   const ai = state?.ai;
   const anyDemo = s && (s.events.mode === 'demo' || s.markets.mode === 'demo' || s.crypto.prices.mode === 'demo');
   return (
-    <header className="flex h-11 items-center gap-3 border-b border-line px-4">
+    <header className="flex h-12 items-center gap-3 border-b-2 border-black bg-paper px-4">
       <div className="flex items-center gap-2">
-        <svg width="22" height="22" viewBox="0 0 32 32" aria-hidden="true"><path d="M6 8l6 5h8l6-5-2 11-8 7-8-7z" fill="#8FA89B" /></svg>
-        <span className="text-[15px] font-semibold tracking-tight">Foxhole</span>
+        <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><rect x="2" y="2" width="28" height="28" rx="6" fill="#FFD23F" stroke="#111" strokeWidth="2.5" /><path d="M6 10l6 5h8l6-5-2 11-8 7-8-7z" fill="#111" /></svg>
+        <span className="text-lg font-black tracking-tight">FOXHOLE</span>
+        <span className="sb-verdict hidden text-[10px] md:inline" style={{ background: '#FFD23F' }}>SIGNAL BOARD</span>
       </div>
       <div className="ml-4 flex items-center gap-2">
         {s && (
@@ -29,29 +30,29 @@ export default function TopBar({ state, online, onSetup, tvOpen, onTv }) {
             <Chip label={s.crypto.sentiment === 'live' ? 'Crypto sentiment live' : s.crypto.sentiment === 'demo' ? 'Crypto sentiment demo' : 'No crypto sentiment'} mode={s.crypto.sentiment} title={s.crypto.prices.note || 'cryptocurrency.cv'} />
           </>
         )}
-        {!online && <span className="rounded-full bg-down/15 px-2.5 py-1 text-xs text-down">Cannot reach the Foxhole server. Is it running?</span>}
+        {!online && <span className="sb-chip px-2.5 py-1 text-xs" style={{ background: '#FF7A59' }}>Cannot reach the Foxhole server. Is it running?</span>}
       </div>
       {anyDemo && (
-        <span className="ml-1 text-xs text-warn">Demo data is shown where a live source is missing. Do not trade on it.</span>
+        <span className="ml-1 sb-chip px-2 py-1 text-[11px]" style={{ background: '#FFD23F' }}>Demo data where live is missing. Do not trade on it.</span>
       )}
       {ai?.connected && ai.lastError && (
-        <button onClick={onSetup} title={ai.lastError} className="max-w-[320px] truncate rounded-full bg-warn/15 px-2.5 py-1 text-xs text-warn">
+        <button onClick={onSetup} title={ai.lastError} className="sb-chip max-w-[320px] truncate px-2.5 py-1 text-xs" style={{ background: '#FFD23F' }}>
           {ai.paused ? 'AI paused for 5 minutes. ' : 'AI problem. '}{ai.lastError} Change model
         </button>
       )}
       <div className="ml-auto flex items-center gap-2">
         <LiveTicker />
         {ai?.connected ? (
-          <button onClick={onSetup} className="flex items-center gap-1.5 rounded-full border border-accent/50 px-3 py-1 text-xs text-accent hover:bg-accent/10" title={`Model: ${ai.model}`}>
-            <span className="h-1.5 w-1.5 rounded-full bg-accent" /> AI on
+          <button onClick={onSetup} className="sb-btn flex items-center gap-1.5 px-3 py-1 text-xs font-black" style={{ background: '#C6E265' }} title={`Model: ${ai.model}`}>
+            AI ON
           </button>
         ) : (
-          <button onClick={onSetup} className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-bg hover:brightness-110">
-            Rules only. Connect a free AI
+          <button onClick={onSetup} className="sb-btn px-3 py-1 text-xs font-black" style={{ background: '#FFD23F' }}>
+            Rules only. Connect AI
           </button>
         )}
-        <button onClick={onSetup} className="rounded-full border border-line px-3 py-1 text-xs text-mute hover:text-ink">Settings</button>
-        <button onClick={onTv} title="Live TV" className={`rounded-full border px-3 py-1 text-xs ${tvOpen ? 'border-accent/60 bg-accent/10 text-ink' : 'border-line text-mute hover:text-ink'}`}>TV</button>
+        <button onClick={onSetup} className="sb-btn px-3 py-1 text-xs font-bold">Settings</button>
+        <button onClick={onTv} title="Live TV" className="sb-btn px-3 py-1 text-xs font-bold" style={tvOpen ? { background: '#111', color: '#fff' } : {}}>TV</button>
       </div>
     </header>
   );

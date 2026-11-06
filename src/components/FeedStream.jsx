@@ -13,11 +13,11 @@ const AGE_TICK = 1000;
 
 // Left border colour per item kind. News stays neutral grey.
 const KIND_COLOR = {
-  news: '#7C8C84', x: '#7FE3F2', live: '#E5706B', cinema: '#E0B45A',
-  conflict: '#E5706B', trade: '#E0B45A', policy: '#8FA89B', nature: '#5FD39A', crypto: '#A9BFD6',
-  blockade: '#E0B45A', sanction: '#8FA89B',
-  quake: '#5FD39A', storm: '#5FD39A', wildfire: '#E0B45A', volcano: '#5FD39A', flood: '#5FD39A', drought: '#5FD39A',
-  cluster: '#7FE3F2',
+  news: '#111111', x: '#0A7A3D', live: '#E64A2E', cinema: '#E6A700',
+  conflict: '#E64A2E', trade: '#E6A700', policy: '#111111', nature: '#22A352', crypto: '#0A7A3D',
+  blockade: '#E6A700', sanction: '#111111',
+  quake: '#22A352', storm: '#22A352', wildfire: '#E6A700', volcano: '#22A352', flood: '#22A352', drought: '#22A352',
+  cluster: '#0A7A3D',
 };
 
 const FILTER_TABS = [
@@ -117,7 +117,8 @@ export default function FeedStream({ incoming = [], onPickEvent, wide = true }) 
             key={t.id}
             type="button"
             onClick={() => setFilter(t.id)}
-            className={`rounded-full border px-2 py-0.5 text-[10px] ${filter === t.id ? 'border-accent/60 bg-accent/10 text-ink' : 'border-line bg-panel/55 text-mute hover:text-ink'}`}
+            className="sb-chip px-2 py-0.5 text-[10px]"
+            style={{ background: filter === t.id ? '#111' : '#fff', color: filter === t.id ? '#fff' : '#111' }}
           >{t.label}</button>
         ))}
       </div>
@@ -141,7 +142,7 @@ export default function FeedStream({ incoming = [], onPickEvent, wide = true }) 
                 )}
               </>
             );
-            const cls = 'block w-full rounded-md border border-line bg-panel/55 px-2 py-1.5 text-left backdrop-blur';
+            const cls = 'sb-card block w-full px-2 py-1.5 text-left';
             return (
               <motion.li
                 key={it.id}

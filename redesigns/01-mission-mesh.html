@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>01 — Mission Mesh</title>
+<style>
+:root{
+  --bg:#040a10; --bg2:#07121d; --panel:rgba(10,24,38,.62); --panel2:rgba(13,32,50,.72);
+  --line:rgba(94,200,235,.18); --line2:rgba(255,255,255,.08);
+  --cyan:#22d3ee; --cyan2:#67e8f9; --amber:#fbbf24; --green:#34d399; --red:#fb7185; --violet:#a78bfa;
+  --text:#e8f4ff; --muted:#7f9ab3; --muted2:#55708a;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;color:var(--text);font-family:var(--sans);overflow:hidden;
+  background:
+    radial-gradient(900px 600px at 70% -10%,rgba(34,211,238,.14),transparent 60%),
+    radial-gradient(700px 500px at 15% 110%,rgba(251,191,36,.07),transparent 60%),
+    radial-gradient(1200px 800px at 50% 40%,#0a1a2a 0%,var(--bg) 72%);
+}
+/* topographic / radar backdrop */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;opacity:.5;z-index:0;
+  background-image:
+    radial-gradient(circle at 62% 42%,transparent 0 120px,rgba(103,232,249,.05) 121px,transparent 122px),
+    radial-gradient(circle at 62% 42%,transparent 0 210px,rgba(103,232,249,.04) 211px,transparent 212px),
+    radial-gradient(circle at 62% 42%,transparent 0 300px,rgba(103,232,249,.035) 301px,transparent 302px),
+    radial-gradient(circle at 62% 42%,transparent 0 390px,rgba(103,232,249,.03) 391px,transparent 392px),
+    linear-gradient(rgba(103,232,249,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(103,232,249,.035) 1px,transparent 1px);
+  background-size:auto,auto,auto,auto,56px 56px,56px 56px;
+}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:1;
+  background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(255,255,255,.012) 3px 4px);}
+a{color:inherit}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+button:focus-visible,a:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;border-radius:8px}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:rgba(103,232,249,.25);border-radius:99px}::-webkit-scrollbar-track{background:transparent}
+
+.app{position:relative;z-index:2;display:grid;height:100vh;height:100dvh;
+  grid-template-columns:96px minmax(0,1fr) 368px;
+  grid-template-rows:58px minmax(0,1fr) 40px;
+  grid-template-areas:"rail header header" "rail main right" "rail marquee marquee";}
+
+/* ---------- NAV RAIL ---------- */
+.rail{grid-area:rail;display:flex;flex-direction:column;align-items:stretch;padding:14px 10px 12px;gap:6px;
+  border-right:1px solid var(--line2);background:linear-gradient(180deg,rgba(6,16,26,.85),rgba(4,10,16,.65));backdrop-filter:blur(18px)}
+.logo{text-align:center;padding:6px 0 14px;border-bottom:1px solid var(--line2);margin-bottom:10px}
+.logo-mark{width:38px;height:38px;margin:0 auto 8px;display:grid;place-items:center;border-radius:12px;
+  border:1px solid rgba(103,232,249,.45);background:radial-gradient(circle at 35% 30%,rgba(103,232,249,.35),rgba(8,30,45,.9));
+  box-shadow:0 0 22px rgba(34,211,238,.35),inset 0 0 12px rgba(34,211,238,.25);font-family:var(--mono);font-weight:800;color:var(--cyan2)}
+.logo b{font-family:var(--mono);font-size:11px;letter-spacing:.18em;display:block}
+.logo span{font-family:var(--mono);font-size:8px;letter-spacing:.14em;color:var(--muted)}
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:11px 4px;border-radius:14px;border:1px solid transparent;
+  color:var(--muted);transition:.2s;position:relative}
+.nav-btn .ic{font-size:18px;line-height:1;filter:saturate(.7)}
+.nav-btn .lb{font-family:var(--mono);font-size:9px;letter-spacing:.16em}
+.nav-btn:hover{color:var(--text);background:rgba(103,232,249,.07);transform:translateX(2px)}
+.nav-btn.active{color:#04121c;background:linear-gradient(135deg,var(--cyan),#0ea5b7);box-shadow:0 6px 22px rgba(34,211,238,.35)}
+.nav-btn.active .lb{color:#04121c;font-weight:700}
+.nav-btn .badge{position:absolute;top:7px;right:10px;min-width:16px;height:16px;padding:0 4px;border-radius:99px;background:var(--red);
+  color:#fff;font-family:var(--mono);font-size:9px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 10px rgba(251,113,133,.6)}
+.rail-foot{margin-top:auto;text-align:center;font-family:var(--mono);font-size:8px;letter-spacing:.12em;color:var(--muted2);line-height:1.7}
+
+/* ---------- HEADER ---------- */
+.header{grid-area:header;display:flex;align-items:center;gap:16px;padding:0 18px;border-bottom:1px solid var(--line2);
+  background:linear-gradient(90deg,rgba(7,18,30,.88),rgba(7,18,30,.55));backdrop-filter:blur(18px);min-width:0}
+.live-pill{display:flex;align-items:center;gap:8px;flex:0 0 auto;padding:7px 12px;border-radius:99px;border:1px solid rgba(251,113,133,.5);
+  background:rgba(251,113,133,.1);font-family:var(--mono);font-size:11px;font-weight:800;letter-spacing:.16em;color:#fecdd3}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 0 0 rgba(251,113,133,.6);animation:pulse 1.6s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 9px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.ticker-wrap{flex:1 1 auto;min-width:120px;overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent)}
+.ticker{display:flex;gap:38px;width:max-content;animation:tick 38s linear infinite;font-family:var(--mono);font-size:12px;color:#cfe8f7;white-space:nowrap}
+.ticker-wrap:hover .ticker{animation-play-state:paused}
+@keyframes tick{to{transform:translateX(-50%)}}
+.ticker b{color:var(--cyan2)} .ticker i{color:var(--amber);font-style:normal}
+.clock{flex:0 0 auto;text-align:right;font-family:var(--mono)}
+.clock .t{font-size:16px;font-weight:700;letter-spacing:.08em}
+.clock .d{font-size:9px;letter-spacing:.18em;color:var(--muted)}
+.markets{display:flex;gap:6px;flex:0 0 auto;overflow:hidden}
+.mkt{padding:6px 9px;border-radius:9px;border:1px solid var(--line2);background:rgba(255,255,255,.03);font-family:var(--mono);font-size:11px;white-space:nowrap;transition:.2s}
+.mkt:hover{border-color:rgba(103,232,249,.5);background:rgba(103,232,249,.08);transform:translateY(-1px)}
+.mkt b{color:#fff}.mkt .up{color:var(--green)} .mkt .dn{color:var(--red)}
+@media(max-width:1250px){.markets .mkt:nth-child(n+5){display:none}}
+
+/* ---------- MAIN ---------- */
+.main{grid-area:main;padding:18px;min-width:0;min-height:0;overflow:auto}
+.view{display:none;animation:fade .35s ease}
+.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.view-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:14px;flex-wrap:wrap}
+.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.24em;color:var(--cyan)}
+.view-head h1{margin:4px 0 0;font-size:28px;letter-spacing:-.02em}
+.view-head p{margin:6px 0 0;color:var(--muted);font-size:13px;max-width:560px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-family:var(--mono);font-size:10px;letter-spacing:.12em;padding:7px 11px;border-radius:99px;border:1px solid var(--line2);
+  background:rgba(255,255,255,.03);color:var(--muted);transition:.2s}
+.chip:hover{color:var(--text);border-color:rgba(103,232,249,.5)}
+.chip.active{background:var(--cyan);color:#04121c;border-color:transparent;font-weight:800}
+
+/* map hero */
+.map-hero{position:relative;border-radius:22px;border:1px solid var(--line);overflow:hidden;min-height:430px;
+  background:radial-gradient(520px 360px at 58% 45%,rgba(34,211,238,.16),transparent 65%),linear-gradient(160deg,#0a2033,#050f1a 70%);
+  box-shadow:0 24px 60px rgba(0,0,0,.45),inset 0 0 80px rgba(34,211,238,.06)}
+.map-hero svg.world{position:absolute;inset:0;width:100%;height:100%}
+.map-labels{position:absolute;top:16px;left:18px;font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--cyan2);line-height:1.9}
+.map-labels span{color:var(--muted);letter-spacing:.08em}
+.map-legend{position:absolute;left:18px;bottom:16px;display:flex;gap:8px;flex-wrap:wrap;font-family:var(--mono);font-size:10px}
+.legend{display:flex;align-items:center;gap:6px;padding:6px 9px;border-radius:99px;background:rgba(4,12,20,.7);border:1px solid var(--line2);backdrop-filter:blur(8px)}
+.legend i{width:8px;height:8px;border-radius:50%;display:block}
+.map-detail{position:absolute;right:18px;bottom:16px;max-width:300px;padding:14px;border-radius:16px;
+  background:rgba(5,15,26,.82);border:1px solid var(--line);backdrop-filter:blur(14px);box-shadow:0 16px 40px rgba(0,0,0,.4)}
+.map-detail .k{font-family:var(--mono);font-size:9px;letter-spacing:.22em;color:var(--amber)}
+.map-detail h3{margin:6px 0 4px;font-size:15px}
+.map-detail p{margin:0;color:var(--muted);font-size:12px;line-height:1.55}
+.event-dot{position:absolute;width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,.85);cursor:pointer;transform:translate(-50%,-50%);transition:.2s;z-index:3}
+.event-dot::after{content:"";position:absolute;inset:-9px;border-radius:50%;border:1px solid currentColor;opacity:.55;animation:ring 2.2s infinite}
+.event-dot:hover{transform:translate(-50%,-50%) scale(1.35)}
+.event-dot:focus-visible{outline:2px solid #fff;outline-offset:3px}
+@keyframes ring{from{transform:scale(.5);opacity:.7}to{transform:scale(1.6);opacity:0}}
+.radar{position:absolute;left:58%;top:45%;width:340px;height:340px;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;
+  border:1px solid rgba(103,232,249,.22);
+  background:radial-gradient(circle,transparent 0 32%,rgba(103,232,249,.05) 33% 34%,transparent 35%),
+             radial-gradient(circle,transparent 0 64%,rgba(103,232,249,.04) 65% 66%,transparent 67%)}
+.radar::before{content:"";position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(from 0deg,rgba(34,211,238,.28),transparent 22%);animation:sweep 5s linear infinite}
+@keyframes sweep{to{transform:rotate(360deg)}}
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+.stat{padding:14px;border-radius:16px;border:1px solid var(--line2);background:var(--panel);backdrop-filter:blur(12px);transition:.2s}
+.stat:hover{transform:translateY(-2px);border-color:rgba(103,232,249,.4)}
+.stat .n{font-family:var(--mono);font-size:22px;font-weight:800;color:var(--cyan2)}
+.stat .l{font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--muted);margin-top:4px}
+
+/* generic cards / grids */
+.grid{display:grid;gap:12px}
+.g3{grid-template-columns:repeat(3,1fr)} .g2{grid-template-columns:repeat(2,1fr)} .g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:1100px){.g3,.g4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){.g3,.g4,.g2,.stat-row{grid-template-columns:1fr}}
+.card{padding:16px;border-radius:18px;border:1px solid var(--line2);background:var(--panel);backdrop-filter:blur(14px);transition:.2s}
+.card:hover{transform:translateY(-3px);border-color:rgba(103,232,249,.45);box-shadow:0 16px 36px rgba(0,0,0,.35)}
+.card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.card h3{margin:0;font-size:15px}
+.card p{color:var(--muted);font-size:12.5px;line-height:1.55;margin:8px 0 0}
+.meta{font-family:var(--mono);font-size:10px;color:var(--muted2);letter-spacing:.06em}
+.tag{font-family:var(--mono);font-size:9px;letter-spacing:.14em;padding:5px 8px;border-radius:99px;border:1px solid var(--line2);color:var(--cyan2);white-space:nowrap}
+.tag.amber{color:var(--amber);border-color:rgba(251,191,36,.4)} .tag.red{color:#fecdd3;border-color:rgba(251,113,133,.4)}
+.tag.green{color:#a7f3d0;border-color:rgba(52,211,153,.4)} .tag.violet{color:#ddd6fe;border-color:rgba(167,139,250,.4)}
+.poster{height:150px;border-radius:14px;margin-bottom:12px;position:relative;overflow:hidden;border:1px solid var(--line2)}
+.poster::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(3,8,14,.85))}
+.poster .rank{position:absolute;left:10px;bottom:8px;font-family:var(--mono);font-weight:800;font-size:12px;z-index:1}
+.poster .score{position:absolute;right:10px;top:10px;z-index:1;font-family:var(--mono);font-size:11px;padding:5px 8px;border-radius:99px;background:rgba(3,8,14,.75);border:1px solid var(--line2)}
+.bar{height:6px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:10px}
+.bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--cyan),var(--amber))}
+.avatar{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-family:var(--mono);font-weight:800;color:#04121c;flex:0 0 auto}
+.live-card .thumb{height:118px;border-radius:14px;position:relative;display:grid;place-items:center;font-family:var(--mono);letter-spacing:.2em;font-size:11px;color:#dff9ff;border:1px solid var(--line2);overflow:hidden}
+.live-card .thumb::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 70% 20%,rgba(255,255,255,.18),transparent 45%)}
+.live-badge{position:absolute;left:10px;top:10px;z-index:1;display:flex;gap:6px;align-items:center;font-family:var(--mono);font-size:9px;font-weight:800;letter-spacing:.14em;padding:5px 8px;border-radius:99px;background:rgba(160,10,40,.85);color:#fff}
+.viewers{position:absolute;right:10px;bottom:10px;z-index:1;font-family:var(--mono);font-size:10px;padding:5px 8px;border-radius:99px;background:rgba(3,8,14,.8)}
+.x-post{display:flex;gap:12px}
+.x-post .avatar{border-radius:50%}
+.x-post p{margin:4px 0 0;color:#dbeefe;font-size:13px;line-height:1.5}
+.x-actions{display:flex;gap:14px;margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--muted2)}
+.x-actions span:hover{color:var(--cyan2)}
+
+/* ---------- RIGHT COLUMN ---------- */
+.right{grid-area:right;padding:18px 18px 14px 4px;min-height:0;overflow:auto}
+.right-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.right-head h2{margin:0;font-size:15px}
+.right-head span{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.signal{padding:15px;border-radius:18px;border:1px solid var(--line);background:var(--panel2);backdrop-filter:blur(16px);
+  margin-bottom:10px;transition:.2s;position:relative;overflow:hidden}
+.signal::before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:var(--cyan);opacity:.8}
+.signal.sell::before{background:var(--red)} .signal.watch::before{background:var(--amber)}
+.signal:hover{transform:translateX(-4px);border-color:rgba(103,232,249,.55);box-shadow:0 14px 34px rgba(0,0,0,.4)}
+.signal .row{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.asset{font-family:var(--mono);font-weight:800;font-size:16px;letter-spacing:.04em}
+.asset small{display:block;font-size:9px;letter-spacing:.16em;color:var(--muted);font-weight:500;margin-top:3px}
+.pill{font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.14em;padding:6px 10px;border-radius:99px;white-space:nowrap}
+.pill.buy{background:rgba(52,211,153,.16);color:#6ee7b7;border:1px solid rgba(52,211,153,.5)}
+.pill.sell{background:rgba(251,113,133,.14);color:#fda4af;border:1px solid rgba(251,113,133,.5)}
+.pill.watch{background:rgba(251,191,36,.14);color:#fcd34d;border:1px solid rgba(251,191,36,.5)}
+.why{color:var(--muted);font-size:12px;line-height:1.55;margin:10px 0 0}
+.why b{color:var(--cyan2);font-family:var(--mono);font-size:9px;letter-spacing:.16em;display:block;margin-bottom:4px}
+.signal .foot{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-top:12px}
+.conf{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.conf b{color:#fff;font-size:14px}
+.ring{transform:rotate(-90deg)} .ring circle{fill:none;stroke-width:3}
+.ring .track{stroke:rgba(255,255,255,.1)} .ring .val{stroke:var(--cyan);stroke-linecap:round;transition:stroke-dashoffset 1s}
+.spark{opacity:.95}
+.filter-row{display:flex;gap:6px;margin-bottom:12px}
+
+/* ---------- MARQUEE ---------- */
+.marquee{grid-area:marquee;border-top:1px solid var(--line2);background:rgba(5,13,22,.9);backdrop-filter:blur(14px);display:flex;align-items:center;overflow:hidden}
+.marquee .label{flex:0 0 auto;padding:0 14px;font-family:var(--mono);font-size:9px;font-weight:800;letter-spacing:.22em;color:var(--cyan2);border-right:1px solid var(--line2);height:100%;display:grid;place-items:center}
+.marquee-track{display:flex;gap:34px;width:max-content;animation:tick 55s linear infinite;font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap;padding-left:20px}
+.marquee:hover .marquee-track{animation-play-state:paused}
+.marquee-track b{color:var(--text)} .marquee-track i{color:var(--amber);font-style:normal}
+@media(max-width:1050px){
+  body{overflow:auto}
+  .app{grid-template-columns:76px minmax(0,1fr);grid-template-rows:58px auto auto 40px;height:auto;min-height:100vh;
+    grid-template-areas:"rail header" "rail main" "rail right" "rail marquee"}
+  .right{padding:0 18px 18px}.markets{display:none}.ticker-wrap{display:none}
+}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- NAV RAIL -->
+  <nav class="rail" aria-label="Primary">
+    <div class="logo"><div class="logo-mark">⌖</div><b>FOXHOLE</b><span>MISSION MESH</span></div>
+    <button class="nav-btn active" data-view="signals"><span class="ic">⌁</span><span class="lb">SIGNALS</span><span class="badge">6</span></button>
+    <button class="nav-btn" data-view="map"><span class="ic">◍</span><span class="lb">MAP</span></button>
+    <button class="nav-btn" data-view="cinema"><span class="ic">▣</span><span class="lb">CINEMA</span></button>
+    <button class="nav-btn" data-view="horizon"><span class="ic">◎</span><span class="lb">HORIZON</span></button>
+    <button class="nav-btn" data-view="live"><span class="ic">▶</span><span class="lb">LIVE</span><span class="badge">4</span></button>
+    <button class="nav-btn" data-view="x"><span class="ic">𝕏</span><span class="lb">X</span></button>
+    <div class="rail-foot">NODE&nbsp;07<br>UPLINK&nbsp;SECURE<br>v0.1 MOCK</div>
+  </nav>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="live-pill"><span class="dot"></span>LIVE</div>
+    <div class="ticker-wrap" aria-label="Live ticker"><div class="ticker" id="ticker"></div></div>
+    <nav class="markets" id="markets" aria-label="Markets"></nav>
+    <div class="clock"><div class="t" id="clock">--:--:--</div><div class="d" id="dateline">—</div></div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="main">
+    <!-- SIGNALS / MAP HERO VIEW -->
+    <section class="view active" id="view-signals">
+      <div class="view-head">
+        <div><div class="eyebrow">01 // SIGNAL CONFLUENCE</div><h1>Mission Mesh</h1>
+        <p>Event → asset verdicts fused from quake, storm, conflict, shipping and satellite feeds. Right rail is the live signal stack.</p></div>
+        <div class="chips"><button class="chip active">ALL SIGNALS</button><button class="chip">HIGH CONFIDENCE</button><button class="chip">LAST 1H</button></div>
+      </div>
+      <div class="map-hero" aria-label="Live map hero">
+        <svg class="world" viewBox="0 0 800 430" preserveAspectRatio="none" aria-hidden="true">
+          <defs><pattern id="gridp" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="rgba(103,232,249,.07)"/></pattern></defs>
+          <rect width="800" height="430" fill="url(#gridp)"/>
+          <g fill="none" stroke="rgba(103,232,249,.28)" stroke-width="1">
+            <path d="M60 150 Q180 60 320 120 T560 110 T760 170"/><path d="M40 240 Q200 170 360 220 T740 230"/>
+            <path d="M80 330 Q260 260 430 310 T780 300"/><path d="M150 80 Q240 200 300 340"/>
+            <path d="M420 50 Q460 190 520 380"/><path d="M620 70 Q600 210 660 360"/>
+          </g>
+          <g stroke="rgba(251,191,36,.35)" stroke-width="1"><circle cx="464" cy="193" r="70"/><circle cx="464" cy="193" r="120"/></g>
+          <g stroke="rgba(103,232,249,.5)"><path d="M464 193 L180 130 M464 193 L610 260 M464 193 L300 300 M180 130 L610 260"/></g>
+          <g fill="#67e8f9"><circle cx="464" cy="193" r="4"/><circle cx="180" cy="130" r="3"/><circle cx="610" cy="260" r="3"/><circle cx="300" cy="300" r="3"/></g>
+          <g font-family="ui-monospace,monospace" font-size="9" fill="#7f9ab3" letter-spacing="2">
+            <text x="18" y="28">LAT 34.05 / LON -118.24</text><text x="620" y="28">SAT-LINK ●</text><text x="18" y="410">TOPO · RADAR · AIS</text>
+          </g>
+        </svg>
+        <div class="radar"></div>
+        <div class="map-labels">GLOBAL EVENT MESH<br><span>— 6 active nodes · refreshed <b id="mesh-updated" style="color:var(--cyan2)">just now</b></span></div>
+        <div id="map-dots"></div>
+        <aside class="map-detail" aria-live="polite"><div class="k" id="md-k">SELECTED NODE</div><h3 id="md-title">Pacific Ring — M6.4 quake</h3><p id="md-body">Offshore seismic cluster. Tsunami watch issued; shipping lanes rerouted. Primary read: USO ↑ · shipping rates ↑.</p></aside>
+        <div class="map-legend">
+          <span class="legend"><i style="background:#fb7185"></i>CONFLICT</span>
+          <span class="legend"><i style="background:#fbbf24"></i>STORM / QUAKE</span>
+          <span class="legend"><i style="background:#22d3ee"></i>SHIPS / SATS</span>
+        </div>
+      </div>
+      <div class="stat-row" id="stat-row"></div>
+    </section>
+
+    <!-- MAP VIEW -->
+    <section class="view" id="view-map">
+      <div class="view-head"><div><div class="eyebrow">02 // THEATRE OF EVENTS</div><h1>Live Map</h1><p>Every pulsing node is a tracked event. Select a node to inspect its market and logistics read.</p></div></div>
+      <div class="grid g3" id="map-cards"></div>
+    </section>
+
+    <!-- CINEMA VIEW -->
+    <section class="view" id="view-cinema">
+      <div class="view-head"><div><div class="eyebrow">03 // BOX OFFICE RADAR</div><h1>Cinema</h1><p>Trending and tracked titles across the mesh — what the network is watching, rating and re-watching.</p></div>
+      <div class="chips"><button class="chip active">TRENDING</button><button class="chip">TRACKING</button><button class="chip">TOP RATED</button></div></div>
+      <div class="grid g3" id="cinema-grid"></div>
+    </section>
+
+    <!-- HORIZON VIEW -->
+    <section class="view" id="view-horizon">
+      <div class="view-head"><div><div class="eyebrow">04 // WHO KNOWS WHAT</div><h1>Horizon Profiles</h1><p>Domain specialists the mesh follows — war, markets, tech, cinema and crypto. Ranked by calibration, not follower count.</p></div></div>
+      <div class="grid g2" id="horizon-grid"></div>
+    </section>
+
+    <!-- LIVE VIEW -->
+    <section class="view" id="view-live">
+      <div class="view-head"><div><div class="eyebrow">05 // ON AIR NOW</div><h1>Live Now</h1><p>Simultaneous streams across Kick, Rumble, YouTube and Twitch. Viewer counts tick in real time.</p></div>
+      <div class="chips"><button class="chip active">ALL PLATFORMS</button><button class="chip">KICK</button><button class="chip">YOUTUBE</button><button class="chip">TWITCH</button></div></div>
+      <div class="grid g2" id="live-grid"></div>
+    </section>
+
+    <!-- X VIEW -->
+    <section class="view" id="view-x">
+      <div class="view-head"><div><div class="eyebrow">06 // THE WIRE</div><h1>X Feed</h1><p>Curated posts from tracked accounts, de-duplicated and scored for signal value before they hit the mesh.</p></div></div>
+      <div class="grid g2" id="x-grid"></div>
+    </section>
+  </main>
+
+  <!-- RIGHT: SIGNALS -->
+  <aside class="right" aria-label="Signal cards">
+    <div class="right-head"><h2>⌁ Signal Stack</h2><span id="signal-count"></span></div>
+    <div class="filter-row" role="group" aria-label="Filter signals">
+      <button class="chip active" data-filter="all">ALL</button>
+      <button class="chip" data-filter="buy">BUY</button>
+      <button class="chip" data-filter="sell">SELL</button>
+      <button class="chip" data-filter="watch">WATCH</button>
+    </div>
+    <div id="signal-stack"></div>
+  </aside>
+
+  <!-- BOTTOM MARQUEE -->
+  <footer class="marquee"><div class="label">WIRE ▸</div><div class="marquee-track" id="marquee"></div></footer>
+</div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+
+/* ---------- DATA (static demo) ---------- */
+const SIGNALS=[
+ {asset:"USO",name:"WTI Crude Oil",verdict:"BUY",conf:87,event:"M6.4 quake — Pacific Ring",why:"Tanker traffic rerouted around aftershock zone; 3 VLCCs delayed 18–36h. Inventories draw expected + supply shock premium.",chg:"+2.4%",spark:[8,9,8,11,13,12,15,17,19,22]},
+ {asset:"SPY",name:"S&P 500 ETF",verdict:"WATCH",conf:64,event:"Storm landfall — Gulf Coast",why:"Category-3 landfall threatens refinery corridor; futures choppy, options skew defensive until damage survey lands.",chg:"-0.3%",spark:[20,19,18,19,17,16,17,15,16,15]},
+ {asset:"BTC",name:"Bitcoin",verdict:"BUY",conf:78,event:"Conflict escalation — E. Europe",why:"Exchange inflows falling while conflict headlines spike; on-chain dormancy at 3-month low. Risk-off bid rotating into BTC.",chg:"+3.1%",spark:[5,6,7,6,8,9,10,12,13,15]},
+ {asset:"XLE",name:"Energy Select",verdict:"SELL",conf:71,event:"Sat outage — maritime comms",why:"Sat constellation degradation is noise, not supply: no cargo impact confirmed. Premium is overextended vs. fundamentals.",chg:"-1.2%",spark:[22,21,20,20,18,17,16,15,14,13]},
+ {asset:"GLD",name:"Gold",verdict:"BUY",conf:82,event:"Conflict escalation — E. Europe",why:"Safe-haven flows accelerating for 5th straight session; central-bank buying + ETF inflows confirm the move.",chg:"+1.8%",spark:[10,11,12,12,14,15,16,18,19,21]},
+ {asset:"QQQ",name:"Nasdaq-100 ETF",verdict:"WATCH",conf:58,event:"Storm landfall — Gulf Coast",why:"Data-centre power risk in Texas priced at 50/50. Awaiting utility restoration estimates before committing direction.",chg:"+0.1%",spark:[14,15,13,14,12,13,12,13,12,12]},
+];
+const EVENTS=[
+ {type:"QUAKE",color:"#fbbf24",x:58,y:45,title:"Pacific Ring — M6.4 quake",body:"Offshore seismic cluster. Tsunami watch issued; shipping lanes rerouted. Primary read: USO ↑ · shipping rates ↑."},
+ {type:"STORM",color:"#fbbf24",x:24,y:38,title:"Gulf Coast — Cat-3 landfall",body:"Landfall in ~9h. Refinery corridor in cone. Primary read: SPY → · QQQ → · XLE ↑ watch."},
+ {type:"CONFLICT",color:"#fb7185",x:50,y:30,title:"E. Europe — escalation",body:"Air-defence interception cluster near border. Primary read: GLD ↑ · BTC ↑ (risk-off bid)."},
+ {type:"SHIPS",color:"#22d3ee",x:76,y:62,title:"Malacca — 12 vessels held",body:"AIS gap over 40 min for a dozen bulk carriers. Possible spoofing. Primary read: BDRY ↑ · USO →."},
+ {type:"SATS",color:"#22d3ee",x:41,y:66,title:"LEO — constellation drift",body:"Three satellites drifting off-slot; comms redundancy degraded. Primary read: XLE ↓ (noise premium)."},
+ {type:"CONFLICT",color:"#fb7185",x:64,y:24,title:"Taiwan Strait — naval drill",body:"PLA naval group transiting median line. Primary read: TSM → · SOXX → · GLD ↑."},
+];
+const MARKETS=[["SPY","612.44","+0.42%",1],["BTC","$97,210","+3.1%",1],["USO","$74.18","+2.4%",1],["GLD","$262.90","+1.8%",1],["QQQ","$521.07","-0.3%",0],["ETH","$3,418","+1.4%",1],["XLE","$88.42","-1.2%",0],["DXY","104.22","+0.18%",1]];
+const TICKER=["<b>USO +2.4%</b> quake reroutes tankers","<i>GLD +1.8%</i> safe-haven bid 5th day","<b>BTC $97.2K</b> on-chain dormancy low","Storm landfall 9h — Gulf Coast","<i>SPY -0.3%</i> futures choppy","12 vessels AIS-dark — Malacca"];
+const LIVE=[
+ {platform:"KICK",title:"Frontline briefing: overnight escalation",host:"@fielddesk",viewers:48210,cat:"WAR",hue:"linear-gradient(135deg,#14532d,#052e16)"},
+ {platform:"RUMBLE",title:"Oil markets live: what the quake means",host:"@energywire",viewers:18740,cat:"MARKETS",hue:"linear-gradient(135deg,#4c1d95,#1e1b4b)"},
+ {platform:"YOUTUBE",title:"Sat tracking: the drifting constellation",host:"@orbitalwatch",viewers:12930,cat:"TECH",hue:"linear-gradient(135deg,#0c4a6e,#082f49)"},
+ {platform:"TWITCH",title:"Cinema night: tracking the box-office upset",host:"@reelstate",viewers:9640,cat:"CINEMA",hue:"linear-gradient(135deg,#831843,#500724)"},
+];
+const XPOSTS=[
+ {h:"@energywire",n:"Energy Wire",t:"3 VLCCs now holding south of the quake zone. Insurance rates +11% in the last hour. USO isn't done moving.",time:"2m",likes:"1.2K",c:"#22d3ee"},
+ {h:"@orbitalwatch",n:"Orbital Watch",t:"Drift confirmed on 3 sats. It's a software fault, not debris. Expect pundits to call it a 'blackout' anyway.",time:"9m",likes:"847",c:"#a78bfa"},
+ {h:"@fielddesk",n:"Field Desk",t:"Interceptions tonight were the heaviest in 3 weeks. Air defence inventory is the story nobody's pricing.",time:"18m",likes:"2.4K",c:"#fb7185"},
+ {h:"@reelstate",n:"Reel State",t:"The upset title is now tracking $41M opening — 3× pre-sales. The algorithm had it at $18M. Trust the mesh.",time:"31m",likes:"3.1K",c:"#fbbf24"},
+ {h:"@satwatch",n:"Sat Watch",t:"AIS-dark cluster in Malacca resolved: transponder faults, not spoofing. BDRY spike was a false mark.",time:"44m",likes:"693",c:"#34d399"},
+];
+const CINEMA=[
+ {t:"The Last Signal",y:2025,r:"8.7",track:"412K",trend:"+38%",hue:"linear-gradient(150deg,#164e63,#082f3a)",note:"War thriller. Tracking surges after festival buzz."},
+ {t:"Orbital Decay",y:2025,r:"8.2",track:"298K",trend:"+24%",hue:"linear-gradient(150deg,#4c1d95,#1e1b4b)",note:"Hard-SF. Sleeper hit riding sat-fault headlines."},
+ {t:"Aftershock",y:2024,r:"7.9",track:"187K",trend:"+19%",hue:"linear-gradient(150deg,#7c2d12,#431407)",note:"Disaster drama. Re-watched after Pacific quake."},
+ {t:"The Long Rewind",y:2025,r:"8.4",track:"154K",trend:"+12%",hue:"linear-gradient(150deg,#14532d,#052e16)",note:"Time-loop thriller. Word-of-mouth compounding."},
+ {t:"Gulf Light",y:2025,r:"7.6",track:"98K",trend:"+9%",hue:"linear-gradient(150deg,#0c4a6e,#082f49)",note:"Refinery-town drama. Quiet breakout."},
+ {t:"Zero Hour Protocol",y:2024,r:"8.9",track:"521K",trend:"+6%",hue:"linear-gradient(150deg,#831843,#500724)",note:"Action. Still #1 on tracking, 11 weeks running."},
+];
+const HORIZON=[
+ {n:"Mara Voss",h:"@maraoracle",d:"WAR",acc:91,fol:"1.2M",sig:48,c:"#fb7185",spec:"Battlefield movements & air-defence logistics. Called the interception cluster 6h early."},
+ {n:"Dex Okafor",h:"@dexflows",d:"MARKETS",acc:88,fol:"860K",sig:61,c:"#22d3ee",spec:"Energy & shipping flows. First to flag tanker rerouting; SPY/USO calls run 2–4h ahead of desk."},
+ {n:"Ines Rahal",h:"@inesorbital",d:"TECH",acc:86,fol:"540K",sig:37,c:"#a78bfa",spec:"Satellite & comms. Nailed the constellation drift as software fault while media cried blackout."},
+ {n:"Tomás Rey",h:"@tomasreel",d:"CINEMA",acc:84,fol:"1.8M",sig:52,c:"#fbbf24",spec:"Box-office tracking. Pre-sales model beat consensus 3× on the current upset title."},
+ {n:"Kaito Mori",h:"@kaitochain",d:"CRYPTO",acc:83,fol:"720K",sig:44,c:"#34d399",spec:"On-chain flows. Dormancy-to-flow model flagged BTC accumulation days before the move."},
+];
+const STATS=[["6","ACTIVE SIGNALS"],["87%","TOP CONFIDENCE"],["12","NODES TRACKED"],["4","LIVE CHANNELS"]];
+
+/* ---------- HELPERS ---------- */
+const sparkSVG=data=>{const w=92,h=26,mx=Math.max(...data),mn=Math.min(...data);
+  const pts=data.map((v,i)=>`${(i/(data.length-1))*w},${h-((v-mn)/((mx-mn)||1))*(h-4)-2}`).join(" ");
+  return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polyline points="${pts}" fill="none" stroke="#67e8f9" stroke-width="1.6"/></svg>`};
+const ringSVG=conf=>{const r=15,c=2*Math.PI*r,off=c*(1-conf/100);
+  return `<svg class="ring" width="38" height="38" viewBox="0 0 38 38"><circle class="track" cx="19" cy="19" r="${r}"/><circle class="val" cx="19" cy="19" r="${r}" stroke-dasharray="${c}" stroke-dashoffset="${off}"/></svg>`};
+const esc=s=>s.replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+
+/* ---------- RENDER ---------- */
+$("#ticker").innerHTML=[...TICKER,...TICKER].map(t=>`<span>${t}</span>`).join("");
+$("#marquee").innerHTML=[...XPOSTS,...XPOSTS].map(p=>`<span><b>${esc(p.h)}</b> ${esc(p.t)} <i>· ${p.likes} likes</i></span>`).join("");
+$("#markets").innerHTML=MARKETS.map(m=>`<button class="mkt" title="Open ${m[0]}"><b>${m[0]}</b> ${m[1]} <span class="${m[3]?"up":"dn"}">${m[2].startsWith("-")?"▼":"▲"} ${m[2]}</span></button>`).join("");
+$("#stat-row").innerHTML=STATS.map(s=>`<div class="stat"><div class="n">${s[0]}</div><div class="l">${s[1]}</div></div>`).join("");
+
+function renderSignals(filter="all"){
+  const list=SIGNALS.filter(s=>filter==="all"||s.verdict.toLowerCase()===filter);
+  $("#signal-count").textContent=list.length+" / "+SIGNALS.length;
+  $("#signal-stack").innerHTML=list.length?list.map(s=>`
+   <article class="signal ${s.verdict.toLowerCase()}">
+    <div class="row"><div class="asset">${s.asset}<small>${s.name} · ${s.chg}</small></div><span class="pill ${s.verdict.toLowerCase()}">${s.verdict}</span></div>
+    <p class="why"><b>WHY · ${esc(s.event.toUpperCase())}</b>${esc(s.why)}</p>
+    <div class="foot"><div class="conf">${ringSVG(s.conf)}<span>CONF <b>${s.conf}%</b></span></div>${sparkSVG(s.spark)}</div>
+   </article>`).join(""):`<p class="meta" style="padding:14px">No signals in this bucket right now.</p>`;
+}
+renderSignals();
+$$(".filter-row .chip").forEach(b=>b.onclick=()=>{$$(".filter-row .chip").forEach(x=>x.classList.remove("active"));b.classList.add("active");renderSignals(b.dataset.filter);});
+
+$("#map-dots").innerHTML=EVENTS.map((e,i)=>`<button class="event-dot" data-i="${i}" style="left:${e.x}%;top:${e.y}%;background:${e.color};color:${e.color}" aria-label="${esc(e.title)}" title="${esc(e.title)}"></button>`).join("");
+$$("#map-dots .event-dot").forEach(d=>d.onclick=()=>{const e=EVENTS[+d.dataset.i];
+  $("#md-k").textContent="NODE · "+e.type;$("#md-title").textContent=e.title;$("#md-body").textContent=e.body;});
+
+$("#map-cards").innerHTML=EVENTS.map(e=>`<div class="card"><div class="top"><h3>${esc(e.title)}</h3><span class="tag" style="color:${e.color};border-color:${e.color}55">${e.type}</span></div><p>${esc(e.body)}</p><div class="bar"><i style="width:${55+Math.floor(Math.random()*40)}%"></i></div><p class="meta" style="margin-top:10px">SEVERITY · ${e.type==="CONFLICT"?"HIGH":"MODERATE"} · UPDATED 2M AGO</p></div>`).join("");
+$("#cinema-grid").innerHTML=CINEMA.map((c,i)=>`<div class="card"><div class="poster" style="background:${c.hue}"><span class="score">★ ${c.r}</span><span class="rank">#${i+1} · ${c.trend}</span></div><h3>${esc(c.t)}</h3><p>${esc(c.note)}</p><p class="meta" style="margin-top:10px">${c.y} · TRACKING ${c.track} · TREND ${c.trend}</p></div>`).join("");
+$("#horizon-grid").innerHTML=HORIZON.map(p=>`<div class="card"><div class="top" style="align-items:center"><div style="display:flex;gap:12px;align-items:center"><span class="avatar" style="background:${p.c}">${esc(p.n.split(" ").map(w=>w[0]).join(""))}</span><div><h3>${esc(p.n)}</h3><p class="meta">${esc(p.h)} · ${p.fol} followers</p></div></div><span class="tag" style="color:${p.c};border-color:${p.c}55">${p.d}</span></div><p>${esc(p.spec)}</p><p class="meta" style="margin-top:10px">ACCURACY ${p.acc}% · ${p.sig} SIGNALS THIS CYCLE</p><div class="bar"><i style="width:${p.acc}%"></i></div></div>`).join("");
+$("#live-grid").innerHTML=LIVE.map((l,i)=>`<div class="card live-card"><div class="thumb" style="background:${l.hue}"><span class="live-badge"><span class="dot" style="width:6px;height:6px"></span>LIVE</span><span>${l.platform}</span><span class="viewers" data-viewers="${l.viewers}">👁 ${l.viewers.toLocaleString()}</span></div><div class="top" style="margin-top:12px"><h3>${esc(l.title)}</h3><span class="tag red">${l.cat}</span></div><p class="meta" style="margin-top:8px">${esc(l.host)} · ${l.platform}</p></div>`).join("");
+$("#x-grid").innerHTML=XPOSTS.map(p=>`<div class="card x-post"><span class="avatar" style="background:${p.c}">${esc(p.n[0])}</span><div style="flex:1"><div class="top"><h3 style="font-size:13px">${esc(p.n)} <span class="meta">${esc(p.h)}</span></h3><span class="meta">${p.time}</span></div><p>${esc(p.t)}</p><div class="x-actions"><span>💬 48</span><span>🔁 212</span><span>♥ ${p.likes}</span><span>▣ 18K</span></div></div></div>`).join("");
+
+/* ---------- INTERACTIVITY ---------- */
+$$(".nav-btn").forEach(b=>b.onclick=()=>{
+  $$(".nav-btn").forEach(x=>x.classList.remove("active"));b.classList.add("active");
+  $$(".view").forEach(v=>v.classList.remove("active"));
+  $("#view-"+b.dataset.view).classList.add("active");
+  $(".main").scrollTop=0;
+});
+function tickClock(){const d=new Date();
+  $("#clock").textContent=d.toLocaleTimeString("en-GB");
+  $("#dateline").textContent=d.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"}).toUpperCase()+" · ZULU";}
+tickClock();setInterval(tickClock,1000);
+setInterval(()=>{$$("[data-viewers]").forEach(el=>{const v=+el.dataset.viewers+Math.floor(Math.random()*90-30);el.dataset.viewers=v;el.textContent="👁 "+v.toLocaleString();});
+  $("#mesh-updated").textContent="just now";},4000);
+</script>
+</body>
+</html>

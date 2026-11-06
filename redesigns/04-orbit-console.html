@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FOXHOLE — 04 Orbit Console</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{
+  --bg:#050B18; --bg2:#0A1628; --panel:#0A1628cc; --cyan:#67E8F9; --cyan-dim:#67e8f988;
+  --line:rgba(103,232,249,.25); --ink:#E3F4FA; --mut:#8FB6C9; --amber:#FCD34D; --red:#F87171; --grn:#6EE7B7;
+  --mono:"SF Mono",ui-monospace,Menlo,Consolas,"Courier New",monospace;
+  --sans:"Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink);font-family:var(--sans)}
+body{
+  background:
+    radial-gradient(1600px 900px at 50% -200px,#0d2138 0%,transparent 55%),
+    radial-gradient(900px 600px at 110% 110%,#0a1f33 0%,transparent 50%),
+    var(--bg);
+  min-height:100vh; font-size:13px; -webkit-font-smoothing:antialiased;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    radial-gradient(rgba(103,232,249,.11) 1px, transparent 1.1px),
+    radial-gradient(rgba(103,232,249,.05) 1px, transparent 1.1px);
+  background-size:26px 26px,26px 26px; background-position:0 0,13px 13px;
+  mask-image:linear-gradient(to bottom,rgba(0,0,0,.7),rgba(0,0,0,.25));
+}
+::selection{background:#67e8f9;color:#050b18}
+
+/* ===== TOP BAR ===== */
+.top{
+  position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:16px;
+  padding:10px 20px;background:linear-gradient(180deg,#071226,#050b18f2);
+  border-bottom:1px solid var(--line);
+}
+.brand{display:flex;align-items:center;gap:11px;min-width:0}
+.mark{width:32px;height:32px;flex:0 0 32px;position:relative}
+.mark svg{width:100%;height:100%}
+.brand h1{font-size:15px;letter-spacing:.24em;font-weight:800;color:#EAFBFF;white-space:nowrap}
+.brand h1 small{display:block;font-size:8.5px;letter-spacing:.34em;color:var(--mut);font-weight:600;margin-top:2px}
+.top .spacer{flex:1}
+.mode{display:flex;align-items:center;gap:8px;border:1px solid var(--line);padding:6px 12px;border-radius:999px;background:#0a1628}
+.mode .dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);animation:pulse 1.6s infinite}
+.mode b{font-size:10px;letter-spacing:.28em;color:var(--cyan)}
+.mode span{font-size:9.5px;letter-spacing:.14em;color:var(--mut)}
+.clockbox{display:flex;align-items:center;gap:16px}
+.clock{text-align:right}
+.clock .t{font-family:var(--mono);font-size:21px;font-weight:700;color:#EAFBFF;letter-spacing:.06em;line-height:1}
+.clock .d{font-size:8.5px;letter-spacing:.28em;color:var(--mut);margin-top:3px}
+.utc{font-family:var(--mono);font-size:11px;color:var(--mut);letter-spacing:.1em;border-left:1px solid var(--line);padding-left:16px;line-height:1.5}
+.utc b{color:var(--cyan)}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.78)}}
+
+/* ===== MARKETS STRIP ===== */
+.strip{
+  display:flex;gap:0;overflow-x:auto;scrollbar-width:none;background:#070f1d;
+  border-bottom:1px solid var(--line);
+}
+.strip::-webkit-scrollbar{display:none}
+.tcell{flex:0 0 auto;padding:8px 16px 7px;border-right:1px solid rgba(103,232,249,.12);min-width:120px;position:relative}
+.tcell .k{font-size:8.5px;letter-spacing:.28em;color:var(--mut);display:flex;gap:6px;align-items:center}
+.tcell .v{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--ink);margin-top:3px}
+.tcell .c{font-family:var(--mono);font-size:10px;margin-top:1px}
+.tcell .c.up{color:var(--grn)} .tcell .c.dn{color:var(--red)}
+.tcell::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--cyan);opacity:0;transition:opacity .2s}
+.tcell:hover::before{opacity:1}
+.tcell:hover{background:#0a1628}
+.tcell:hover .k{color:var(--cyan)}
+
+/* ===== LAYOUT ===== */
+.wrap{position:relative;z-index:1;max-width:1900px;margin:0 auto;padding:16px 20px 26px;display:grid;
+  grid-template-columns:250px minmax(0,1fr) 285px;gap:14px;align-items:start}
+.col{display:grid;gap:14px;min-width:0}
+.section-label{display:flex;align-items:center;gap:10px;margin-bottom:0}
+.kicker{font-size:9px;letter-spacing:.34em;color:var(--mut)}
+.kicker b{color:var(--ink)}
+.rule{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+
+/* ===== PANELS + CORNER BRACKETS ===== */
+.panel{
+  position:relative;background:var(--panel);border:1px solid rgba(103,232,249,.16);padding:13px 15px;
+  transition:border-color .25s,box-shadow .25s;
+}
+.panel::before,.panel::after,
+.corners i::before,.corners i::after{
+  content:"";position:absolute;width:12px;height:12px;border:1px solid var(--cyan);opacity:.55;transition:all .25s;z-index:2;
+}
+.panel::before{top:-1px;left:-1px;border-right:none;border-bottom:none}
+.panel::after{top:-1px;right:-1px;border-left:none;border-bottom:none}
+.corners i{position:absolute;inset:0;pointer-events:none}
+.corners i::before{bottom:-1px;left:-1px;border-right:none;border-top:none}
+.corners i::after{bottom:-1px;right:-1px;border-left:none;border-top:none}
+.panel:hover{border-color:rgba(103,232,249,.55);box-shadow:0 0 24px rgba(103,232,249,.10),inset 0 0 24px rgba(103,232,249,.03)}
+.panel:hover::before,.panel:hover::after,
+.panel:hover .corners i::before,.panel:hover .corners i::after{opacity:1;width:18px;height:18px;box-shadow:0 0 10px rgba(103,232,249,.6)}
+.phead{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;gap:8px}
+.phead h2{font-size:9.5px;letter-spacing:.34em;color:var(--ink);font-weight:800}
+.phead .tag{font-size:8.5px;letter-spacing:.2em;color:var(--mut);font-family:var(--mono)}
+.phead .tag b{color:var(--cyan)}
+
+/* ===== LIST ITEMS ===== */
+.ev-row,.pr-row,.li-row,.sig-row{display:flex;gap:10px;align-items:flex-start;padding:9px 6px;border-bottom:1px dashed rgba(103,232,249,.10);cursor:pointer;transition:background .15s;position:relative}
+.ev-row:hover,.pr-row:hover,.li-row:hover,.sig-row:hover{background:rgba(103,232,249,.05)}
+.ev-row:last-child,.pr-row:last-child,.li-row:last-child,.sig-row:last-child{border-bottom:none}
+.sdot{flex:0 0 7px;width:7px;height:7px;margin-top:5px;border-radius:50%}
+.sdot.red{background:var(--red);box-shadow:0 0 7px var(--red);animation:pulse 1.8s infinite}
+.sdot.amber{background:var(--amber);box-shadow:0 0 7px var(--amber)}
+.sdot.cyan{background:var(--cyan);box-shadow:0 0 7px var(--cyan)}
+.sdot.grn{background:var(--grn);box-shadow:0 0 7px var(--grn)}
+.mini{font-size:8.5px;letter-spacing:.24em;color:var(--mut)}
+.h{font-size:11.5px;font-weight:700;color:var(--ink);line-height:1.35;margin:2px 0 1px}
+.p{font-size:10.5px;color:var(--mut);line-height:1.45}
+.mono{font-family:var(--mono)}
+.right-meta{margin-left:auto;text-align:right;flex:0 0 auto;font-family:var(--mono);font-size:10px;color:var(--mut);line-height:1.7}
+.badge{display:inline-block;font-family:var(--mono);font-size:8px;letter-spacing:.14em;padding:2px 6px;border:1px solid var(--line);color:var(--cyan);border-radius:2px;margin-top:4px}
+.badge.hot{color:#0AD1FF;border-color:#0AD1FF;background:#0AD1FF18}
+
+/* trending bars */
+.bar{height:3px;background:rgba(103,232,249,.10);margin-top:7px;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--cyan);box-shadow:0 0 6px rgba(103,232,249,.5)}
+
+/* profiles */
+.avatar{flex:0 0 30px;width:30px;height:30px;border:1px solid var(--cyan);background:rgba(103,232,249,.08);
+  display:grid;place-items:center;font-family:var(--mono);font-size:11px;color:var(--cyan);font-weight:700}
+.foll{font-family:var(--mono);font-size:9px;color:var(--mut);border:1px solid var(--line);padding:3px 8px;letter-spacing:.12em;flex:0 0 auto}
+.foll:hover{background:var(--cyan);color:#050b18;border-color:var(--cyan)}
+
+/* ===== MAP HERO ===== */
+.map{position:relative;border:1px solid rgba(103,232,249,.3);border-radius:14px;overflow:hidden;background:#060f1e;
+  aspect-ratio:16/7.6;isolation:isolate;box-shadow:0 24px 60px rgba(0,0,0,.45),inset 0 0 80px rgba(103,232,249,.04)}
+.map .dots{
+  position:absolute;inset:0;
+  background-image:
+    radial-gradient(circle at 22% 34%, rgba(103,232,249,.32) 1.3px, transparent 1.5px);
+  background-size:10px 10px;
+  mask-image:
+    radial-gradient(ellipse 30% 34% at 22% 30%,#000 0 72%,transparent 100%),
+    radial-gradient(ellipse 20% 40% at 30% 62%,#000 0 68%,transparent 100%),
+    radial-gradient(ellipse 16% 30% at 46% 26%,#000 0 70%,transparent 100%),
+    radial-gradient(ellipse 20% 44% at 52% 66%,#000 0 68%,transparent 100%),
+    radial-gradient(ellipse 24% 36% at 70% 34%,#000 0 70%,transparent 100%),
+    radial-gradient(ellipse 16% 30% at 82% 72%,#000 0 70%,transparent 100%);
+  mask-composite:source-over;
+  opacity:.85;
+}
+.map .grid-lines{position:absolute;inset:0;
+  background:
+    linear-gradient(rgba(103,232,249,.06) 1px,transparent 1px) 0 0/100% 33.333%,
+    linear-gradient(90deg,rgba(103,232,249,.06) 1px,transparent 1px) 0 0/16.667% 100%;
+  pointer-events:none}
+.route{position:absolute;border-top:1.5px dashed rgba(103,232,249,.5);height:0;transform-origin:0 50%;opacity:.7;animation:dash 2.4s linear infinite}
+@keyframes dash{to{border-color:rgba(103,232,249,.05)}50%{border-color:rgba(103,232,249,.7)}}
+.marker{position:absolute;transform:translate(-50%,-50%);z-index:6;cursor:pointer}
+.marker .core{position:relative;width:11px;height:11px;border-radius:50%;border:2px solid var(--m,#67E8F9);background:var(--m,#67E8F9);
+  box-shadow:0 0 12px var(--m,#67E8F9)}
+.marker .core::after{content:"";position:absolute;inset:-7px;border-radius:50%;border:1px solid var(--m,#67E8F9);opacity:.6;animation:ring 2.2s ease-out infinite}
+.marker .core::before{content:"";position:absolute;inset:-13px;border-radius:50%;border:1px solid var(--m,#67E8F9);opacity:.35;animation:ring 2.2s ease-out infinite .55s}
+@keyframes ring{0%{transform:scale(.45);opacity:.8}100%{transform:scale(1.5);opacity:0}}
+.marker.hot .core::after{animation-duration:1.4s}
+.marker .lbl{position:absolute;left:16px;top:0;white-space:nowrap;background:rgba(5,11,24,.88);border:1px solid rgba(103,232,249,.3);
+  padding:4px 8px;font-size:8.5px;letter-spacing:.16em;color:var(--ink);pointer-events:none;opacity:.92;transition:opacity .2s}
+.marker:hover .lbl,.marker.flash .lbl{opacity:1}
+.marker.flash .core{box-shadow:0 0 26px 8px var(--m,#67E8F9)}
+.map-readout{
+  position:absolute;left:14px;bottom:12px;right:14px;display:flex;justify-content:space-between;align-items:center;z-index:8;
+  pointer-events:none;
+  font-family:var(--mono);font-size:9px;color:var(--mut);letter-spacing:.14em;
+}
+.map-readout b{color:var(--cyan)}
+.map-tag{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;z-index:8;pointer-events:none}
+.map-tag .t1{font-size:9px;letter-spacing:.3em;color:var(--ink);display:flex;gap:8px;align-items:center}
+.map-tag .t2{font-family:var(--mono);font-size:9px;color:var(--mut);letter-spacing:.14em}
+.pulse-line{height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.5;margin:12px 0}
+.scanline{position:absolute;left:0;right:0;height:90px;pointer-events:none;z-index:7;
+  background:linear-gradient(180deg,transparent,rgba(103,232,249,.06),transparent);
+  animation:scan 9s linear infinite}
+@keyframes scan{0%{top:-90px}100%{top:110%}}
+
+/* ===== SIGNAL LOG ===== */
+.log-head{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.log-head h2{font-size:9.5px;letter-spacing:.34em}
+.log-head .mono{font-size:9px;color:var(--mut)}
+.sig-row{cursor:pointer}
+.sig-row.active{background:rgba(103,232,249,.09);outline:1px solid rgba(103,232,249,.45)}
+.sig-asset{font-family:var(--mono);font-weight:800;font-size:13px;color:var(--ink);min-width:52px}
+.verdict{font-family:var(--mono);font-size:9px;letter-spacing:.18em;padding:3px 8px;border:1px solid;margin-top:1px;flex:0 0 auto}
+.verdict.BUY{color:var(--grn);border-color:#6EE7B755;background:#6EE7B714}
+.verdict.SELL{color:var(--red);border-color:#F8717155;background:#F8717114}
+.verdict.WATCH{color:var(--amber);border-color:#FCD34D55;background:#FCD34D14}
+.conf{width:120px;flex:0 0 120px}
+.conf .num{font-family:var(--mono);font-size:10px;text-align:right;display:block;color:var(--mut)}
+.conf .bar{height:4px;background:rgba(103,232,249,.10);margin-top:4px}
+.conf .bar i{display:block;height:100%;background:var(--cyan);box-shadow:0 0 6px rgba(103,232,249,.6)}
+.conf.low .bar i{background:var(--amber)} .conf.med .bar i{background:var(--cyan)}
+.why{font-size:10px;color:var(--mut);line-height:1.5;margin-top:4px}
+.why b{color:var(--ink);font-family:var(--mono);font-size:9px;letter-spacing:.1em}
+.flt{font-family:var(--mono);font-size:9px;color:var(--mut);line-height:1.8;text-align:right}
+.flt b{color:var(--cyan);font-weight:400}
+
+/* live chips */
+.live-chip{display:inline-flex;align-items:center;gap:6px;font-size:8px;letter-spacing:.28em;color:#FF6B6B;
+  animation:pulse 1.4s infinite}
+.live-chip i{width:6px;height:6px;border-radius:50%;background:#FF6B6B;box-shadow:0 0 8px #FF6B6B}
+
+/* x feed */
+.handle{font-family:var(--mono);font-size:10px;color:var(--cyan)}
+.xava{flex:0 0 26px;width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#0AD1FF,#0a1628);display:grid;place-items:center;
+  font-family:var(--mono);font-size:10px;font-weight:800;color:#050b18}
+.stats{font-family:var(--mono);font-size:9px;color:var(--mut);margin-top:5px}
+.stats b{color:var(--ink);font-weight:400}
+
+/* cinema mini */
+.cine-poster{flex:0 0 34px;width:34px;height:46px;border:1px solid rgba(103,232,249,.35);background:
+  linear-gradient(160deg,#0A1628,#12233d);display:grid;place-items:center;font-size:15px}
+.rank{font-family:var(--mono);font-size:8px;color:var(--cyan);letter-spacing:.2em}
+.trend-up{color:var(--grn)} .trend-dn{color:var(--red)}
+
+/* footer */
+footer{position:relative;z-index:1;border-top:1px solid rgba(103,232,249,.18);padding:14px 20px;display:flex;justify-content:space-between;
+  font-size:8.5px;letter-spacing:.22em;color:var(--mut);font-family:var(--mono)}
+@media(max-width:1100px){.wrap{grid-template-columns:1fr}.col{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<header class="top">
+  <div class="brand">
+    <div class="mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="10" stroke="#67E8F9" stroke-width="1.2"/><circle cx="16" cy="16" r="3" fill="#67E8F9"/><ellipse cx="16" cy="16" rx="14" ry="5.2" stroke="#67E8F9" stroke-width="1" transform="rotate(-22 16 16)" opacity=".7"/></svg></div>
+    <h1>FOXHOLE <small>ORBITAL OPS · CONSOLE 04</small></h1>
+  </div>
+  <div class="spacer"></div>
+  <div class="mode"><span class="dot"></span><b>ORBIT MODE</b><span>O-04 LIVE</span></div>
+  <div class="clockbox">
+    <div class="clock"><div class="t" id="clock">--:--:--</div><div class="d" id="dateline">— — —</div></div>
+    <div class="utc">UTC <b id="utcClock">--:--:--Z</b><br>T+ 0.000d</div>
+  </div>
+</header>
+
+<!-- ============ MARKETS STRIP ============ -->
+<div class="strip" id="markets"></div>
+
+<!-- ============ THREE-COLUMN CONSOLE ============ -->
+<main class="wrap">
+
+  <!-- ===== LEFT ===== -->
+  <div class="col">
+    <section class="panel"><i class="corners"></i>
+      <div class="section-label"><span class="kicker"><b>EVENT</b> STACK</span><span class="rule"></span></div>
+      <div style="height:10px"></div>
+      <div class="ev-row" data-map="e1"><span class="sdot red"></span>
+        <div><div class="mini">SEV-3 · CONFLICT</div><div class="h">Black Sea — GPS spoofing spike</div>
+        <div class="p">Jamming pattern over Odessa corridor; impacts USO / wheat.</div><span class="badge hot">GLIMMER · HIGH</span></div>
+        <div class="right-meta">08:12Z<br>UTC</div></div>
+      <div class="ev-row" data-map="e5"><span class="sdot amber"></span>
+        <div><div class="mini">SEV-2 · STORM</div><div class="h">Taiwan Strait — typhoon wall</div>
+        <div class="p">Wind field 145 kt; shipping lanes rerouted. Semis watch.</div></div>
+        <div class="right-meta">07:58Z<br>UTC</div></div>
+      <div class="ev-row" data-map="e3"><span class="sdot amber"></span>
+        <div><div class="mini">SEV-2 · QUAKE</div><div class="h">Sulawesi M6.1 — deep focus</div>
+        <div class="p">No tsunami signal. Nickel supply watch arm.</div></div>
+        <div class="right-meta">06:41Z<br>UTC</div></div>
+      <div class="ev-row" data-map="e2"><span class="sdot cyan"></span>
+        <div><div class="mini">SAT FEED</div><div class="h">GEO relay K-7 — 412.2 MHz</div>
+        <div class="p">Downlink nominal. Tasking window open in 14 min.</div></div>
+        <div class="right-meta">06:02Z<br>UTC</div></div>
+      <div class="ev-row" data-map="e4"><span class="sdot grn"></span>
+        <div><div class="mini">MARITIME</div><div class="h">Baltic tanker — escort window</div>
+        <div class="p">Pipeline fee futures cooling; discounted read.</div></div>
+        <div class="right-meta">05:17Z<br>UTC</div></div>
+    </section>
+
+    <section class="panel"><i class="corners"></i>
+      <div class="phead"><h2>HORIZON PROFILES</h2><span class="tag">TRACKING <b>×5</b></span></div>
+      <div class="pr-row"><div class="avatar">W</div><div><div class="mini">WAR DESK</div><div class="h">@orwell_fox</div>
+        <div class="p">Sat-intel threads, 14 live. SEV-3 08:12Z.</div></div><span class="foll">FOLLOW</span></div>
+      <div class="pr-row"><div class="avatar">M</div><div><div class="mini">MARKETS DESK</div><div class="h">@foxhole_markets</div>
+        <div class="p">Cross-asset flows; 92 posts today.</div></div><span class="foll">FOLLOW</span></div>
+      <div class="pr-row"><div class="avatar">T</div><div><div class="mini">TECH DESK</div><div class="h">@chips_and_orbits</div>
+        <div class="p">Semi-capex tracker, 8 satellite feeds.</div></div><span class="foll">FOLLOW</span></div>
+      <div class="pr-row"><div class="avatar">C</div><div><div class="mini">CINEMA DESK</div><div class="h">@foxhole_cinema</div>
+        <div class="p">Trailer drop calendar, 27 awaiting.</div></div><span class="foll">FOLLOW</span></div>
+      <div class="pr-row"><div class="avatar">₿</div><div><div class="mini">CRYPTO DESK</div><div class="h">@onchain_owl</div>
+        <div class="p">Mempool + ETF flow; BTC net +$412M/wk.</div></div><span class="foll">FOLLOW</span></div>
+    </section>
+  </div>
+
+  <!-- ===== CENTER ===== -->
+  <div class="col">
+    <section class="map" aria-label="Live world events map">
+      <div class="dots"></div><div class="grid-lines"></div><div class="scanline"></div>
+      <div class="route" style="left:58%;top:62%;width:22%;transform:rotate(-18deg)"></div>
+      <div class="route" style="left:20%;top:44%;width:26%;transform:rotate(6deg)"></div>
+      <div class="route" style="left:44%;top:40%;width:18%;transform:rotate(28deg)"></div>
+      <div class="marker" id="e1" style="left:31%;top:34%;--m:#F87171" data-label="BLACK SEA · SEV-3 · GPS JAMMING" data-desc="Black Sea conflict signal — jammer wall near Odessa corridor"><div class="core"></div><div class="lbl">BLACK SEA · SEV-3</div></div>
+      <div class="marker" id="e2" style="left:20%;top:48%;--m:#67E8F9" data-label="SAT RELAY K-7 · NOMINAL" data-desc="Satellite uplink relay K-7 — nominal downlink, tasking window in 14 min"><div class="core"></div><div class="lbl">SAT K-7</div></div>
+      <div class="marker" id="e3" style="left:71%;top:60%;--m:#FCD34D" data-label="SULAWESI · M6.1 · DEEP FOCUS" data-desc="Quake signal — Sulawesi M6.1 deep focus, nickel watch"><div class="core"></div><div class="lbl">SULAWESI M6.1</div></div>
+      <div class="marker" id="e4" style="left:50%;top:32%;--m:#6EE7B7" data-label="BALTIC · TANKER ESCORT" data-desc="Maritime signal — Baltic tanker escort window, pipeline fees cooling"><div class="core"></div><div class="lbl">BALTIC TANKER</div></div>
+      <div class="marker" id="e5" style="left:80%;top:42%;--m:#FCD34D" data-label="TAIWAN STRAIT · TYPHOON 145KT" data-desc="Storm signal — Taiwan Strait typhoon wall, lanes rerouted"><div class="core"></div><div class="lbl">TAIWAN STORM</div></div>
+      <div class="marker" id="e6" style="left:60%;top:70%;--m:#67E8F9" data-label="SHIP LANE · JKT–SGP" data-desc="Live ship lanes — Jakarta to Singapore corridor under watch"><div class="core"></div><div class="lbl">SHIP LANE</div></div>
+      <div class="map-tag"><span class="t1"><span class="sdot red" style="margin:0"></span> LIVE WORLD EVENTS</span>
+        <span class="t2">GRID · 10° · <b style="color:var(--cyan)">ORBIT TRACK</b></span></div>
+      <div class="map-readout"><span id="readout">SAT-LINK · TRACKING <b>6</b> EVENTS</span><span id="coords">31.95° N · 35.93° E</span></div>
+    </section>
+
+    <section class="panel"><i class="corners"></i>
+      <div class="log-head"><h2>SIGNAL LOG</h2><span class="mono">FLIGHT RECORDER · AUTO-TRIAGE</span>
+        <span class="rule"></span></div>
+      <div id="siglog"></div>
+    </section>
+  </div>
+
+  <!-- ===== RIGHT ===== -->
+  <div class="col">
+    <section class="panel"><i class="corners"></i>
+      <div class="phead"><h2>LIVE NOW</h2><span class="tag">14 CHANNELS</span></div>
+      <div class="li-row"><span class="sdot red"></span><div><div class="mini">TWITCH · 12.4K</div><div class="h">Blackout coverage: convoy OP</div><div class="p">Orwell_fox · analysis thread live</div></div></div>
+      <div class="li-row"><span class="live-chip" style="color:#FF6B6B"><i></i>LIVE</span><div style="margin-left:2px"><div class="mini" style="color:#FF6B6B">KICK · 3.1K</div><div class="h">Chips + orbits — live bench</div><div class="p">Chips_and_orbits · semi-capex deep dive</div></div></div>
+      <div class="li-row"><span class="sdot cyan"></span><div><div class="mini">YOUTUBE · 8.7K</div><div class="h">Onchain owl — mempool decoded</div><div class="p">Onchain_owl · ETF flow breakdown</div></div></div>
+      <div class="li-row"><span class="sdot cyan"></span><div><div class="mini">RUMBLE · 1.9K</div><div class="h">Foxhole Cinema — trailer talk</div><div class="p">Foxhole_cinema · premiere calendar Q1</div></div></div>
+    </section>
+
+    <section class="panel"><i class="corners"></i>
+      <div class="phead"><h2>X FEED</h2><span class="tag">REALTIME</span></div>
+      <div class="li-row"><div class="xava">O</div><div><div class="handle">@orwell_fox</div><div class="p" style="margin-top:2px">Black Sea jamming just tripled footprint. USO into the gap.</div><div class="stats"><b>1.2K</b> reposts · <b>4.8K</b> likes</div></div></div>
+      <div class="li-row"><div class="xava">₿</div><div><div class="handle">@onchain_owl</div><div class="p" style="margin-top:2px">Mempool congestion clearing 3× faster. BTC ETF net +$412M this week.</div><div class="stats"><b>842</b> reposts · <b>2.1K</b> likes</div></div></div>
+      <div class="li-row"><div class="xava">T</div><div><div class="handle">@chips_and_orbits</div><div class="p" style="margin-top:2px">TSM capex guide raised 6%. Storm lane watch on semi queue.</div><div class="stats"><b>561</b> reposts · <b>1.9K</b> likes</div></div></div>
+    </section>
+
+    <section class="panel"><i class="corners"></i>
+      <div class="phead"><h2>CINEMA · TRENDING</h2><span class="tag">TRACKING <b>×27</b></span></div>
+      <div class="li-row"><div class="rank">#1</div><div class="cine-poster">🎬</div><div><div class="h">Interstellar 2 — official trailer</div><div class="p">1.4M views · <span class="trend-up">▲</span> 12%</div><div class="bar"><i style="width:92%"></i></div></div></div>
+      <div class="li-row"><div class="rank">#2</div><div class="cine-poster">🎞️</div><div><div class="h">Silo S2 — episode 4 clip</div><div class="p">892K views · <span class="trend-up">▲</span> 8%</div><div class="bar"><i style="width:74%"></i></div></div></div>
+      <div class="li-row"><div class="rank">#3</div><div class="cine-poster">🛰️</div><div><div class="h">For All Mankind — S4 short</div><div class="p">511K views · <span class="trend-dn">▼</span> 3%</div><div class="bar"><i style="width:58%"></i></div></div></div>
+    </section>
+  </div>
+</main>
+
+<footer><span>FOXHOLE · ORBITAL CONSOLE 04</span><span>LINK: STABLE · MODE: <b style="color:var(--cyan)">O-04 LIVE</b></span></footer>
+
+<script>
+const $=s=>document.querySelector(s);
+
+/* --- UTC clock --- */
+const days=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+function pad(n){return String(n).padStart(2,'0')}
+function tick(){
+  const d=new Date();
+  const hh=pad(d.getUTCHours()),mm=pad(d.getUTCMinutes()),ss=pad(d.getUTCSeconds());
+  const t=`${hh}:${mm}:${ss}`;
+  $('#clock').textContent=t;
+  $('#utcClock').textContent=t+'Z';
+  $('#dateline').textContent=`${days[d.getUTCDay()]} · ${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}`;
+}
+setInterval(tick,1000);tick();
+
+/* --- Markets strip --- */
+const tickers=[
+ ['SPY','$582.14','+0.84%',1],['BTC','$97,420','-1.23%',0],['USO','$71.86','+2.41%',1],
+ ['TSM','$212.08','+1.05%',1],['GLD','$2,642','+0.42%',1],['VIX','14.21','-3.11%',0],
+ ['EUR/USD','1.0842','-0.18%',0],['NKE','$146.30','+0.62%',1],['XOM','$118.44','-0.37%',0],
+ ['SMH','$268.10','+1.88%',1]
+];
+$('#markets').innerHTML=tickers.map(([s,v,c,up])=>
+ `<div class="tcell"><div class="k">${s}</div><div class="v">${v}</div><div class="c ${up?'up':'dn'}">${up?'▲':'▼'} ${c}</div></div>`
+).join('');
+
+/* --- Signal log --- */
+const signals=[
+ {t:'08:12:44',asset:'USO',verdict:'BUY',conf:91,map:'e1',why:'Black Sea jamming tripled → shipping premium into USO'},
+ {t:'07:58:10',asset:'TSM',verdict:'WATCH',conf:64,map:'e5',why:'Taiwan typhoon 145kt — lane reroute, semi queue risk'},
+ {t:'07:31:22',asset:'BTC',verdict:'HOLD',conf:72,map:'e2',why:'ETF inflows +$412M/wk vs mempool clearing faster'},
+ {t:'06:41:03',asset:'NICKEL',verdict:'WATCH',conf:58,map:'e3',why:'Sulawesi M6.1 deep focus — supply arm, no tsunami signal'},
+ {t:'06:02:47',asset:'SPY',verdict:'BUY',conf:81,map:'e4',why:'Baltic tanker escort window — energy fee discount fading'},
+ {t:'05:17:29',asset:'GLD',verdict:'BUY',conf:88,map:'e1',why:'Conflict SEV-3 correlation — safe-haven bid accelerating'}
+];
+$('#siglog').innerHTML=signals.map((s,i)=>`
+ <div class="sig-row" data-map="${s.map}" data-i="${i}">
+   <div class="flt">${s.t}<br><b>FLT-${String(i+1).padStart(3,'0')}</b></div>
+   <div style="flex:1;min-width:0">
+     <div style="display:flex;align-items:center;gap:10px">
+       <span class="sig-asset">${s.asset}</span><span class="verdict ${s.verdict==='HOLD'?'WATCH':s.verdict}">${s.verdict}</span>
+       <div class="conf ${s.conf>=80?'med':s.conf>=65?'med':'low'}"><span class="num">${s.conf}%</span><div class="bar"><i style="width:${s.conf}%"></i></div></div>
+     </div>
+     <div class="why"><b>WHY:</b> ${s.why}</div>
+   </div>
+ </div>`).join('');
+
+/* --- Signal <-> map linking --- */
+const ro=$('#readout');
+function flashMarker(id){
+  document.querySelectorAll('.marker').forEach(m=>m.classList.remove('flash'));
+  const m=document.getElementById(id);
+  if(!m)return;
+  m.classList.add('flash');
+  ro.innerHTML=`TRACK · <b>${m.dataset.label}</b> — ${m.dataset.desc}`;
+  const co=['20.07° N','77.37° E'];
+  $('#coords').textContent=co[0]+' · '+co[1];
+  setTimeout(()=>m.classList.remove('flash'),3200);
+}
+document.addEventListener('click',e=>{
+  const row=e.target.closest('.sig-row,.ev-row,.marker');
+  if(!row)return;
+  const id=row.dataset.map||row.id;
+  document.querySelectorAll('.sig-row').forEach(r=>r.classList.toggle('active',r===row));
+  flashMarker(id);
+});
+/* auto-cycle flash */
+let ci=0;const ids=['e1','e2','e3','e4','e5','e6'];
+setInterval(()=>{flashMarker(ids[ci++%ids.length])},3400);
+</script>
+</body>
+</html>

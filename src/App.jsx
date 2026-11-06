@@ -10,7 +10,6 @@ import { PROFILES, matchProfile } from './lib/profiles.js';
 import { satrecOf, satPosition } from './lib/sats.js';
 
 const Globe3D = lazy(() => import('./components/Globe3D.jsx'));
-const Chain = lazy(() => import('./components/Chain.jsx'));
 const Lines = lazy(() => import('./components/Lines.jsx'));
 const Setup = lazy(() => import('./components/Setup.jsx'));
 const TvPanel = lazy(() => import('./components/TvPanel.jsx'));
@@ -18,6 +17,8 @@ const CinemaRail = lazy(() => import('./components/CinemaRail.jsx'));
 const HorizonPanel = lazy(() => import('./components/HorizonPanel.jsx'));
 const LiveWatchPanel = lazy(() => import('./components/LiveWatchPanel.jsx'));
 const XFeedPanel = lazy(() => import('./components/XFeedPanel.jsx'));
+const SignalKanban = lazy(() => import('./components/SignalKanban.jsx'));
+const MarketsChart = lazy(() => import('./components/MarketsChart.jsx'));
 
 const PanelsFallback = () => <div className="grid place-items-center py-16 text-sm text-mute">Loading panel…</div>;
 const GlobeFallback = () => <div className="grid place-items-center py-16 text-sm text-mute">Loading globe…</div>;
@@ -204,11 +205,11 @@ export default function App() {
       <TopBar state={state} online={online} onSetup={() => setSetupOpen(true)} tvOpen={tvOpen} onTv={() => setTvOpen((v) => !v)} />
       <BestSignals signals={state.signals} top={state.top} ai={state.ai} onPick={select} onSetup={() => setSetupOpen(true)} />
 
-      <main className="grid min-h-0 grid-cols-[290px_minmax(0,1fr)_370px]">
-        <div className="flex min-h-0 flex-col border-r border-line">
-          <div className="flex flex-wrap items-center gap-1 border-b border-line px-2 py-1.5">
+      <main className="grid min-h-0 grid-cols-[340px_minmax(0,1fr)_360px]">
+        <div className="flex min-h-0 flex-col border-r-2 border-black">
+          <div className="flex flex-wrap items-center gap-1 border-b-2 border-black px-2 py-1.5">
             {[['signals', 'Signals'], ['cinema', 'Cinema'], ['horizon', 'Horizon'], ['live', `Live${liveCount > 0 ? ` ${liveCount}` : ''}`], ['x', 'X']].map(([id, label]) => (
-              <button key={id} onClick={() => setRailTab(id)} className={`rounded-full border px-2.5 py-1 text-xs ${railTab === id ? 'border-accent/60 bg-accent/10 text-ink' : 'border-line text-mute hover:text-ink'}`}>{label}</button>
+              <button key={id} onClick={() => setRailTab(id)} className="sb-chip px-2.5 py-1 text-xs" style={{ background: railTab === id ? '#111' : '#fff', color: railTab === id ? '#fff' : '#111' }}>{label}</button>
             ))}
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto">
@@ -222,18 +223,18 @@ export default function App() {
           </div>
         </div>
 
-        <section className="relative min-h-0 overflow-hidden" style={{ background: 'radial-gradient(ellipse at 50% 45%, #16201C 0%, #0E1412 70%)' }}>
+        <section className="relative min-h-0 overflow-hidden" style={{ background: 'radial-gradient(ellipse at 50% 45%, #FFFDF5 0%, #FAF6EF 70%)' }}>
           <Suspense fallback={GlobeFallback}>
             <Globe3D ref={globe} events={visible.filter((e) => mapLayerOn(e, mapLayers))} context={visibleCtx} selectedId={selectedId} onSelect={(id) => (id ? select(id) : setSelectedId(null))} aircraft={mapLayers.military ? live.aircraft : []} ships={mapLayers.ships ? live.ships : []} shipNames={live.shipNames} sats={mapLayers.sats ? sats : []} pulse={live.pulse} />
           </Suspense>
           <div className="absolute left-4 top-3 flex flex-col gap-1.5 pr-[220px]">
             <div className="flex flex-wrap items-center gap-2 text-xs text-mute">
               {PROFILES.map((p) => (
-                <button key={p.id} data-profile={p.id} onClick={() => applyProfile(p.id)} aria-pressed={activeProfile === p.id} className={`rounded-full border px-3 py-1 ${activeProfile === p.id ? 'border-accent/60 bg-accent/10 text-ink' : 'border-line text-mute hover:text-ink'}`}>{p.label}</button>
+                <button key={p.id} data-profile={p.id} onClick={() => applyProfile(p.id)} aria-pressed={activeProfile === p.id} className="sb-chip px-3 py-1" style={{ background: activeProfile === p.id ? '#111' : '#fff', color: activeProfile === p.id ? '#fff' : '#111' }}>{p.label}</button>
               ))}
               {[['quakes', 'Quakes'], ['storms', 'Storms & Fires'], ['military', 'Military Aircraft'], ['ships', 'Ships'], ['sats', 'Satellites'], ['feed', 'Feed']].map(([k, label]) => (
-                <button key={k} data-layer-switch={k} onClick={() => toggleMap(k)} aria-pressed={mapLayers[k]} className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 ${mapLayers[k] ? 'border-accent/60 bg-accent/10 text-ink' : 'border-line text-mute hover:text-ink'}`}>
-                  <span className={`h-1.5 w-1.5 rounded-full ${mapLayers[k] ? 'bg-accent' : 'bg-mute'}`} /> {label}
+                <button key={k} data-layer-switch={k} onClick={() => toggleMap(k)} aria-pressed={mapLayers[k]} className="sb-chip flex items-center gap-1.5 px-2.5 py-1" style={{ background: mapLayers[k] ? '#FFD23F' : '#fff', color: '#111' }}>
+                  <span className={`h-1.5 w-1.5 rounded-full ${mapLayers[k] ? 'bg-black' : 'bg-mute'}`} /> {label}
                 </button>
               ))}
             </div>
@@ -250,7 +251,7 @@ export default function App() {
           </label>
           <div className="absolute bottom-3 left-4 flex gap-1.5">
             {PRESETS.map((p) => (
-              <button key={p.label} onClick={() => globe.current?.flyTo(p.lat, p.lng, p.alt)} className="rounded-full border border-line bg-panel/80 px-3 py-1 text-xs text-mute backdrop-blur hover:border-accent/60 hover:text-ink">{p.label}</button>
+              <button key={p.label} onClick={() => globe.current?.flyTo(p.lat, p.lng, p.alt)} className="sb-chip px-3 py-1 text-xs text-ink">{p.label}</button>
             ))}
           </div>
           {mapLayers.feed && (
@@ -269,9 +270,18 @@ export default function App() {
           </Suspense>
         </section>
 
-        <Suspense fallback={PanelsFallback}>
-          <Chain event={selected} signals={selectedSignals} trad={state.trad} crypto={state.crypto} now={state.now} />
-        </Suspense>
+        <div className="flex min-h-0 flex-col border-l-2 border-black">
+          <div className="min-h-0 flex-[1.4]">
+            <Suspense fallback={PanelsFallback}>
+              <SignalKanban signals={state.signals} onPick={select} selectedId={selectedId} />
+            </Suspense>
+          </div>
+          <div className="min-h-0 flex-1 border-t-2 border-black p-2">
+            <Suspense fallback={PanelsFallback}>
+              <MarketsChart signals={state.signals} trad={state.trad} crypto={state.crypto} />
+            </Suspense>
+          </div>
+        </div>
       </main>
 
       <AssetStrip trad={state.trad} crypto={state.crypto} signals={state.signals} selectedSignals={selectedSignals} />

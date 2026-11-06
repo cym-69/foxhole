@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FOXHOLE WORLD WIRE — Intelligence Board</title>
+<style>
+:root{
+  --paper:#0a0a0b;
+  --ink:#e8e4d8;
+  --ink-dim:#9c9688;
+  --ink-faint:#6b675c;
+  --rule:#2a2925;
+  --rule-soft:#1c1b18;
+  --red:#e83a2a;
+  --red-dim:#8c2f22;
+  --green:#5fa46a;
+  --amber:#d9a441;
+  --mono:'SF Mono',ui-monospace,'Cascadia Mono',Consolas,monospace;
+  --serif:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;
+  --serif-d:'Didot','Bodoni MT','Playfair Display',Georgia,serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--paper);color:var(--ink);height:100%}
+body{font-family:var(--serif);overflow-x:hidden}
+::selection{background:var(--red);color:#fff}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#33322c;border-radius:2px}
+::-webkit-scrollbar-thumb:hover{background:var(--red-dim)}
+
+/* ---------- GRAIN ---------- */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");}
+
+/* ---------- MASTHEAD ---------- */
+.masthead{border-bottom:3px double var(--rule);padding:14px 28px 10px;position:relative}
+.masthead-top{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:9px;letter-spacing:.22em;color:var(--ink-faint);text-transform:uppercase}
+.masthead h1{font-family:var(--serif-d);font-size:clamp(28px,4.2vw,52px);font-weight:900;letter-spacing:.02em;line-height:1;text-align:center;margin:6px 0 2px}
+.masthead h1 .red{color:var(--red)}
+.masthead-sub{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--ink-dim);text-transform:uppercase;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:6px 0;margin-top:8px;flex-wrap:wrap;gap:6px}
+.live-dot{display:inline-block;width:7px;height:7px;background:var(--red);border-radius:50%;animation:pulse 1.6s infinite;vertical-align:middle;margin-right:5px}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(232,58,42,.5)}50%{opacity:.6;box-shadow:0 0 0 5px rgba(232,58,42,0)}}
+#clock{color:var(--ink);font-size:12px;letter-spacing:.08em}
+.edition{color:var(--red)}
+
+/* ---------- TELEGRAPH TICKER ---------- */
+.ticker-wrap{border-bottom:1px solid var(--rule);display:flex;align-items:center;overflow:hidden;background:#0d0d0e;position:relative}
+.ticker-label{font-family:var(--mono);font-size:9px;letter-spacing:.25em;color:#000;background:var(--red);padding:5px 12px;white-space:nowrap;z-index:2;font-weight:700;flex-shrink:0}
+.ticker-track{display:flex;white-space:nowrap;animation:tick 70s linear infinite;padding:5px 0}
+.ticker-wrap:hover .ticker-track{animation-play-state:paused}
+@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.ticker-item{font-family:var(--mono);font-size:11px;color:var(--ink-dim);margin-right:40px;letter-spacing:.05em}
+.ticker-item b{color:var(--ink)}
+.ticker-item .up{color:var(--green)}
+.ticker-item .dn{color:var(--red)}
+
+/* ---------- MAIN GRID ---------- */
+.main-grid{display:grid;grid-template-columns:320px 1fr 340px;gap:0;min-height:520px}
+@media(max-width:1100px){.main-grid{grid-template-columns:1fr;grid-template-rows:auto auto auto}}
+.pane{border-right:1px solid var(--rule);display:flex;flex-direction:column;overflow:hidden}
+.pane:last-child{border-right:none}
+.pane-head{padding:10px 16px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-shrink:0}
+.pane-title{font-family:var(--serif-d);font-size:15px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.pane-title span{color:var(--red)}
+
+/* ---------- LEFT — EDITORIAL CASCADE ---------- */
+.wire-feed{flex:1;overflow-y:auto;padding:0 16px;min-height:0}
+.wire-item{border-bottom:1px solid var(--rule-soft);padding:11px 0 10px;animation:itemIn .5s ease forwards;transition:opacity 1s ease,filter 1s ease}
+@keyframes itemIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.wire-item.expired{opacity:.3;filter:grayscale(1)}
+.wire-item.fading{opacity:.55}
+.wire-headline{font-family:var(--serif);font-size:16px;font-weight:700;line-height:1.28;cursor:pointer}
+.wire-headline:hover{color:var(--red)}
+.wire-tweet{font-style:italic;font-size:14.5px;line-height:1.42;color:var(--ink);margin:3px 0}
+.wire-tweet .handle{font-family:var(--mono);font-style:normal;font-size:10px;color:var(--red);letter-spacing:.05em}
+.wire-meta{display:flex;justify-content:space-between;align-items:center;margin-top:5px}
+.wire-src{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+.wire-time{font-family:var(--mono);font-size:10px;color:var(--ink-dim);letter-spacing:.05em}
+.wire-time .fresh{color:var(--red);font-weight:700}
+.wire-body{font-size:13px;line-height:1.5;color:var(--ink-dim);margin-top:4px}
+.wire-impact{font-family:var(--mono);font-size:8px;letter-spacing:.18em;text-transform:uppercase;padding:2px 6px;border:1px solid;margin-left:8px}
+.imp-high{color:var(--red);border-color:var(--red-dim)}
+.imp-med{color:var(--amber);border-color:#5a4820}
+.imp-low{color:var(--green);border-color:#2d4a32}
+.wire-controls{display:flex;gap:8px;padding:10px 16px;border-top:1px solid var(--rule);flex-shrink:0;align-items:center}
+.btn-freeze{font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;background:none;border:1px solid var(--ink-dim);color:var(--ink);padding:7px 14px;cursor:pointer;transition:all .2s;flex:1}
+.btn-freeze:hover{border-color:var(--red);color:var(--red)}
+.btn-freeze.frozen{background:var(--red);border-color:var(--red);color:#fff}
+.wire-count{font-family:var(--mono);font-size:10px;color:var(--ink-faint);letter-spacing:.1em}
+.feeding-badge{font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--green);display:flex;align-items:center;gap:4px}
+.feeding-badge::before{content:'';width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+
+/* ---------- CENTER — GLOBE ---------- */
+.globe-pane{position:relative;background:radial-gradient(ellipse at center,#111113 0%,#090909 70%);min-height:520px;display:flex;flex-direction:column}
+.globe-head{padding:10px 16px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.globe-canvas-wrap{flex:1;position:relative;display:flex;align-items:center;justify-content:center;min-height:0}
+#globe{cursor:grab;display:block}
+#globe:active{cursor:grabbing}
+.globe-stats{display:flex;gap:0;border-top:1px solid var(--rule);flex-shrink:0}
+.gs{flex:1;text-align:center;padding:8px 4px;border-right:1px solid var(--rule-soft)}
+.gs:last-child{border-right:none}
+.gs-v{font-family:var(--mono);font-size:16px;color:var(--ink);font-weight:700}
+.gs-l{font-family:var(--mono);font-size:8px;letter-spacing:.2em;color:var(--ink-faint);text-transform:uppercase;margin-top:1px}
+.gs-v .r{color:var(--red)}
+.detail-card{position:absolute;bottom:58px;left:16px;right:16px;background:rgba(10,10,11,.96);border:1px solid var(--red-dim);padding:14px 16px;z-index:10;animation:cardIn .35s ease;display:none;backdrop-filter:blur(8px)}
+.detail-card.open{display:block}
+@keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.dc-head{display:flex;justify-content:space-between;align-items:flex-start}
+.dc-title{font-family:var(--serif-d);font-size:18px;font-weight:700;line-height:1.25}
+.dc-title .t{font-family:var(--mono);font-size:9px;color:var(--red);letter-spacing:.2em;text-transform:uppercase;display:block;margin-bottom:3px}
+.dc-close{background:none;border:none;color:var(--ink-dim);font-size:18px;cursor:pointer;line-height:1;padding:2px 6px}
+.dc-close:hover{color:var(--red)}
+.dc-meta{display:flex;gap:14px;font-family:var(--mono);font-size:10px;color:var(--ink-dim);margin:8px 0;letter-spacing:.06em;flex-wrap:wrap}
+.dc-body{font-size:13.5px;line-height:1.55;color:var(--ink)}
+.dc-actions{display:flex;gap:8px;margin-top:10px}
+.dc-btn{font-family:var(--mono);font-size:9px;letter-spacing:.15em;text-transform:uppercase;padding:6px 12px;cursor:pointer;border:1px solid var(--rule);background:none;color:var(--ink-dim);transition:all .2s}
+.dc-btn:hover{border-color:var(--ink);color:var(--ink)}
+.dc-btn.red{border-color:var(--red-dim);color:var(--red)}
+.dc-btn.red:hover{background:var(--red);color:#fff}
+.orbit-tag{font-family:var(--mono);font-size:8px;letter-spacing:.2em;color:var(--ink-faint);text-transform:uppercase;text-align:center;padding:4px;position:absolute;top:46px;left:0;right:0;pointer-events:none}
+.rotate-hint{font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--ink-faint);text-transform:uppercase;text-align:center;padding:5px;pointer-events:none}
+.fly-line{stroke:var(--red);stroke-width:1;stroke-dasharray:4 4;fill:none;opacity:.5;animation:flyDash 1.2s linear infinite}
+@keyframes flyDash{to{stroke-dashoffset:-8}}
+
+/* ---------- RIGHT — KANBAN ---------- */
+.kanban{flex:1;display:flex;gap:0;overflow-x:auto;min-height:0}
+.kcol{flex:1;min-width:100px;border-right:1px solid var(--rule-soft);display:flex;flex-direction:column}
+.kcol:last-child{border-right:none}
+.kcol.drag-over{background:rgba(232,58,42,.06)}
+.kcol-head{padding:8px 10px;border-bottom:2px solid;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;text-align:center;flex-shrink:0}
+.kcol-watch .kcol-head{border-color:var(--amber);color:var(--amber)}
+.kcol-buy .kcol-head{border-color:var(--green);color:var(--green)}
+.kcol-sell .kcol-head{border-color:var(--red);color:var(--red)}
+.kcol-count{font-size:9px;opacity:.6;font-weight:400;letter-spacing:.05em}
+.kcol-body{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:8px;min-height:100px}
+.kcard{background:#141314;border:1px solid var(--rule);border-left:3px solid,var(--kc,#333);padding:10px 11px;cursor:grab;transition:border-color .2s,transform .15s,box-shadow .15s;position:relative}
+.kcard:hover{border-color:#4a493f;transform:translateY(-1px);box-shadow:0 4px 18px rgba(0,0,0,.5)}
+.kcard:active{cursor:grabbing}
+.kcard.dragging{opacity:.4;transform:scale(.97)}
+.kcard.watch{--kc:var(--amber)}
+.kcard.buy{--kc:var(--green)}
+.kcard.sell{--kc:var(--red)}
+.kcard-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px}
+.kcard-asset{font-family:var(--serif-d);font-size:15px;font-weight:700;line-height:1.15}
+.kcard-ticker{font-family:var(--mono);font-size:9px;color:var(--ink-faint);letter-spacing:.12em}
+.kcard-price{font-family:var(--mono);font-size:13px;color:var(--ink);text-align:right}
+.kcard-chg{font-family:var(--mono);font-size:10px;text-align:right}
+.chg-up{color:var(--green)}
+.chg-dn{color:var(--red)}
+.kcard-why{font-size:12px;line-height:1.45;color:var(--ink-dim);margin:5px 0 8px}
+.kcard-foot{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.conf-wrap{flex:1}
+.conf-label{font-family:var(--mono);font-size:8px;letter-spacing:.18em;color:var(--ink-faint);text-transform:uppercase;display:flex;justify-content:space-between}
+.conf-bar{height:3px;background:#22211d;margin-top:3px;overflow:hidden}
+.conf-fill{height:100%;transition:width .8s ease}
+.verdict{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:.15em;padding:3px 8px;text-transform:uppercase;white-space:nowrap}
+.v-watch{background:rgba(217,164,65,.12);color:var(--amber);border:1px solid rgba(217,164,65,.35)}
+.v-buy{background:rgba(95,164,106,.12);color:var(--green);border:1px solid rgba(95,164,106,.35)}
+.v-sell{background:rgba(232,58,42,.12);color:var(--red);border:1px solid rgba(232,58,42,.35)}
+.spark{width:100%;height:24px;margin-top:6px}
+.drop-hint{font-family:var(--mono);font-size:8px;color:var(--ink-faint);letter-spacing:.12em;text-align:center;padding:6px 2px;opacity:.5}
+.kcard-remove{position:absolute;top:6px;right:6px;background:none;border:none;color:var(--ink-faint);font-size:14px;cursor:pointer;opacity:0;transition:opacity .2s;line-height:1}
+.kcard:hover .kcard-remove{opacity:1}
+.kcard-remove:hover{color:var(--red)}
+
+/* ---------- BOTTOM STRIP ---------- */
+.bottom-strip{border-top:1px solid var(--rule);display:grid;grid-template-columns:1fr 260px 240px 200px;min-height:180px}
+@media(max-width:1100px){.bottom-strip{grid-template-columns:1fr 1fr}}
+.bpane{border-right:1px solid var(--rule);display:flex;flex-direction:column;overflow:hidden}
+.bpane:last-child{border-right:none}
+.bpane-head{padding:8px 14px;border-bottom:1px solid var(--rule-soft);display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.bpane-title{font-family:var(--serif-d);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.markets-table{width:100%;border-collapse:collapse;overflow-y:auto}
+.markets-table th{font-family:var(--mono);font-size:8px;letter-spacing:.2em;color:var(--ink-faint);text-transform:uppercase;text-align:left;padding:6px 14px 4px;border-bottom:1px solid var(--rule-soft);position:sticky;top:0;background:var(--paper)}
+.markets-table td{padding:7px 14px;border-bottom:1px solid var(--rule-soft);font-family:var(--mono);font-size:11px;vertical-align:middle}
+.markets-table tr:hover td{background:#111110}
+.mk-asset{font-family:var(--serif);font-size:13px;font-weight:700}
+.mk-price{color:var(--ink)}
+.mk-chg{text-align:right}
+.live-item{padding:9px 14px;border-bottom:1px solid var(--rule-soft);display:flex;gap:10px;align-items:flex-start;animation:itemIn .5s ease}
+.live-badge{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:.12em;color:#fff;background:var(--red);padding:2px 6px;white-space:nowrap;flex-shrink:0;margin-top:2px}
+.live-txt{font-size:13px;line-height:1.4;color:var(--ink)}
+.live-sub{font-family:var(--mono);font-size:9px;color:var(--ink-faint);letter-spacing:.08em;margin-top:2px}
+.cinema-item{padding:9px 14px;border-bottom:1px solid var(--rule-soft);display:flex;gap:10px;align-items:center}
+.cinema-thumb{width:52px;height:34px;background:#1a1a18;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;border:1px solid var(--rule);position:relative;overflow:hidden}
+.cinema-thumb::after{content:'▶';font-size:10px;color:var(--ink-dim)}
+.cinema-thumb:hover::after{color:var(--red)}
+.cinema-dur{position:absolute;bottom:2px;right:3px;font-family:var(--mono);font-size:8px;background:rgba(0,0,0,.85);color:var(--ink);padding:1px 3px}
+.cinema-title{font-family:var(--serif);font-size:12.5px;font-weight:700;line-height:1.3}
+.cinema-meta{font-family:var(--mono);font-size:9px;color:var(--ink-faint);letter-spacing:.06em;margin-top:2px}
+.horizon{padding:6px 14px;overflow-y:auto}
+.hchip{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--rule-soft);align-items:baseline}
+.hchip-date{font-family:var(--mono);font-size:9px;color:var(--red);white-space:nowrap;font-weight:700;letter-spacing:.08em;min-width:52px}
+.hchip-txt{font-size:12.5px;line-height:1.4;color:var(--ink-dim)}
+.xfeed-note{padding:10px 14px;border-top:1px solid var(--rule);background:#0c0c0d}
+.xfeed-note p{font-size:11.5px;color:var(--ink-faint);line-height:1.5;font-style:italic}
+.xfeed-note .mono-tag{font-family:var(--mono);font-size:8px;letter-spacing:.2em;color:var(--red);font-style:normal;text-transform:uppercase;display:block;margin-bottom:4px}
+.scroll-area{flex:1;overflow-y:auto;min-height:0}
+</style>
+</head>
+<body>
+
+<!-- ============ MASTHEAD ============ -->
+<header class="masthead">
+  <div class="masthead-top">
+    <span>Est. MMXXIV — Independent Intelligence</span>
+    <span>Vol. VII · No. <span id="editionNum">311</span></span>
+    <span>Price: Free to the Desperate</span>
+  </div>
+  <h1>FOXHOLE <span class="red">WORLD WIRE</span></h1>
+  <div class="masthead-sub">
+    <span><span class="live-dot"></span> LIVE WIRE — ALL SOURCES SYNCED</span>
+    <span id="clock">—:—:—</span>
+    <span>EDITION <span class="edition" id="editionNum2">311</span></span>
+    <span>MARKETS OPEN · GEOPOLITICS · TECH</span>
+  </div>
+</header>
+
+<!-- ============ TELEGRAPH TICKER ============ -->
+<div class="ticker-wrap">
+  <div class="ticker-label">WIRE</div>
+  <div class="ticker-track" id="tickerTrack"></div>
+</div>
+
+<!-- ============ MAIN GRID ============ -->
+<div class="main-grid">
+
+  <!-- LEFT: EDITORIAL CASCADE -->
+  <section class="pane">
+    <div class="pane-head">
+      <span class="pane-title">The <span>Cascade</span></span>
+      <span class="feeding-badge" id="feedBadge">FEEDING</span>
+    </div>
+    <div class="wire-feed" id="wireFeed"></div>
+    <div class="wire-controls">
+      <button class="btn-freeze" id="freezeBtn">✦ HOLD TO FREEZE</button>
+      <span class="wire-count" id="wireCount">0 IN QUEUE</span>
+    </div>
+  </section>
+
+  <!-- CENTER: GLOBE -->
+  <section class="globe-pane">
+    <div class="globe-head">
+      <span class="pane-title" style="font-size:13px">Live Event <span>Globe</span></span>
+      <span style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);letter-spacing:.15em" id="globeEventCount">0 EVENTS TRACKED</span>
+    </div>
+    <div class="orbit-tag">◈ DRAG TO ROTATE · CLICK MARKERS FOR DISPATCH ◈</div>
+    <div class="globe-canvas-wrap">
+      <canvas id="globe" width="640" height="520"></canvas>
+      <div class="detail-card" id="detailCard">
+        <div class="dc-head">
+          <div class="dc-title"><span class="t" id="dcType">—</span><span id="dcTitle">—</span></div>
+          <button class="dc-close" id="dcClose">✕</button>
+        </div>
+        <div class="dc-meta">
+          <span id="dcLoc">—</span>
+          <span id="dcTime">—</span>
+          <span id="dcImpact">—</span>
+          <span id="dcSource">—</span>
+        </div>
+        <p class="dc-body" id="dcBody">—</p>
+        <div class="dc-actions">
+          <button class="dc-btn red" id="dcEscalate">⚑ Escalate to Desk</button>
+          <button class="dc-btn" id="dcFullWire">Full Dispatch →</button>
+        </div>
+      </div>
+    </div>
+    <div class="rotate-hint">Auto-rotating · drag to explore · scroll to zoom</div>
+    <div class="globe-stats">
+      <div class="gs"><div class="gs-v"><span class="r" id="gsActive">0</span></div><div class="gs-l">Active Pings</div></div>
+      <div class="gs"><div class="gs-v" id="gsHigh">0</div><div class="gs-l">High Impact</div></div>
+      <div class="gs"><div class="gs-v" id="gsSpawn">0</div><div class="gs-l">Events Spawned</div></div>
+      <div class="gs"><div class="gs-v" id="gsRotation">0.0°</div><div class="gs-l">Rotation</div></div>
+    </div>
+  </section>
+
+  <!-- RIGHT: KANBAN -->
+  <section class="pane">
+    <div class="pane-head">
+      <span class="pane-title">Analyst <span>Desk</span></span>
+      <span style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);letter-spacing:.12em">DRAG TO REASSIGN</span>
+    </div>
+    <div class="kanban">
+      <div class="kcol kcol-watch" data-col="watch">
+        <div class="kcol-head">◉ Watch <span class="kcol-count" data-count>0</span></div>
+        <div class="kcol-body" data-body></div>
+      </div>
+      <div class="kcol kcol-buy" data-col="buy">
+        <div class="kcol-head">▲ Buy <span class="kcol-count" data-count>0</span></div>
+        <div class="kcol-body" data-body></div>
+      </div>
+      <div class="kcol kcol-sell" data-col="sell">
+        <div class="kcol-head">▼ Sell <span class="kcol-count" data-count>0</span></div>
+        <div class="kcol-body" data-body></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ============ BOTTOM STRIP ============ -->
+<div class="bottom-strip">
+
+  <!-- Markets -->
+  <div class="bpane">
+    <div class="bpane-head"><span class="bpane-title">Markets <span style="color:var(--red)">Ticker</span></span><span style="font-family:var(--mono);font-size:8px;color:var(--ink-faint)">UPDATED <span id="mkTime">—</span></span></div>
+    <div class="scroll-area"><table class="markets-table"><thead><tr><th>Asset</th><th>Price</th><th>24h</th><th>Trend</th><th>Desk</th></tr></thead><tbody id="mkBody"></tbody></table></div>
+  </div>
+
+  <!-- LIVE NOW -->
+  <div class="bpane">
+    <div class="bpane-head"><span class="bpane-title"><span class="live-dot"></span>Live <span style="color:var(--red)">Now</span></span></div>
+    <div class="scroll-area" id="liveNow"></div>
+  </div>
+
+  <!-- Cinema -->
+  <div class="bpane">
+    <div class="bpane-head"><span class="bpane-title">The <span style="color:var(--red)">Cinema</span></span><span style="font-family:var(--mono);font-size:8px;color:var(--ink-faint)">BRIEFINGS</span></div>
+    <div class="scroll-area" id="cinemaRow"></div>
+  </div>
+
+  <!-- Horizon + X feed note -->
+  <div class="bpane">
+    <div class="bpane-head"><span class="bpane-title">The <span style="color:var(--red)">Horizon</span></span><span style="font-family:var(--mono);font-size:8px;color:var(--ink-faint)">COMING</span></div>
+    <div class="horizon" id="horizonChips"></div>
+    <div class="xfeed-note">
+      <span class="mono-tag">𝕏 Feed Note</span>
+      <p>X/Twitter ingestion is simulated for this mockup. In production, wire this to the X API v2 streaming endpoint with keyword filters: <em>$BTC, $ETH, geopolitics, supply-chain</em>.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= HELPERS ================= */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const rand=(a,b)=>a+Math.random()*(b-a);
+const rint=(a,b)=>Math.floor(rand(a,b+1));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const fmt$=n=>(n<0?'-':'')+'$'+Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtPct=n=>(n>=0?'+':'')+n.toFixed(2)+'%';
+const nowT=()=>new Date().toLocaleTimeString('en-US',{hour12:false});
+const pad=n=>String(n).padStart(2,'0');
+
+/* ================= MASTHEAD CLOCK ================= */
+let edition=311;
+function tickClock(){const d=new Date();$('#clock').textContent=pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds())+' LOCAL';}
+setInterval(tickClock,1000);tickClock();
+setInterval(()=>{edition++;$('#editionNum').textContent=edition;$('#editionNum2').textContent=edition;},60000);
+
+/* ================= TELEGRAPH TICKER ================= */
+const tickerData=[
+  ['BTC','67,420','+2.4%','up'],['ETH','3,891','-0.8%','dn'],['SOL','172.4','+5.1%','up'],
+  ['TSLA','248.1','-1.2%','dn'],['NVDA','875.3','+3.7%','up'],['BRENT','84.2','+0.6%','up'],
+  ['GOLD','2,015','+0.3%','up'],['USD INDEX','104.2','-0.1%','dn'],['FROM THE WIRE','Fed holds at 5.25%','',''],
+  ['FROM THE WIRE','Taiwan Strait: naval drill announced','',''],['FROM THE WIRE','Chips: export controls tighten','',''],
+  ['WIRE','UN emergency session called','',''],['WIRE','Lithium futures hit 8-month high','',''],
+];
+(function buildTicker(){
+  const html=tickerData.map(([s,p,c,d])=>`<span class="ticker-item"><b>${s}</b> ${p} ${c?`<span class="${d}">${d==='up'?'▲':'▼'} ${c}</span>`:''}</span>`).join('');
+  $('#tickerTrack').innerHTML=html+html;
+})();
+
+/* ================= EDITORIAL CASCADE ================= */
+const wirePool=[
+  {t:'headline',src:'Reuters',imp:'high',title:'Fed Signals Rate Cuts as Inflation Cools for Third Straight Month',body:'Powell: "We are increasingly confident the path back to 2% is intact." Markets priced in September action within minutes of the statement.'},
+  {t:'headline',src:'Bloomberg',imp:'high',title:'Taiwan Strait Naval Exercise Escalates as China Deploys Carrier Group',body:'PLA Eastern Theatre Command announced live-fire drills spanning 48 hours. Shipping insurers raised premiums on transiting vessels.'},
+  {t:'tweet',src:'@zerohedge',imp:'med',text:'BREAKING: Bank of Japan just sold ¥2.1T in USD/JPY. Yen futures volume is 3x the daily average. Something is moving.'},
+  {t:'headline',src:'AP Wire',imp:'med',title:'DRC Cobalt Export Halt Triggers Supply Chain Panic Among Battery Makers',body:'Kinshasa froze shipments pending new royalty terms. Glencore and CMOC say force majeure declarations are "under consideration."'},
+  {t:'tweet',src:'@PieterHattop',imp:'low',text:'Oil tanker rates through the Strait of Hormuz just spiked 40% in a single afternoon. Watch VLCC spot rates tomorrow open.'},
+  {t:'headline',src:'FT',imp:'low',title:'EU Passes Landmark AI Liability Framework After Marathon Session',body:'The directive shifts burden of proof to foundation-model providers in high-risk deployments, effective 2027.'},
+  {t:'tweet',src:'@Reuters',imp:'med',text:'JUST IN: IAEA inspectors denied access to second Fordow site for third consecutive week. Brent futures +$2.40 on the headline.'},
+  {t:'headline',src:'WSJ',imp:'high',title:'TSMC’s Arizona Fab Achieves First Yield Milestone Ahead of Schedule',body:'Sources say 4nm yields reportedly exceed 70%, a full quarter early. Customers including Apple and NVIDIA have locked capacity through 2027.'},
+  {t:'tweet',src:'@zerohedge',imp:'high',text:'[WIRE ALERT] PLA airspace incursion: 28 aircraft crossed the ADIZ median line. Taiwan scrambled F-16s. This is the largest single-day incursion this year.'},
+  {t:'headline',src:'Reuters',imp:'med',title:'Gold Smashes Record as Central Bank Buying Hits Decade High',body:'World Gold Council data shows central banks added 289 tonnes in Q1 alone — the strongest opening quarter since records began in 2000.'},
+  {t:'tweet',src:'@PieterHattop',imp:'low',text:'Wheat futures down hard. Black Sea corridor deal extension looks likely after Ankara talks. Shorts are covering.'},
+  {t:'headline',src:'Bloomberg',imp:'low',title:'Anthropic Unveils Constitutional AI Update; Enterprise Adoption Accelerates',body:'The new model card details expanded red-teaming. Enterprise deployments reported up 40% quarter-over-quarter.'},
+];
+let frozen=false, wireQueue=[];
+const wireEl=$('#wireFeed');
+function spawnWireItem(){
+  if(frozen) return;
+  if(wireQueue.length>=10) wireQueue.shift();
+  const item=pick(wirePool);
+  const el=document.createElement('div');
+  el.className='wire-item';
+  const impTag=item.imp==='high'?'<span class="wire-impact imp-high">HIGH IMPACT</span>':item.imp==='med'?'<span class="wire-impact imp-med">DEVELOPING</span>':'<span class="wire-impact imp-low">LOW</span>';
+  if(item.t==='headline'){
+    el.innerHTML=`<div class="wire-headline">${item.title}</div><div class="wire-body">${item.body}</div>
+      <div class="wire-meta"><span class="wire-src">${item.src}${impTag}</span><span class="wire-time"><span class="fresh">● LIVE</span> ${nowT()}</span></div>`;
+  }else{
+    el.innerHTML=`<div class="wire-tweet"><span class="handle">${item.src}</span> ${item.text}</div>
+      <div class="wire-meta"><span class="wire-src">X / Social ${impTag}</span><span class="wire-time"><span class="fresh">● LIVE</span> ${nowT()}</span></div>`;
+  }
+  wireEl.prepend(el);
+  // age / expire cascade
+  [...wireEl.children].forEach((c,i)=>{
+    if(i===0) return;
+    if(i>4) c.classList.add('expired');
+    else if(i>2) c.classList.add('fading');
+    else {c.classList.remove('fading','expired');}
+  });
+  while(wireEl.children.length>14) wireEl.lastChild.remove();
+  $('#wireCount').textContent=wireEl.children.length+' IN QUEUE';
+}
+for(let i=0;i<6;i++) spawnWireItem();
+setInterval(()=>{ if(Math.random()<0.75) spawnWireItem(); }, rand(3500,6500));
+
+$('#freezeBtn').addEventListener('click',()=>{
+  frozen=!frozen;
+  const b=$('#freezeBtn');
+  b.classList.toggle('frozen',frozen);
+  b.textContent=frozen?'❄ FROZEN — CLICK TO RESUME':'✦ HOLD TO FREEZE';
+  $('#feedBadge').textContent=frozen?'FROZEN':'FEEDING';
+  $('#feedBadge').style.color=frozen?'var(--red)':'var(--green)';
+  if(frozen) $('#feedBadge').style.setProperty('--c','var(--red)');
+});
+wireEl.addEventListener('click',e=>{
+  const h=e.target.closest('.wire-headline');
+  if(h){h.style.color='var(--red)';setTimeout(()=>h.style.color='',1200);}
+});
+
+/* ================= GLOBE ================= */
+const canvas=$('#globe'), ctx=canvas.getContext('2d');
+let rot=rand(0,Math.PI*2), tilt=0.42, scale=1, autoRotate=true, drag=null;
+let events=[], spawnCount=0, highCount=0;
+
+const EVENT_POOL=[
+  {city:'Vladivostok',lat:43.1,lon:131.9,type:'GEOPOLITICAL',title:'Pacific Fleet sortie detected — 14 vessels departed harbour',loc:'Vladivostok, RU',impact:'HIGH',src:'SIGINT / Satellite',body:'Commercial satellite imagery confirms the Pacific Fleet\'s Kirov-class battlecruiser leading a 14-vessel task group into the Sea of Japan. NOTAMs issued for the region. Regional naval posture raised to maximum.'},
+  {city:'Strait of Hormuz',lat:26.5,lon:56.3,type:'ENERGY',title:'Tanker traffic halted — two VLCCs anchor off Bandar Abbas',loc:'Strait of Hormuz',impact:'CRITICAL',src:'Maritime AIS',body:'Two Very Large Crude Carriers have anchored with AIS transponders dark. Insurance underwriters have suspended war-risk coverage for Iranian-flagged tonnage. Brent +$3.80 in 11 minutes.'},
+  {city:'London',lat:51.5,lon:-0.12,type:'MARKETS',title:'FTSE 100 opens at record high on mining rally',loc:'London, UK',impact:'MEDIUM',src:'LSE Feed',body:'Precious metals miners lead gains as gold consolidates above $2,000. Energy majors track crude higher. Volume 22% above 30-day average in first hour.'},
+  {city:'Lagos',lat:6.5,lon:3.37,type:'INFRASTRUCTURE',title:'Subsea cable cut disrupts West African internet backbone',loc:'Lagos, NG',impact:'MEDIUM',src:'Network Telemetry',body:'A severed segment of the West Africa Cable System has throttled bandwidth across three countries. Restoration vessel dispatched; repair estimate 10–14 days.'},
+  {city:'Reykjavik',lat:64.1,lon:-21.9,type:'CLIMATE',title:'Volcanic eruption on Reykjanes Peninsula — lava flow threatens Grindavík',loc:'Reykjanes, IS',impact:'HIGH',src:'Icelandic Met Office',body:'A magnitude 5.2 fissure eruption has opened northeast of Grindavík. Evacuation orders in effect for 3,800 residents. Aviation code raised to Orange. Geothermal plant secured.'},
+  {city:'São Paulo',lat:-23.5,lon:-46.6,type:'COMMODITIES',title:'Drought forces Brazil to import wheat for first time in decade',loc:'São Paulo, BR',impact:'MEDIUM',src:'CONAB',body:'The worst drought in 50 years has cut the wheat harvest 38%. Federal reserves are depleted; import tenders issued for 6 million tonnes. Coffee prices firming on related weather stress.'},
+  {city:'Mumbai',lat:19.1,lon:72.9,type:'TECH',title:'India approves $10B semiconductor fab package — three new plants',loc:'Mumbai, IN',impact:'HIGH',src:'PIB / Reuters',body:'The cabinet approved subsidies for three new fabrication facilities including a Tata-PSMC JV. Analysts expect India to capture 3–5% of global chip output by 2030, upending the East Asia concentration.'},
+  {city:'Cairo',lat:30.0,lon:31.2,type:'DIPLOMACY',title:'Emergency Arab League session called over Red Sea escalation',loc:'Cairo, EG',impact:'HIGH',src:'Diplomatic Wire',body:'Foreign ministers convene in emergency session as Houthi attacks on Bab el-Mandeb shipping intensify. UN Security Council draft resolution circulating among P5 members.'},
+  {city:'Perth',lat:-31.9,lon:115.9,type:'ENERGY',title:'Australia awards first offshore wind leases in SW region',loc:'Perth, AU',impact:'LOW',src:'DOEE',body:'Three developers awarded seabed leases for 7 GW of offshore wind capacity. First power expected 2031. Cable landing points near Bunbury and Albany.'},
+  {city:'Chicago',lat:41.9,lon:-87.6,type:'MARKETS',title:'CME wheat futures gap down on Black Sea deal signals',loc:'Chicago, US',impact:'MEDIUM',src:'CME Group',body:'December wheat dropped 18 cents at the open after Turkish officials confirmed a 60-day grain corridor extension. Exporters in Odessa report resumed loading.'},
+  {city:'Seoul',lat:37.6,lon:126.9,type:'TECH',title:'Samsung unveils 2nm gate-all-around production milestone',loc:'Seoul, KR',impact:'HIGH',src:'Company Filing',body:'Samsung Foundry claims GAA yields above 60% on 2nm, closing the gap with TSMC. First customer tape-outs reported from a major US GPU designer.'},
+  {city:'Gulf of Guinea',lat:4.0,lon:2.0,type:'SECURITY',title:'Pirate attack on product tanker — crew safe, cargo secure',loc:'Gulf of Guinea',impact:'MEDIUM',src:'IMB / Maritime Security',body:'Eight armed men boarded a chemical tanker 60nm off Tema before being repelled by embarked security team. IMB reports 2025 piracy incidents down 30% year-on-year in the region.'},
+];
+
+function ll2xyz(lat,lon){
+  const la=lat*Math.PI/180, lo=lon*Math.PI/180;
+  return {x:Math.cos(la)*Math.sin(lo), y:Math.sin(la), z:Math.cos(la)*Math.cos(lo)};
+}
+function project(p,cx,cy,R){
+  // rotate around Y then X (tilt)
+  let x=p.x, y=p.y, z=p.z;
+  const cosR=Math.cos(rot), sinR=Math.sin(rot);
+  let rx=x*cosR+z*sinR, rz=-x*sinR+z*cosR;
+  const cosT=Math.cos(tilt), sinT=Math.sin(tilt);
+  let ry=y*cosT-rz*sinT, rzz=y*sinT+rz*cosT;
+  return {sx:cx+rx*R*scale, sy:cy-ry*R*scale, depth:rzz, rx, ry, rzz};
+}
+function spawnEvent(seed){
+  const pool=EVENT_POOL.length;
+  const e=seed||EVENT_POOL[Math.floor(Math.random()*pool)];
+  const p=ll2xyz(e.lat,e.lon);
+  const ev={...e, p, id:Math.random().toString(36).slice(2,8), born:Date.now(), ping:0};
+  events.push(ev);
+  spawnCount++;
+  if(ev.impact==='HIGH'||ev.impact==='CRITICAL') highCount++;
+  $('#gsSpawn').textContent=spawnCount;
+  $('#gsHigh').textContent=highCount;
+  return ev;
+}
+// seed a few
+for(let i=0;i<7;i++) spawnEvent(EVENT_POOL[i*2 % EVENT_POOL.length]);
+setInterval(()=>{ if(Math.random()<0.55) spawnEvent(); }, rand(5000,9000));
+
+function drawGlobe(){
+  const W=canvas.width, H=canvas.height;
+  const cx=W/2, cy=H/2, R=Math.min(W,H)*0.36;
+  ctx.clearRect(0,0,W,H);
+  // outer glow
+  const g=ctx.createRadialGradient(cx,cy,R*0.4,cx,cy,R*1.4);
+  g.addColorStop(0,'rgba(232,58,42,0.04)');g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  // sphere body
+  const sg=ctx.createRadialGradient(cx-R*0.35,cy-R*0.4,R*0.1,cx,cy,R*1.15);
+  sg.addColorStop(0,'#1a1a1c');sg.addColorStop(0.6,'#121213');sg.addColorStop(1,'#0a0a0b');
+  ctx.beginPath();ctx.arc(cx,cy,R*scale,0,Math.PI*2);ctx.fillStyle=sg;ctx.fill();
+  ctx.strokeStyle='#3a392f';ctx.lineWidth=1.2;ctx.stroke();
+  // lat/long grid
+  ctx.lineWidth=0.6;
+  for(let lat=-75;lat<=75;lat+=15){
+    ctx.beginPath();
+    for(let lon=-180;lon<=180;lon+=4){
+      const p=ll2xyz(lat,lon);const pr=project(p,cx,cy,R);
+      if(pr.depth>-0.05){ const sx=cx+pr.rx*R*scale, sy=cy-pr.ry*R*scale; lon===-180?ctx.moveTo(sx,sy):ctx.lineTo(sx,sy); }
+      else ctx.moveTo(cx+pr.rx*R*scale,cy-pr.ry*R*scale);
+    }
+    ctx.strokeStyle='rgba(156,150,136,0.14)';ctx.stroke();
+  }
+  for(let lon=-180;lon<180;lon+=20){
+    ctx.beginPath();
+    for(let lat=-90;lat<=90;lat+=3){
+      const p=ll2xyz(lat,lon);const pr=project(p,cx,cy,R);
+      const sx=cx+pr.rx*R*scale, sy=cy-pr.ry*R*scale;
+      if(pr.depth>-0.05){ lat===-90?ctx.moveTo(sx,sy):ctx.lineTo(sx,sy); }
+      else ctx.moveTo(sx,sy);
+    }
+    ctx.strokeStyle='rgba(156,150,136,0.10)';ctx.stroke();
+  }
+  // equator highlight
+  ctx.beginPath();
+  for(let lon=-180;lon<=180;lon+=2){
+    const p=ll2xyz(0,lon);const pr=project(p,cx,cy,R);
+    const sx=cx+pr.rx*R*scale, sy=cy-pr.ry*R*scale;
+    lon===-180?ctx.moveTo(sx,sy):ctx.lineTo(sx,sy);
+  }
+  ctx.strokeStyle='rgba(232,58,42,0.25)';ctx.lineWidth=0.8;ctx.stroke();
+  // events
+  let activeCount=0;
+  events.forEach(ev=>{
+    const pr=project(ev.p,cx,cy,R);
+    if(pr.depth<0.02) return;
+    activeCount++;
+    const sx=cx+pr.rx*R*scale, sy=cy-pr.ry*R*scale;
+    const age=(Date.now()-ev.born)/1000;
+    const isHigh=ev.impact==='HIGH'||ev.impact==='CRITICAL';
+    const col=isHigh?'#e83a2a':ev.impact==='MEDIUM'?'#d9a441':'#5fa46a';
+    // ping ring
+    const prog=(age%2.2)/2.2;
+    ctx.beginPath();ctx.arc(sx,sy,2+prog*16,0,Math.PI*2);
+    ctx.strokeStyle=col;ctx.globalAlpha=(1-prog)*0.55;ctx.lineWidth=1;ctx.stroke();ctx.globalAlpha=1;
+    // dot
+    ctx.beginPath();ctx.arc(sx,sy,isHigh?4.5:3,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();
+    ctx.beginPath();ctx.arc(sx,sy,1.5,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();
+    // label for high impact
+    if(isHigh){
+      ctx.font='9px monospace';ctx.fillStyle='rgba(232,228,216,0.85)';
+      ctx.fillText(ev.city.toUpperCase(),sx+9,sy-7);
+    }
+    ev._sx=sx;ev._sy=sy;ev._visible=true;
+  });
+  // fly lines between high events
+  const highs=events.filter(e=>e._visible&&(e.impact==='HIGH'||e.impact==='CRITICAL'));
+  for(let i=0;i<highs.length-1;i++){
+    const a=highs[i],b=highs[i+1];
+    if(!a._sx||!b._sx) continue;
+    ctx.beginPath();ctx.moveTo(a._sx,a._sy);
+    const mx=(a._sx+b._sx)/2, my=Math.min(a._sy,b._sy)-30;
+    ctx.quadraticCurveTo(mx,my,b._sx,b._sy);
+    ctx.setLineDash([4,4]);ctx.strokeStyle='rgba(232,58,42,0.28)';ctx.lineWidth=0.8;ctx.stroke();ctx.setLineDash([]);
+  }
+  $('#gsActive').textContent=activeCount;
+  $('#gsRotation').textContent=(rot*180/Math.PI%360).toFixed(1)+'°';
+  if(autoRotate) rot+=0.0022;
+  requestAnimationFrame(drawGlobe);
+}
+requestAnimationFrame(drawGlobe);
+
+// interaction
+canvas.addEventListener('mousedown',e=>{drag={x:e.offsetX,y:e.offsetY,rot,moved:0};autoRotate=false;});
+canvas.addEventListener('mousemove',e=>{
+  if(!drag) return;
+  const dx=e.offsetX-drag.x, dy=e.offsetY-drag.y;
+  drag.moved+=Math.abs(dx)+Math.abs(dy);
+  rot=drag.rot+dx*0.008;
+  tilt=Math.max(-1.1,Math.min(1.1,0.42+dy*0.004));
+});
+window.addEventListener('mouseup',()=>{ if(drag&&drag.moved<5) handleClick(drag); drag=null; autoRotate=true; });
+canvas.addEventListener('wheel',e=>{e.preventDefault(); scale=Math.max(0.7,Math.min(1.5,scale-e.deltaY*0.001));},{passive:false});
+canvas.addEventListener('touchstart',e=>{const t=e.touches[0];drag={x:t.clientX,y:t.clientY,rot,moved:0};autoRotate=false;},{passive:true});
+canvas.addEventListener('touchmove',e=>{if(!drag)return;const t=e.touches[0];rot=drag.rot+(t.clientX-drag.x)*0.008;drag.moved+=1;},{passive:true});
+canvas.addEventListener('touchend',()=>{drag=null;autoRotate=true;});
+
+function handleClick(d){
+  // find nearest visible event
+  let best=null,bd=1e9;
+  events.forEach(ev=>{ if(!ev._visible) return;
+    const dx=d.x-ev._sx, dy=d.y-ev._sy, dist=Math.hypot(dx,dy);
+    if(dist<bd){bd=dist;best=ev;}
+  });
+  if(best&&bd<22){ openDetail(best); } else { $('#detailCard').classList.remove('open'); }
+}
+function openDetail(ev){
+  $('#dcType').textContent=ev.type+' DISPATCH';
+  $('#dcTitle').textContent=ev.title;
+  $('#dcLoc').textContent='◎ '+ev.loc.toUpperCase();
+  $('#dcTime').textContent='◷ '+new Date(ev.born).toLocaleTimeString('en-US',{hour12:false});
+  $('#dcImpact').textContent='⚑ '+ev.impact;
+  $('#dcSource').textContent='SRC: '+ev.src;
+  $('#dcBody').textContent=ev.body;
+  $('#detailCard').classList.add('open');
+  // escalate button adds to kanban watch
+  $('#dcEscalate').onclick=()=>{
+    addCardToDesk({asset:ev.city,ticker:ev.type,price:'—',chg:0,why:ev.title,conf:72,verdict:'watch',spark:genSpark()});
+    $('#detailCard').classList.remove('open');
+  };
+  $('#dcFullWire').onclick=()=>{ spawnWireItem(); $('#detailCard').classList.remove('open'); };
+}
+$('#dcClose').addEventListener('click',()=>$('#detailCard').classList.remove('open'));
+$('#globeEventCount').textContent=events.length+' EVENTS TRACKED';
+
+/* ================= KANBAN / ANALYST DESK ================= */
+const kanbanData=[
+  {asset:'Bitcoin',ticker:'BTC',price:'$67,420',chg:+2.4,why:'ETF inflows accelerating; miner capitulation likely complete. Halving supply shock 6 months out.',conf:78,verdict:'buy',spark:[42,44,43,47,49,48,52,55,53,57,59,62,61,65,67]},
+  {asset:'Ethereum',ticker:'ETH',price:'$3,891',chg:-0.8,why:'L2 fees still compressing. No catalyst until EIP-4844 full rollout. Hold above $3,700 support.',conf:55,verdict:'watch',spark:[52,50,51,49,50,48,47,49,48,46,47,45,46,44,43]},
+  {asset:'Nvidia',ticker:'NVDA',price:'$875.30',chg:+3.7,why:'Blackwell orders tight; hyperscaler capex guidance raised again. Momentum intact but valuation stretched.',conf:84,verdict:'buy',spark:[30,32,31,35,38,36,40,43,41,45,48,46,50,52,54]},
+  {asset:'Tesla',ticker:'TSLA',price:'$248.10',chg:-1.2,why:'Delivery miss consensus whisper; robotaxi timeline sliding. Margin pressure from price cuts ongoing.',conf:61,verdict:'sell',spark:[60,58,59,56,57,54,55,52,53,50,51,48,49,47,45]},
+  {asset:'Brent Crude',ticker:'BRENT',price:'$84.20',chg:+0.6,why:'OPEC+ compliance holding at 92%. Strait tensions offset by SPR chatter. Range-bound $80–88.',conf:47,verdict:'watch',spark:[44,43,45,44,46,45,47,46,48,47,49,48,50,49,51]},
+  {asset:'Gold',ticker:'XAU/USD',price:'$2,015',chg:+0.3,why:'Central bank demand at record pace. Real yields sticky; momentum traders crowded. Trim into strength.',conf:69,verdict:'sell',spark:[38,40,39,42,41,44,43,46,45,48,47,50,49,52,51]},
+  {asset:'Solana',ticker:'SOL',price:'$172.40',chg:+5.1,why:'DePIN narrative bid; network uptime 99.2% this quarter. Breakout above $170 opens $210 measured move.',conf:63,verdict:'buy',spark:[28,30,35,33,38,42,40,45,43,48,52,50,55,53,57]},
+  {asset:'Uranium',ticker:'URNM',price:'$58.90',chg:+1.9,why:'Term contracting repricing finally feeding spot. Utilities backstopping at $85/lb equivalent.',conf:71,verdict:'watch',spark:[35,36,38,37,40,42,41,44,46,45,48,49,48,50,52]},
+];
+function genSpark(){ const b=rint(30,50), d=[]; let v=b; for(let i=0;i<15;i++){ v+=rand(-4,5); d.push(Math.round(v)); } return d; }
+function sparkSVG(data,w=120,h=24){
+  const max=Math.max(...data), min=Math.min(...data), rng=max-min||1;
+  const pts=data.map((v,i)=>[(i/(data.length-1))*w, h-3-((v-min)/rng)*(h-6)]);
+  const line=pts.map((p,i)=>(i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+  const up=data[data.length-1]>=data[0];
+  const col=up?'#5fa46a':'#e83a2a';
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><path d="${line}" fill="none" stroke="${col}" stroke-width="1.5"/><path d="${line} L${w},${h} L0,${h} Z" fill="${col}" opacity="0.08"/></svg>`;
+}
+function confColor(c){return c>=70?'var(--green)':c>=50?'var(--amber)':'var(--red)';}
+function verdictBadge(v){return v==='buy'?'<span class="verdict v-buy">▲ BUY</span>':v==='sell'?'<span class="verdict v-sell">▼ SELL</span>':'<span class="verdict v-watch">◉ WATCH</span>';}
+
+function renderDesk(){
+  $$('.kcol').forEach(col=>{
+    const body=col.querySelector('[data-body]');
+    body.innerHTML='';
+    const items=kanbanData.filter(c=>c.verdict===col.dataset.col);
+    col.querySelector('[data-count]').textContent=items.length;
+    items.forEach(c=>{
+      const div=document.createElement('div');
+      div.className='kcard '+c.verdict;
+      div.draggable=true;
+      div.dataset.asset=c.asset;
+      div.innerHTML=`
+        <button class="kcard-remove" title="Remove">✕</button>
+        <div class="kcard-top">
+          <div><div class="kcard-asset">${c.asset}</div><div class="kcard-ticker">${c.ticker||''}</div></div>
+          <div><div class="kcard-price">${c.price}</div><div class="kcard-chg ${c.chg>=0?'chg-up':'chg-dn'}">${fmtPct(c.chg)}</div></div>
+        </div>
+        <p class="kcard-why">${c.why}</p>
+        ${sparkSVG(c.spark)}
+        <div class="kcard-foot">
+          <div class="conf-wrap"><div class="conf-label"><span>CONFIDENCE</span><span>${c.conf}%</span></div><div class="conf-bar"><div class="conf-fill" style="width:${c.conf}%;background:${confColor(c.conf)}"></div></div></div>
+          ${verdictBadge(c.verdict)}
+        </div>`;
+      div.addEventListener('dragstart',e=>{ e.dataTransfer.setData('text/plain',c.asset); div.classList.add('dragging'); });
+      div.addEventListener('dragend',()=>div.classList.remove('dragging'));
+      div.querySelector('.kcard-remove').addEventListener('click',ev=>{
+        ev.stopPropagation();
+        const i=kanbanData.findIndex(x=>x.asset===c.asset);
+        if(i>-1) kanbanData.splice(i,1);
+        renderDesk();
+      });
+      body.appendChild(div);
+    });
+    if(!items.length) body.innerHTML='<div class="drop-hint">— DROP HERE —</div>';
+  });
+  // drop targets
+  $$('.kcol-body').forEach(body=>{
+    body.ondragover=e=>{ e.preventDefault(); body.closest('.kcol').classList.add('drag-over'); };
+    body.ondragleave=()=>body.closest('.kcol').classList.remove('drag-over');
+    body.ondrop=e=>{
+      e.preventDefault();
+      body.closest('.kcol').classList.remove('drag-over');
+      const asset=e.dataTransfer.getData('text/plain');
+      const card=kanbanData.find(c=>c.asset===asset);
+      if(card){ card.verdict=body.closest('.kcol').dataset.col; renderDesk(); }
+    };
+  });
+}
+function addCardToDesk(c){
+  kanbanData.unshift({...c, spark:c.spark||genSpark()});
+  renderDesk();
+}
+renderDesk();
+// live price jitter
+setInterval(()=>{
+  kanbanData.forEach(c=>{
+    if(Math.random()<0.5){ c.chg=+(c.chg+rand(-0.4,0.4)).toFixed(2); }
+  });
+  renderDesk();
+},8000);
+
+/* ================= MARKETS TABLE ================= */
+const marketRows=[
+  {sym:'BTC',name:'Bitcoin',price:67420,chg:2.4,spark:[42,44,43,47,49,48,52,55]},
+  {sym:'ETH',name:'Ethereum',price:3891,chg:-0.8,spark:[52,50,51,49,50,48,47,45]},
+  {sym:'SOL',name:'Solana',price:172.4,chg:5.1,spark:[28,32,30,35,38,42,45,48]},
+  {sym:'NVDA',name:'NVIDIA',price:875.3,chg:3.7,spark:[30,34,32,36,39,42,44,46]},
+  {sym:'TSLA',name:'Tesla',price:248.1,chg:-1.2,spark:[60,58,57,55,56,53,52,50]},
+  {sym:'XAU',name:'Gold',price:2015,chg:0.3,spark:[38,40,39,42,41,44,43,45]},
+  {sym:'SPX',name:'S&P 500',price:5284,chg:0.4,spark:[40,41,40,42,43,42,44,45]},
+  {sym:'DXY',name:'USD Index',price:104.2,chg:-0.1,spark:[50,49,50,48,49,48,47,47]},
+];
+function renderMk(){
+  $('#mkBody').innerHTML=marketRows.map(r=>{
+    const desk=kanbanData.find(c=>c.ticker===r.sym);
+    const dTag=desk?verdictBadge(desk.verdict):'<span style="font-family:var(--mono);font-size:8px;color:var(--ink-faint)">—</span>';
+    return `<tr><td><span class="mk-asset">${r.name}</span> <span style="color:var(--ink-faint);font-size:9px">${r.sym}</span></td>
+      <td class="mk-price">${fmt$(r.price)}</td>
+      <td class="mk-chg ${r.chg>=0?'chg-up':'chg-dn'}">${fmtPct(r.chg)}</td>
+      <td style="width:90px;padding:4px 10px">${sparkSVG(r.spark,90,20)}</td><td>${dTag}</td></tr>`;
+  }).join('');
+  $('#mkTime').textContent=nowT();
+}
+renderMk();
+setInterval(()=>{ marketRows.forEach(r=>{ if(Math.random()<0.6) r.price*=1+rand(-0.003,0.003); }); renderMk(); },5000);
+
+/* ================= LIVE NOW ================= */
+const liveNowData=[
+  {badge:'LIVE',text:'White House press briefing on export controls',sub:'POOL FEED · 4 min ago'},
+  {badge:'LIVE',text:'ECB Lagarde speaking — monetary policy outlook',sub:'FRANKFURT · 12 min ago'},
+  {badge:'LIVE',text:'Taiwan Strait naval exercise — day 2 tracking',sub:'MARITIME AIS · ONGOING'},
+  {badge:'LIVE',text:'Gaza ceasefire negotiation round — Doha',sub:'DIPLOMATIC WIRE · 8 min ago'},
+];
+$('#liveNow').innerHTML=liveNowData.map(l=>`<div class="live-item"><span class="live-badge">${l.badge}</span><div><div class="live-txt">${l.text}</div><div class="live-sub">${l.sub}</div></div></div>`).join('');
+
+/* ================= CINEMA ================= */
+const cinemaData=[
+  {title:'The Strait Briefing: Hormuz at a Glance',meta:'WIRE DESK · 8 min',dur:'08:42',icon:'🎬'},
+  {title:'Supply Chain Autopsy — Cobalt & the DRC',meta:'DEEP DIVE · 14 min',dur:'14:10',icon:'🎬'},
+  {title:'The Chip War, Year Three',meta:'TECH DESK · 22 min',dur:'22:05',icon:'🎬'},
+  {title:'Central Banks Are Buying Gold. Why Now?',meta:'MARKETS · 11 min',dur:'11:30',icon:'🎬'},
+];
+$('#cinemaRow').innerHTML=cinemaData.map(c=>`<div class="cinema-item"><div class="cinema-thumb"><span class="cinema-dur">${c.dur}</span></div><div><div class="cinema-title">${c.title}</div><div class="cinema-meta">${c.meta}</div></div></div>`).join('');
+
+/* ================= HORIZON CHIPS ================= */
+const horizonData=[
+  {d:'JUN 12',t:'ECB rate decision — Lagarde presser 14:45 CET'},
+  {d:'JUN 18',t:'FOMC meeting — dot plot & SEP release'},
+  {d:'JUN 24',t:'OPEC+ emergency session on quota compliance'},
+  {d:'JUL 02',t:'TSMC Q2 earnings — CoWoS capacity update'},
+  {d:'JUL 09',t:'CPI print — core consensus 3.1% YoY'},
+];
+$('#horizonChips').innerHTML=horizonData.map(h=>`<div class="hchip"><span class="hchip-date">${h.d}</span><span class="hchip-txt">${h.t}</span></div>`).join('');
+</script>
+</body>
+</html>

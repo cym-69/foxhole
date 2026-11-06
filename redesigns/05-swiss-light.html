@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>05 — Swiss Light</title>
+<style>
+  :root{
+    --ink:#0a0a0a;
+    --muted:#6b6b6b;
+    --line:#0a0a0a;
+    --hair:#d9d9d9;
+    --blue:#1A56FF;
+    --bg:#ffffff;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;border-radius:0}
+  html{scroll-behavior:smooth}
+  html,body{background:var(--bg);color:var(--ink)}
+  body{
+    font-family:"Helvetica Neue",Helvetica,Arial,"Segoe UI",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.25;
+    padding:28px clamp(20px,4vw,64px) 120px;
+  }
+  a{color:inherit;text-decoration:none}
+  .mono{font-family:"SF Mono",ui-monospace,Menlo,Consolas,"Courier New",monospace;font-variant-numeric:tabular-nums}
+  .blue{color:var(--blue)}
+
+  /* ---------- GRID ---------- */
+  .grid12{display:grid;grid-template-columns:repeat(12,1fr);gap:0 20px;width:100%}
+  .rule{border-top:2px solid var(--line)}
+  .rule-thin{border-top:1px solid var(--hair)}
+  .label{
+    font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    font-weight:700;color:var(--muted);
+  }
+  .label b{color:var(--ink)}
+
+  /* ---------- HEADER ---------- */
+  header{padding:8px 0 22px}
+  .masthead{display:flex;align-items:flex-end;gap:28px;flex-wrap:wrap;border-bottom:4px solid var(--ink);padding-bottom:14px}
+  .wordmark{
+    font-size:clamp(64px,11vw,172px);
+    line-height:.86;font-weight:900;letter-spacing:-.04em;
+  }
+  .wordmark .thin{font-weight:300;color:var(--muted)}
+  .mast-meta{padding-bottom:10px;min-width:260px}
+  .mast-meta .edition{font-size:clamp(20px,2.4vw,34px);font-weight:800;line-height:1}
+  .mast-meta .sub{margin-top:8px;max-width:46ch;color:var(--muted);font-size:14px;line-height:1.5}
+  .mast-meta .meta-row{margin-top:14px;display:flex;gap:18px;flex-wrap:wrap}
+  .mast-meta .meta-row span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700}
+  .mast-meta .meta-row span i{font-style:normal;color:var(--blue)}
+  .head-nav{display:flex;gap:0;border-top:1px solid var(--hair);margin-top:16px;flex-wrap:wrap}
+  .head-nav a{
+    font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;
+    padding:10px 14px 10px 0;margin-right:14px;border-right:1px solid var(--hair);
+  }
+  .head-nav a:hover{color:var(--blue)}
+  .head-nav a:last-child{border-right:0}
+
+  /* ---------- SECTION SCAFFOLD ---------- */
+  section{padding-top:54px}
+  .sec-head{display:grid;grid-template-columns:repeat(12,1fr);gap:0 20px;align-items:start;margin-bottom:22px}
+  .sec-num{
+    grid-column:1/4;
+    font-size:clamp(64px,8vw,128px);
+    line-height:.8;font-weight:900;letter-spacing:-.04em;
+    transition:color .12s linear;
+  }
+  .sec-num:hover{color:var(--blue)}
+  .sec-num a{display:block}
+  .sec-title{grid-column:4/10}
+  .sec-title h2{
+    font-size:clamp(28px,3.4vw,44px);
+    font-weight:900;letter-spacing:-.02em;line-height:.95;
+    text-transform:uppercase;
+  }
+  .sec-title p{margin-top:10px;max-width:62ch;color:var(--muted);font-size:14px;line-height:1.55}
+  .sec-side{grid-column:10/13;text-align:right}
+  .sec-side .count{font-size:clamp(28px,3vw,44px);font-weight:900;line-height:1}
+  .sec-side .cap{font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:var(--muted);margin-top:6px}
+
+  /* ---------- TABLE (SIGNALS) ---------- */
+  .sig-table{width:100%;border-collapse:collapse}
+  .sig-table th{
+    text-align:left;font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+    padding:10px 12px;border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);
+    font-weight:700;color:var(--muted);
+  }
+  .sig-table td{
+    padding:14px 12px;border-bottom:1px solid var(--hair);
+    vertical-align:top;
+  }
+  .sig-table tbody tr.main-row{cursor:pointer}
+  .sig-table tbody tr.main-row:hover{background:var(--ink);color:#fff}
+  .sig-table tbody tr.main-row:hover .muted{color:#bdbdbd}
+  .sig-table tbody tr.main-row:hover .confbar-track{background:#3a3a3a}
+  .sig-table tbody tr.main-row:hover .confbar-fill{background:#fff}
+  .sig-table tbody tr.open{background:#f4f4f4}
+  .sig-table tbody tr.open:hover{background:#f4f4f4;color:var(--ink)}
+  .sig-id{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--blue)}
+  .sig-asset{font-size:22px;font-weight:900;letter-spacing:-.01em;line-height:1}
+  .sig-asset small{display:block;font-size:12px;font-weight:400;color:var(--muted);margin-top:4px;letter-spacing:0}
+  .main-row:hover .sig-asset small{color:#bdbdbd}
+  .sig-event{font-size:13px;color:var(--muted);max-width:34ch;line-height:1.45}
+  .sig-event b{color:var(--ink);font-weight:700}
+  .main-row:hover .sig-event{color:#d6d6d6}
+  .main-row:hover .sig-event b{color:#fff}
+  .verdict{font-size:18px;font-weight:900;letter-spacing:.02em}
+  .verdict.blue{color:var(--blue)}
+  .main-row:hover .verdict.blue{color:#8aa8ff}
+  .verdict .arrow{font-weight:400}
+  .conf-num{font-size:18px;font-weight:800}
+  .confbar-track{display:block;width:110px;height:4px;background:#e8e8e8;margin-top:7px}
+  .confbar-fill{display:block;height:100%;background:var(--ink)}
+  .confbar-fill.blue{background:var(--blue)}
+  .detail-row td{padding:0}
+  .detail-cell{border-bottom:1px solid var(--ink);padding:18px 12px 22px;background:#fafafa}
+  .detail-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:0 20px}
+  .detail-grid .col-ev{grid-column:1/6}
+  .detail-grid .col-why{grid-column:6/10}
+  .detail-grid .col-meta{grid-column:10/13}
+  .detail-grid h4{font-size:11px;letter-spacing:.16em;text-transform:uppercase;margin-bottom:10px;color:var(--blue);font-weight:700}
+  .detail-grid p{font-size:14px;line-height:1.6;color:#333;max-width:56ch}
+  .detail-grid dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px}
+  .detail-grid dt{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .detail-grid dd{font-weight:700}
+
+  /* ---------- MAP STRIP ---------- */
+  .map-strip{
+    grid-column:1/13;
+    border:2px solid var(--ink);
+    position:relative;
+    overflow:hidden;
+    min-height:220px;
+    background:
+      linear-gradient(to right, transparent calc(100% - 1px), transparent),
+      repeating-linear-gradient(0deg, transparent, transparent 39px, #efefef 39px, #efefef 40px),
+      repeating-linear-gradient(90deg, transparent, transparent 39px, #efefef 39px, #efefef 40px),
+      #fff;
+  }
+  .map-coords{
+    position:absolute;top:10px;left:12px;right:12px;
+    display:flex;justify-content:space-between;
+    font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:700;
+    pointer-events:none;
+  }
+  .map-marks{position:absolute;inset:0}
+  .map-mark{position:absolute;transform:translate(-50%,-50%);text-align:center}
+  .map-mark .glyph{font-size:26px;line-height:1;font-weight:900}
+  .map-mark .tag{
+    display:inline-block;margin-top:5px;background:#fff;border:1px solid var(--ink);
+    font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;padding:2px 6px;
+  }
+  .map-mark.blue .tag{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .map-mark.black .tag{background:var(--ink);color:#fff}
+  .map-track{
+    position:absolute;left:0;right:0;bottom:0;
+    border-top:1px solid var(--hair);
+    background:#fff;display:grid;grid-template-columns:repeat(12,1fr);
+  }
+  .map-track div{
+    padding:10px 12px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;
+    border-right:1px solid var(--hair);
+  }
+  .map-track div:last-child{border-right:0}
+  .map-track div span{display:block;font-weight:400;color:var(--muted);letter-spacing:0;text-transform:none;margin-top:2px;font-size:12px}
+
+  /* ---------- MARKETS ---------- */
+  .mkt-head{display:grid;grid-template-columns:repeat(12,1fr);gap:0 20px;padding:10px 12px;border-top:2px solid var(--ink);border-bottom:1px solid var(--ink)}
+  .mkt-head div{font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+  .mkt-head .r{text-align:right}
+  .mkt-row{
+    display:grid;grid-template-columns:repeat(12,1fr);gap:0 20px;align-items:baseline;
+    padding:12px;border-bottom:1px solid var(--hair);
+  }
+  .mkt-sym{grid-column:1/3;font-size:17px;font-weight:900}
+  .mkt-name{grid-column:3/6;font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+  .mkt-last{grid-column:6/9;text-align:right;font-size:20px;font-weight:800}
+  .mkt-chg{grid-column:9/11;text-align:right;font-size:14px;font-weight:800}
+  .mkt-vol{grid-column:11/13;text-align:right;font-size:12px;color:var(--muted)}
+  .chg-up{color:var(--blue)}
+  .chg-dn{color:var(--ink)}
+  .chg-dn::before{content:"▾ "}
+  .chg-up::before{content:"▴ "}
+  .mkt-row:hover{background:#f6f6f6}
+
+  /* ---------- LIVE / X ---------- */
+  .two-col{display:grid;grid-template-columns:repeat(12,1fr);gap:0 20px}
+  .col-live{grid-column:1/7;border-right:1px solid var(--hair);padding-right:20px}
+  .col-x{grid-column:7/13;padding-left:20px}
+  .col-head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid var(--ink);padding-bottom:10px;margin-bottom:6px}
+  .col-head h3{font-size:20px;font-weight:900;text-transform:uppercase;letter-spacing:-.01em}
+  .live-dot{width:9px;height:9px;background:var(--blue);display:inline-block;margin-right:8px;vertical-align:2px}
+  .live-row{display:grid;grid-template-columns:54px 1fr auto;gap:14px;padding:14px 0;border-bottom:1px solid var(--hair);cursor:pointer}
+  .live-row:hover{background:#f6f6f6}
+  .live-plat{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:900;color:var(--blue)}
+  .live-plat small{display:block;color:var(--muted);font-weight:400;letter-spacing:.02em;text-transform:none;font-size:12px;margin-top:3px}
+  .live-title{font-size:16px;font-weight:800;line-height:1.3}
+  .live-meta{font-size:12px;color:var(--muted);margin-top:4px}
+  .live-view{text-align:right;font-size:20px;font-weight:900;line-height:1}
+  .live-view small{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-top:4px}
+
+  .x-post{padding:14px 0;border-bottom:1px solid var(--hair);cursor:pointer}
+  .x-post:hover{background:#f6f6f6}
+  .x-top{display:flex;gap:10px;align-items:baseline}
+  .x-handle{font-size:13px;font-weight:900}
+  .x-time{font-size:12px;color:var(--muted);margin-left:auto}
+  .x-body{font-size:14px;line-height:1.55;margin-top:6px;max-width:58ch}
+  .x-body b{font-weight:900}
+  .x-stats{display:flex;gap:20px;margin-top:8px;font-size:12px;color:var(--muted)}
+  .x-stats span b{color:var(--ink)}
+
+  /* ---------- CINEMA ---------- */
+  .cinema-list{border-top:2px solid var(--ink)}
+  .cin-row{
+    display:grid;grid-template-columns:repeat(12,1fr);gap:0 20px;align-items:baseline;
+    padding:14px 12px;border-bottom:1px solid var(--hair);cursor:pointer;
+  }
+  .cin-row:hover{background:var(--ink);color:#fff}
+  .cin-row:hover .muted{color:#bdbdbd}
+  .cin-rank{grid-column:1/2;font-size:28px;font-weight:900;line-height:1}
+  .cin-title{grid-column:2/7;font-size:20px;font-weight:800;line-height:1.15}
+  .cin-title small{display:block;font-size:12px;font-weight:400;color:var(--muted);margin-top:2px}
+  .cin-row:hover .cin-title small{color:#bdbdbd}
+  .cin-status{grid-column:7/10;font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:900}
+  .cin-status.blue{color:var(--blue)}
+  .cin-row:hover .cin-status.blue{color:#8aa8ff}
+  .cin-num{grid-column:10/13;text-align:right}
+  .cin-num b{font-size:22px;font-weight:900}
+  .cin-num span{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-top:2px}
+  .cin-row:hover .cin-num span{color:#bdbdbd}
+
+  /* ---------- HORIZON ---------- */
+  .hz-wrap{border:2px solid var(--ink);padding:22px 22px 18px}
+  .hz-top{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:baseline}
+  .hz-top h3{font-size:clamp(24px,2.6vw,36px);font-weight:900;text-transform:uppercase;line-height:1}
+  .hz-top p{max-width:52ch;color:var(--muted);font-size:13px;line-height:1.55}
+  .hz-chips{display:flex;flex-wrap:wrap;gap:0;margin-top:20px;border-top:1px solid var(--hair)}
+  .hz-chip{
+    border-right:1px solid var(--hair);border-bottom:1px solid var(--hair);
+    padding:14px 18px 12px 0;margin-right:18px;min-width:180px;cursor:pointer;
+  }
+  .hz-chip:hover{background:#f6f6f6}
+  .hz-chip.active{background:var(--ink);color:#fff}
+  .hz-chip.active .muted{color:#bdbdbd}
+  .hz-chip.scifi.active{background:var(--blue)}
+  .hz-handle{font-size:17px;font-weight:900;line-height:1.1}
+  .hz-handle small{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-top:4px}
+  .hz-chip.active .hz-handle small{color:#d6d6d6}
+  .hz-meta{margin-top:10px;font-size:13px;line-height:1.5;color:#444}
+  .hz-chip.active .hz-meta{color:#e8e8e8}
+  .hz-meta b{font-weight:900}
+  .hz-rule{margin-top:20px;border-top:1px solid var(--hair);padding-top:12px;display:flex;gap:22px;flex-wrap:wrap;font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+  .hz-rule b{color:var(--ink)}
+
+  /* ---------- TICKER ---------- */
+  .ticker{
+    position:fixed;left:0;right:0;bottom:0;z-index:20;
+    background:var(--ink);color:#fff;border-top:3px solid var(--blue);
+    overflow:hidden;height:42px;display:flex;align-items:center;
+  }
+  .ticker-label{
+    flex:0 0 auto;background:var(--blue);color:#fff;height:100%;
+    display:flex;align-items:center;padding:0 16px;
+    font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:900;
+    position:relative;z-index:2;
+  }
+  .ticker-track{
+    display:inline-block;white-space:nowrap;
+    font-size:13px;letter-spacing:.04em;font-weight:700;
+    animation:scroll 38s linear infinite;
+    padding-left:20px;
+  }
+  .ticker:hover .ticker-track{animation-play-state:paused}
+  .ticker-track span{margin-right:42px}
+  .ticker-track .blue{color:#8aa8ff}
+  @keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+  footer{
+    margin-top:64px;border-top:2px solid var(--ink);padding-top:16px;
+    display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;
+    font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--muted);
+  }
+  footer b{color:var(--ink)}
+  .muted{color:var(--muted)}
+
+  @media (max-width:900px){
+    body{padding:20px 16px 110px}
+    .sec-head,.grid12{grid-template-columns:1fr}
+    .sec-num,.sec-title,.sec-side,.col-live,.col-x,.map-strip{grid-column:1/-1}
+    .col-live{border-right:0;padding-right:0}
+    .col-x{padding-left:0;margin-top:38px}
+    .sec-side{text-align:left;margin-top:10px}
+    .sig-table th:nth-child(3),.sig-table td:nth-child(3){display:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<header>
+  <div class="masthead">
+    <div class="wordmark">FOX<span class="thin">HOLE</span></div>
+    <div class="mast-meta">
+      <div class="edition">Swiss Light <span class="blue">/ 05</span></div>
+      <div class="sub">Event → asset signals, live map, markets, streams and feeds — set in strict 12-column type. One blue. No ornament. Numbers do the work.</div>
+      <div class="meta-row">
+        <span><i>●</i> LIVE</span>
+        <span>Grid 12-col</span>
+        <span>Helvetica</span>
+        <span>Accent #1A56FF</span>
+      </div>
+    </div>
+  </div>
+  <nav class="head-nav">
+    <a href="#signals">01 Signals</a>
+    <a href="#map">02 Map</a>
+    <a href="#markets">03 Markets</a>
+    <a href="#live">04 Live / X</a>
+    <a href="#cinema">05 Cinema</a>
+    <a href="#horizon">06 Horizon</a>
+  </nav>
+</header>
+
+<!-- ============ 01 SIGNALS ============ -->
+<section id="signals">
+  <div class="sec-head">
+    <div class="sec-num"><a href="#signals">01</a></div>
+    <div class="sec-title">
+      <div class="label">Section — <b>Signals</b></div>
+      <h2>Event → Asset<br/>Verdict Table</h2>
+      <p>Each row reads event first, then the asset it moves. Click a row to expand the evidence, the chain and the invalidation point. Hover inverts the row — every signal is a typographic decision.</p>
+    </div>
+    <div class="sec-side"><div class="count">8</div><div class="cap">Active signals</div></div>
+  </div>
+
+  <div class="grid12">
+    <div style="grid-column:1/13;overflow-x:auto">
+      <table class="sig-table" aria-label="Signals table">
+        <thead>
+          <tr>
+            <th style="width:15%">Asset</th>
+            <th style="width:26%">Event</th>
+            <th style="width:13%">Verdict</th>
+            <th style="width:14%">Conf</th>
+            <th style="width:32%">Why (short)</th>
+          </tr>
+        </thead>
+        <tbody id="sigBody">
+
+          <tr class="main-row" tabindex="0">
+            <td><div class="sig-id">SIG-001</div><div class="sig-asset">USO<small>US Oil Fund</small></div></td>
+            <td class="sig-event"><b>Strait of Hormuz tanker delay</b> — 9 vessels holding 22h</td>
+            <td><div class="verdict blue">BUY <span class="arrow">↗</span></div></td>
+            <td><div class="conf-num mono">0.78</div><span class="confbar-track"><span class="confbar-fill blue" style="width:78%"></span></span></td>
+            <td class="sig-event">Delay + insurance spike; SPR buffer thin vs. 14-day outage</td>
+          </tr>
+          <tr class="detail-row" hidden><td colspan="5"><div class="detail-cell"><div class="detail-grid">
+            <div class="col-ev"><h4>Evidence</h4><p>Three VLCCs rerouted around the Cape, war-risk premium up 41% in 24h, and satellite AIS gaps clustered at the strait mouth. Inventories printed −4.2M bbl vs −1.1M expected.</p></div>
+            <div class="col-why"><h4>Chain / Why</h4><p>Delay → effective supply cut → prompt time-spread widening. USO front contract re-prices first; spot follows with a 2–3 session lag if the queue does not clear.</p></div>
+            <div class="col-meta"><h4>Detail</h4><dl><dt>Invalidation</dt><dd>Queue clears &lt; 6h</dd><dt>Horizon</dt><dd>2–5 sessions</dd><dt>Size guide</dt><dd>Moderate</dd><dt>Sector</dt><dd>Energy</dd></dl></div>
+          </div></div></td></tr>
+
+          <tr class="main-row" tabindex="0">
+            <td><div class="sig-id">SIG-002</div><div class="sig-asset">SPY<small>S&amp;P 500 ETF</small></div></td>
+            <td class="sig-event"><b>Bank stress headline</b> — regional lender guided down</td>
+            <td><div class="verdict">SELL <span class="arrow">↘</span></div></td>
+            <td><div class="conf-num mono">0.61</div><span class="confbar-track"><span class="confbar-fill" style="width:61%"></span></span></td>
+            <td class="sig-event">CDS widening + deposit outflow anecdotes; breadth already soft</td>
+          </tr>
+          <tr class="detail-row" hidden><td colspan="5"><div class="detail-cell"><div class="detail-grid">
+            <div class="col-ev"><h4>Evidence</h4><p>Regional bank −9% premarket, KBW index −3.1% intraday, credit spreads +18bp. Options skew bid on index puts despite light volume.</p></div>
+            <div class="col-why"><h4>Chain / Why</h4><p>Idiosyncratic guide-down is becoming a sector read-through. SPY has no margin for a multiple re-rating while earnings breadth is already below its 50-day mean.</p></div>
+            <div class="col-meta"><h4>Detail</h4><dl><dt>Invalidation</dt><dd>Spreads retrace 10bp</dd><dt>Horizon</dt><dd>1–3 sessions</dd><dt>Size guide</dt><dd>Small</dd><dt>Sector</dt><dd>Financials</dd></dl></div>
+          </div></div></td></tr>
+
+          <tr class="main-row" tabindex="0">
+            <td><div class="sig-id">SIG-003</div><div class="sig-asset">BTC<small>Bitcoin</small></div></td>
+            <td class="sig-event"><b>Ceasefire / de-escalation talks</b> — risk-on rotation</td>
+            <td><div class="verdict blue">BUY <span class="arrow">↗</span></div></td>
+            <td><div class="conf-num mono">0.64</div><span class="confbar-track"><span class="confbar-fill blue" style="width:64%"></span></span></td>
+            <td class="sig-event">DXY soft, real yields down; weekend ETF flows +$210M</td>
+          </tr>
+          <tr class="detail-row" hidden><td colspan="5"><div class="detail-cell"><div class="detail-grid">
+            <div class="col-ev"><h4>Evidence</h4><p>Ceasefire headlines coincided with DXY −0.4% and 10y real yield −6bp. Perpetual funding reset neutral; spot order-books thin above resistance.</p></div>
+            <div class="col-why"><h4>Chain / Why</h4><p>De-escalation removes the geopolitical bid from dollars. BTC is the cleanest high-beta expression of that rotation when liquidity, not fundamentals, is the constraint.</p></div>
+            <div class="col-meta"><h4>Detail</h4><dl><dt>Invalidation</dt><dd>DXY back above 104</dd><dt>Horizon</dt><dd>3–7 sessions</dd><dt>Size guide</dt><dd>Moderate</dd><dt>Sector</dt><dd>Crypto</dd></dl></div>
+          </div></div></td></tr>
+
+          <tr class="main-row" tabindex="0">
+            <td><div class="sig-id">SIG-004</div><div class="sig-asset">GLD<small>Gold Trust</small></div></td>
+            <td class="sig-event"><b>Pacific typhoon landfall window</b> — 72h</td>
+            <td><div class="verdict">WATCH <span class="arrow">→</span></div></td>
+            <td><div class="conf-num mono">0.52</div><span class="confbar-track"><span class="confbar-fill" style="width:52%"></span></span></td>
+            <td class="sig-event">Shipping insurance repricing; safe-haven bid not yet confirmed</td>
+          </tr>
+          <tr class="detail-row" hidden><td colspan="5"><div class="detail-cell"><div class="detail-grid">
+            <div class="col-ev"><h4>Evidence</h4><p>Storm surge models converge on two landfall corridors. Container spot rates +12% on adjacent routes; gold miners lagging bullion by 1.8%.</p></div>
+            <div class="col-why"><h4>Chain / Why</h4><p>Watch, not buy: the haven bid needs either a supply-chain second leg or a rates catalyst. GLD moves after the narrative confirms, not before.</p></div>
+            <div class="col-meta"><h4>Detail</h4><dl><dt>Invalidation</dt><dd>Storm downgrades to 2</dd><dt>Horizon</dt><dd>2–4 sessions</dd><dt>Size guide</dt><dd>None yet</dd><dt>Sector</dt><dd>Metals</dd></dl></div>
+          </div></div></td></tr>
+
+          <tr class="main-row" tabindex="0">
+            <td><div class="sig-id">SIG-005</div><div class="sig-asset">TSLA<small>Tesla Inc</small></div></td>
+            <td class="sig-event"><b>Quake near Gigafactory corridor</b> — production pause</td>
+            <td><div class="verdict">SELL <span class="arrow">↘</span></div></td>
+            <td><div class="conf-num mono">0.58</div><span class="confbar-track"><span class="confbar-fill" style="width:58%"></span></span></td>
+            <td class="sig-event">Line restart est. 5–9 days; delivery guide already tight</td>
+          </tr>
+          <tr class="detail-row" hidden><td colspan="5"><div class="detail-cell"><div class="detail-grid">
+            <div class="col-ev"><h4>Evidence</h4><p>M6.1 quake 38km from the corridor, no structural damage reported but power-grid inspections underway. Supplier ETs pushed 4–6 days in local press.</p></div>
+            <div class="col-why"><h4>Chain / Why</h4><p>Any pause lands directly on a quarter that needs every week of output. The stock trades the delivery guide, so a pause is a guide problem before it is a factory problem.</p></div>
+            <div class="col-meta"><h4>Detail</h4><dl><dt>Invalidation</dt><dd>Restart confirmed &lt; 48h</dd><dt>Horizon</dt><dd>2–6 sessions</dd><dt>Size guide</dt><dd>Small</dd><dt>Sector</dt><dd>Auto / Tech</dd></dl></div>
+          </div></div></td></tr>
+
+          <tr class="main-row" tabindex="0">
+            <td><div class="sig-id">SIG-006</div><div class="sig-asset">XLV<small>Health Care Select</small></div></td>
+            <td class="sig-event"><b>Satellite outage over supply hub</b> — pharma logistics</td>
+            <td><div class="verdict">WATCH <span class="arrow">→</span></div></td>
+            <td><div class="conf-num mono">0.47</div><span class="confbar-track"><span class="confbar-fill" style="width:47%"></span></span></td>
+            <td class="sig-event">Cold-chain reroute costs rising; no FDA/approval headline yet</td>
+          </tr>
+          <tr class="detail-row" hidden><td colspan="5"><div class="detail-cell"><div class="detail-grid">
+            <div class="col-ev"><h4>Evidence</h4><p>Geostationary satellite outage disrupted reefer telemetry at two hubs. Air-freight surcharges +9%; no cold-chain breach reported by regulators.</p></div>
+            <div class="col-why"><h4>Chain / Why</h4><p>XLV is a margin story, not a revenue cliff — yet. Watch the reroute-cost line for two prints before treating it as a thesis.</p></div>
+            <div class="col-meta"><h4>Detail</h4><dl><dt>Invalidation</dt><dd>Full restore &lt; 24h</dd><dt>Horizon</dt><dd>1–2 sessions</dd><dt>Size guide</dt><dd>None yet</dd><dt>Sector</dt><dd>Health care</dd></dl></div>
+          </div></div></td></tr>
+
+          <tr class="main-row" tabindex="0">
+            <td><div class="sig-id">SIG-007</div><div class="sig-asset">NLTK<small>Nordic Shipping</small></div></td>
+            <td class="sig-event"><b>Arctic convoy escort activated</b> — northern route</td>
+            <td><div class="verdict blue">BUY <span class="arrow">↗</span></div></td>
+            <td><div class="conf-num mono">0.69</div><span class="confbar-track"><span class="confbar-fill blue" style="width:69%"></span></span></td>
+            <td class="sig-event">Ice-class rates +23%; escort = institutional cover for route</td>
+          </tr>
+          <tr class="detail-row" hidden><td colspan="5"><div class="detail-cell"><div class="detail-grid">
+            <div class="col-ev"><h4>Evidence</h4><p>Escort announcement followed by two insurance quotes at −18% vs. unescorted. Ice-class charter rates printed +23% week-on-week.</p></div>
+            <div class="col-why"><h4>Chain / Why</h4><p>Escort converts a fringe route into an insurable one. The rate move is the market pricing the conversion before the cargo volume arrives.</p></div>
+            <div class="col-meta"><h4>Detail</h4><dl><dt>Invalidation</dt><dd>Escort withdrawn</dd><dt>Horizon</dt><dd>5–14 sessions</dd><dt>Size guide</dt><dd>Moderate</dd><dt>Sector</dt><dd>Shipping</dd></dl></div>
+          </div></div></td></tr>
+
+          <tr class="main-row" tabindex="0">
+            <td><div class="sig-id">SIG-008</div><div class="sig-asset">QQQ<small>Nasdaq-100</small></div></td>
+            <td class="sig-event"><b>Conflict escalation — airspace closures</b> — EU corridors</td>
+            <td><div class="verdict">SELL <span class="arrow">↘</span></div></td>
+            <td><div class="conf-num mono">0.55</div><span class="confbar-track"><span class="confbar-fill" style="width:55%"></span></span></td>
+            <td class="sig-event">Air freight + VIX term structure flipping; cloud capex wobble</td>
+          </tr>
+          <tr class="detail-row" hidden><td colspan="5"><div class="detail-cell"><div class="detail-grid">
+            <div class="col-ev"><h4>Evidence</h4><p>Three corridors closed in 6h; air-freight spot +31%. VIX 1-week slope inverted for the first time this quarter; semis lagging 2.4%.</p></div>
+            <div class="col-why"><h4>Chain / Why</h4><p>QQQ is long duration and long logistics. Escalation hits both legs at once — rates via insurance, earnings via freight — which is why the hedge is the index, not a single name.</p></div>
+            <div class="col-meta"><h4>Detail</h4><dl><dt>Invalidation</dt><dd>Corridors reopen</dd><dt>Horizon</dt><dd>1–4 sessions</dd><dt>Size guide</dt><dd>Small</dd><dt>Sector</dt><dd>Tech</dd></dl></div>
+          </div></div></td></tr>
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 02 MAP ============ -->
+<section id="map">
+  <div class="sec-head">
+    <div class="sec-num"><a href="#map">02</a></div>
+    <div class="sec-title">
+      <div class="label">Section — <b>Live Map</b></div>
+      <h2>Events,<br/>Placed On Grid</h2>
+      <p>A wide strip, not a map. Quake, storm, conflict, ships and satellites are plotted as glyph + tag on a strict line grid. Everything stays typographic; coordinates are the decoration.</p>
+    </div>
+    <div class="sec-side"><div class="count">23</div><div class="cap">Events tracked</div></div>
+  </div>
+
+  <div class="grid12">
+    <div class="map-strip" aria-label="Live map strip">
+      <div class="map-coords"><span>Lat 84N → 38S</span><span>Lon 180W → 180E</span><span class="blue">● LIVE</span></div>
+      <div class="map-marks">
+        <div class="map-mark black" style="left:18%;top:34%"><div class="glyph">△</div><span class="tag">Quake M6.1</span></div>
+        <div class="map-mark blue" style="left:34%;top:52%"><div class="glyph">◍</div><span class="tag">Storm Cat-3</span></div>
+        <div class="map-mark black" style="left:55%;top:30%"><div class="glyph">✕</div><span class="tag">Conflict</span></div>
+        <div class="map-mark" style="left:68%;top:58%"><div class="glyph">▸</div><span class="tag">Ships 9 held</span></div>
+        <div class="map-mark blue" style="left:84%;top:38%"><div class="glyph">◇</div><span class="tag">Sat outage</span></div>
+      </div>
+      <div class="map-track">
+        <div>Quake<span>M6.1 · 38km corridor</span></div>
+        <div>Storm<span>Cat-3 · 72h window</span></div>
+        <div>Conflict<span>Airspace ×3 closed</span></div>
+        <div>Ships<span>9 held · Hormuz</span></div>
+        <div>Sats<span>GEO outage · 2 hubs</span></div>
+        <div>Convoy<span>Arctic escort · on</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 03 MARKETS ============ -->
+<section id="markets">
+  <div class="sec-head">
+    <div class="sec-num"><a href="#markets">03</a></div>
+    <div class="sec-title">
+      <div class="label">Section — <b>Markets</b></div>
+      <h2>Aligned<br/>Number Columns</h2>
+      <p>One table, six columns, right-aligned mono prices. The blue is reserved for positive change; everything else is black on white. Read the column, not the row.</p>
+    </div>
+    <div class="sec-side"><div class="count mono">16:42</div><div class="cap">Last print · CET</div></div>
+  </div>
+
+  <div class="mkt-head">
+    <div style="grid-column:1/3">Symbol</div>
+    <div style="grid-column:3/6">Name</div>
+    <div class="r" style="grid-column:6/9">Last</div>
+    <div class="r" style="grid-column:9/11">Chg</div>
+    <div class="r" style="grid-column:11/13">Volume</div>
+  </div>
+  <div id="mktBody">
+    <div class="mkt-row"><div class="mkt-sym">SPY</div><div class="mkt-name">SPDR S&amp;P 500</div><div class="mkt-last mono">512.40</div><div class="mkt-chg chg-dn mono">−1.12%</div><div class="mkt-vol mono">48.2M</div></div>
+    <div class="mkt-row"><div class="mkt-sym">QQQ</div><div class="mkt-name">Nasdaq-100</div><div class="mkt-last mono">438.17</div><div class="mkt-chg chg-dn mono">−0.84%</div><div class="mkt-vol mono">31.7M</div></div>
+    <div class="mkt-row"><div class="mkt-sym">BTC</div><div class="mkt-name">Bitcoin</div><div class="mkt-last mono">67,420</div><div class="mkt-chg chg-up mono">+2.31%</div><div class="mkt-vol mono">$18.4B</div></div>
+    <div class="mkt-row"><div class="mkt-sym">USO</div><div class="mkt-name">US Oil Fund</div><div class="mkt-last mono">71.86</div><div class="mkt-chg chg-up mono">+3.47%</div><div class="mkt-vol mono">12.9M</div></div>
+    <div class="mkt-row"><div class="mkt-sym">GLD</div><div class="mkt-name">Gold Trust</div><div class="mkt-last mono">198.53</div><div class="mkt-chg chg-up mono">+0.22%</div><div class="mkt-vol mono">4.1M</div></div>
+    <div class="mkt-row"><div class="mkt-sym">TSLA</div><div class="mkt-name">Tesla Inc</div><div class="mkt-last mono">242.10</div><div class="mkt-chg chg-dn mono">−2.05%</div><div class="mkt-vol mono">98.6M</div></div>
+    <div class="mkt-row"><div class="mkt-sym">XLV</div><div class="mkt-name">Health Care Select</div><div class="mkt-last mono">138.74</div><div class="mkt-chg chg-up mono">+0.41%</div><div class="mkt-vol mono">9.3M</div></div>
+    <div class="mkt-row"><div class="mkt-sym">VIX</div><div class="mkt-name">Volatility Index</div><div class="mkt-last mono">16.82</div><div class="mkt-chg chg-up mono">+8.14%</div><div class="mkt-vol mono">—</div></div>
+  </div>
+</section>
+
+<!-- ============ 04 LIVE / X ============ -->
+<section id="live">
+  <div class="sec-head">
+    <div class="sec-num"><a href="#live">04</a></div>
+    <div class="sec-title">
+      <div class="label">Section — <b>Live / X</b></div>
+      <h2>Streams &amp;<br/>The Feed</h2>
+      <p>Two columns divided by a hairline. Left: what is live now, with viewer counts as the largest number on screen. Right: the X feed, timestamped and unsorted by anyone.</p>
+    </div>
+    <div class="sec-side"><div class="count">128K</div><div class="cap">Watching now</div></div>
+  </div>
+
+  <div class="two-col">
+    <div class="col-live">
+      <div class="col-head"><h3><span class="live-dot"></span>Live Now</h3><span class="label">4 channels</span></div>
+      <div class="live-row"><div class="live-plat">KICK<small>markets</small></div><div><div class="live-title">Tanker queue, live AIS — Hormuz holding pattern</div><div class="live-meta">Started 42m ago · English</div></div><div class="live-view mono">18.4K<small>watching</small></div></div>
+      <div class="live-row"><div class="live-plat">YOUTUBE<small>storm</small></div><div><div class="live-title">Typhoon Cat-3 landfall window — satellite loop</div><div class="live-meta">Started 1h 12m ago · Multilingual</div></div><div class="live-view mono">42.1K<small>watching</small></div></div>
+      <div class="live-row"><div class="live-plat">TWITCH<small>geopolitics</small></div><div><div class="live-title">Ceasefire talks: what the tape is pricing</div><div class="live-meta">Started 18m ago · English</div></div><div class="live-view mono">11.2K<small>watching</small></div></div>
+      <div class="live-row"><div class="live-plat">RUMBLE<small>crypto</small></div><div><div class="live-title">Weekend flows desk — ETF tape and funding</div><div class="live-meta">Started 2h 05m ago · English</div></div><div class="live-view mono">9.7K<small>watching</small></div></div>
+    </div>
+
+    <div class="col-x">
+      <div class="col-head"><h3>X Feed</h3><span class="label">Latest posts</span></div>
+      <div class="x-post"><div class="x-top"><span class="x-handle">@foxhole_markets</span><span class="x-time">2m</span></div><div class="x-body"><b>USO +3.4% on the Hormuz queue.</b> AIS shows 9 vessels holding. Insurance +41%. This is the cleanest event→asset print of the week.</div><div class="x-stats"><span><b>1.2K</b> reposts</span><span><b>4.8K</b> likes</span><span><b>312</b> views-batch</span></div></div>
+      <div class="x-post"><div class="x-top"><span class="x-handle">@signalwatch</span><span class="x-time">11m</span></div><div class="x-body">Bank headline is the one to watch into the close. CDS +18bp is not noise. <b>SPY short thesis needs breadth confirmation, not a headline.</b></div><div class="x-stats"><span><b>640</b> reposts</span><span><b>2.1K</b> likes</span><span><b>98</b> replies</span></div></div>
+      <div class="x-post"><div class="x-top"><span class="x-handle">@stormtrack_fox</span><span class="x-time">26m</span></div><div class="x-body">Cat-3 landfall window narrowed to 72h. GLD is <b>WATCH, not buy</b> — haven bid unconfirmed. Shipping rates are the tell.</div><div class="x-stats"><span><b>410</b> reposts</span><span><b>1.6K</b> likes</span><span><b>54</b> replies</span></div></div>
+      <div class="x-post"><div class="x-top"><span class="x-handle">@arctic_route</span><span class="x-time">48m</span></div><div class="x-body">Escort activated on the northern route. Ice-class rates <b>+23% WoW</b>. Institutional cover changes the insurance math overnight.</div><div class="x-stats"><span><b>880</b> reposts</span><span><b>3.4K</b> likes</span><span><b>121</b> replies</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 05 CINEMA ============ -->
+<section id="cinema">
+  <div class="sec-head">
+    <div class="sec-num"><a href="#cinema">05</a></div>
+    <div class="sec-title">
+      <div class="label">Section — <b>Cinema</b></div>
+      <h2>Trending &amp;<br/>Tracking List</h2>
+      <p>A plain list. Rank, title, one status word, one number. Hover inverts the row to black — selection is a typographic act, not a card flip.</p>
+    </div>
+    <div class="sec-side"><div class="count">12</div><div class="cap">Titles tracked</div></div>
+  </div>
+
+  <div class="cinema-list">
+    <div class="cin-row"><div class="cin-rank">01</div><div class="cin-title">The Quiet Queue<small>Documentary · 2026</small></div><div class="cin-status blue">Trending ↑1</div><div class="cin-num"><b>94</b><span>Foxhole score</span></div></div>
+    <div class="cin-row"><div class="cin-rank">02</div><div class="cin-title">Landfall<small>Drama · 2025</small></div><div class="cin-status">Tracking</div><div class="cin-num"><b>88</b><span>Foxhole score</span></div></div>
+    <div class="cin-row"><div class="cin-rank">03</div><div class="cin-title">Northern Route<small>Thriller · 2026</small></div><div class="cin-status blue">Trending ↑3</div><div class="cin-num"><b>86</b><span>Foxhole score</span></div></div>
+    <div class="cin-row"><div class="cin-rank">04</div><div class="cin-title">Signal Loss<small>Sci-Fi · 2024</small></div><div class="cin-status">Tracking</div><div class="cin-num"><b>81</b><span>Foxhole score</span></div></div>
+    <div class="cin-row"><div class="cin-rank">05</div><div class="cin-title">The Ceasefire Tapes<small>Docu-drama · 2026</small></div><div class="cin-status">Tracking</div><div class="cin-num"><b>79</b><span>Foxhole score</span></div></div>
+  </div>
+</section>
+
+<!-- ============ 06 HORIZON ============ -->
+<section id="horizon">
+  <div class="sec-head">
+    <div class="sec-num"><a href="#horizon">06</a></div>
+    <div class="sec-title">
+      <div class="label">Section — <b>Horizon</b></div>
+      <h2>Profiles<br/>By Vertical</h2>
+      <p>Five profiles, five verticals. Click a chip to pin it — the active profile inverts the block. No avatars, no bios beyond three lines; the numbers carry the identity.</p>
+    </div>
+    <div class="sec-side"><div class="count">5</div><div class="cap">Profiles</div></div>
+  </div>
+
+  <div class="hz-wrap">
+    <div class="hz-top">
+      <h3>Horizon / Index</h3>
+      <p>Pick a vertical to compare signal density, posting cadence and break rate. The block below is the pinned profile — updated by the chip you click.</p>
+    </div>
+    <div class="hz-chips" id="hzChips">
+      <div class="hz-chip active" data-h="war"><div class="hz-handle">@fox_war<small>War</small></div><div class="hz-meta"><b>48</b> signals / wk · <b>0.71</b> avg conf</div></div>
+      <div class="hz-chip" data-h="markets"><div class="hz-handle">@fox_markets<small>Markets</small></div><div class="hz-meta"><b>62</b> signals / wk · <b>0.66</b> avg conf</div></div>
+      <div class="hz-chip" data-h="tech"><div class="hz-handle">@fox_tech<small>Tech</small></div><div class="hz-meta"><b>37</b> signals / wk · <b>0.59</b> avg conf</div></div>
+      <div class="hz-chip" data-h="cinema"><div class="hz-handle">@fox_cinema<small>Cinema</small></div><div class="hz-meta"><b>21</b> signals / wk · <b>0.74</b> avg conf</div></div>
+      <div class="hz-chip" data-h="crypto"><div class="hz-handle">@fox_crypto<small>Crypto</small></div><div class="hz-meta"><b>44</b> signals / wk · <b>0.62</b> avg conf</div></div>
+    </div>
+    <div class="hz-rule" id="hzDetail">
+      <span>Pinned: <b>@fox_war</b></span><span>Vertical: <b>War</b></span><span>Signals/wk: <b>48</b></span><span>Avg conf: <b>0.71</b></span><span>Break rate: <b>18%</b></span>
+    </div>
+  </div>
+
+  <footer>
+    <span><b>FOXHOLE</b> — Swiss Light / 05</span>
+    <span>Design mockup · Static demo data</span>
+    <span>Grid 12 · Helvetica · #1A56FF</span>
+  </footer>
+</section>
+
+<!-- ============ TICKER ============ -->
+<div class="ticker" aria-label="Market ticker">
+  <div class="ticker-label">Ticker ● Live</div>
+  <div class="ticker-track" id="tickerTrack">
+    <span>SPY <b>512.40</b> <span class="blue">−1.12%</span></span>
+    <span>BTC <b>67,420</b> <span class="blue">+2.31%</span></span>
+    <span>USO <b>71.86</b> <span class="blue">+3.47%</span></span>
+    <span>QQQ <b>438.17</b> −0.84%</span>
+    <span>GLD <b>198.53</b> +0.22%</span>
+    <span>TSLA <b>242.10</b> −2.05%</span>
+    <span>VIX <b>16.82</b> +8.14%</span>
+    <span>XLV <b>138.74</b> +0.41%</span>
+    <span>NLTK <b>14.20</b> <span class="blue">+5.10%</span></span>
+    <span>HORMUZ QUEUE <b>9 VESSELS</b> HELD</span>
+    <span>TYPHOON <b>CAT-3</b> 72H WINDOW</span>
+    <span>ARCTIC ESCORT <b>ACTIVE</b></span>
+  </div>
+</div>
+
+<script>
+  // Duplicate ticker content for seamless loop
+  (function(){
+    var t = document.getElementById('tickerTrack');
+    t.innerHTML += t.innerHTML;
+  })();
+
+  // Signal rows: click / Enter expands detail (accordion)
+  (function(){
+    var rows = Array.prototype.slice.call(document.querySelectorAll('#sigBody .main-row'));
+    function toggle(row){
+      var detail = row.nextElementSibling;
+      if(!detail || !detail.classList.contains('detail-row')) return;
+      var willOpen = detail.hidden;
+      // close all others (strict single-open)
+      document.querySelectorAll('#sigBody .detail-row').forEach(function(d){ d.hidden = true; });
+      document.querySelectorAll('#sigBody .main-row.open').forEach(function(r){ r.classList.remove('open'); });
+      if(willOpen){
+        detail.hidden = false;
+        row.classList.add('open');
+      }
+    }
+    rows.forEach(function(row){
+      row.addEventListener('click', function(){ toggle(row); });
+      row.addEventListener('keydown', function(e){
+        if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggle(row); }
+      });
+    });
+  })();
+
+  // Horizon chips: pin a profile
+  (function(){
+    var data = {
+      war:     {handle:'@fox_war',     vertical:'War',     sig:'48', conf:'0.71', brk:'18%'},
+      markets: {handle:'@fox_markets', vertical:'Markets', sig:'62', conf:'0.66', brk:'14%'},
+      tech:    {handle:'@fox_tech',    vertical:'Tech',    sig:'37', conf:'0.59', brk:'22%'},
+      cinema:  {handle:'@fox_cinema',  vertical:'Cinema',  sig:'21', conf:'0.74', brk:'9%'},
+      crypto:  {handle:'@fox_crypto',  vertical:'Crypto',  sig:'44', conf:'0.62', brk:'27%'}
+    };
+    var chips = document.querySelectorAll('#hzChips .hz-chip');
+    var detail = document.getElementById('hzDetail');
+    chips.forEach(function(chip){
+      chip.addEventListener('click', function(){
+        chips.forEach(function(c){ c.classList.remove('active'); });
+        chip.classList.add('active');
+        var d = data[chip.getAttribute('data-h')];
+        detail.innerHTML =
+          '<span>Pinned: <b>'+d.handle+'</b></span>' +
+          '<span>Vertical: <b>'+d.vertical+'</b></span>' +
+          '<span>Signals/wk: <b>'+d.sig+'</b></span>' +
+          '<span>Avg conf: <b>'+d.conf+'</b></span>' +
+          '<span>Break rate: <b>'+d.brk+'</b></span>';
+      });
+      chip.setAttribute('tabindex','0');
+      chip.addEventListener('keydown', function(e){
+        if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); chip.click(); }
+      });
+    });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>02 — Editorial Dark</title>
+<meta name="description" content="Foxhole — Editorial Dark redesign mockup. Bloomberg-terminal-meets-magazine.">
+<style>
+/* ============================================================
+   FOXHOLE — 02 EDITORIAL DARK
+   Near-black paper · Georgia display · hairline rules
+   Single red accent · mono only for tickers / data
+   ============================================================ */
+:root{
+  --paper:#0b0b09;
+  --paper-2:#0f0f0d;
+  --panel:#111110;
+  --ink:#ece6d8;
+  --ink-soft:#cfc8b8;
+  --muted:#918b7d;
+  --faint:#6b675d;
+  --hair:#2a2a26;
+  --hair-2:#3a3a34;
+  --red:#e8281c;
+  --red-soft:#ff4b3e;
+  --amber:#c99a3f;
+  --grey:#8a857a;
+  --max:1440px;
+  --serif:Georgia,'Times New Roman',Times,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--serif);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+::selection{background:var(--red);color:#fff}
+a{color:inherit;text-decoration:none}
+a:hover{text-decoration:underline;text-decoration-color:var(--red);text-underline-offset:4px;text-decoration-thickness:1px}
+button{font-family:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--red);outline-offset:3px}
+
+/* reading progress — hairline */
+#progress{position:fixed;inset:0 auto auto 0;height:2px;width:0;background:var(--red);z-index:60;transition:width .1s linear}
+
+/* ---------- masthead ---------- */
+.masthead{max-width:var(--max);margin:0 auto;padding:0 28px}
+.meta-bar{
+  display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;
+  border-top:3px solid var(--ink);border-bottom:1px solid var(--hair-2);
+  padding:9px 0 8px;margin-top:14px;
+  font-family:var(--sans);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+}
+.meta-bar b{color:var(--ink);font-weight:700}
+.meta-bar .dot{color:var(--red)}
+#clock{font-family:var(--mono);letter-spacing:.06em;color:var(--ink);font-size:11px}
+@media(max-width:760px){.meta-bar{justify-content:center;text-align:center}}
+.mast-row{
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:20px;
+  padding:22px 0 14px;border-bottom:1px solid var(--hair);
+}
+.mast-side{font-size:13px;line-height:1.55;color:var(--muted);max-width:230px}
+.mast-side.right{text-align:right;justify-self:end}
+.mast-side em{color:var(--ink-soft)}
+.logo{
+  text-align:center;line-height:.85;letter-spacing:.02em;
+  font-size:clamp(64px,10.5vw,148px);font-weight:700;color:var(--ink);
+  margin:0;
+}
+.logo span{color:var(--red)}
+.logo-sub{
+  text-align:center;font-family:var(--sans);font-size:10.5px;letter-spacing:.32em;text-transform:uppercase;
+  color:var(--muted);margin:10px 0 0;
+}
+.logo-sub i{font-style:normal;color:var(--red)}
+@media(max-width:900px){.mast-row{grid-template-columns:1fr}.mast-side{display:none}}
+.nav-index{
+  display:flex;gap:0;flex-wrap:wrap;border-bottom:1px solid var(--hair-2);
+  font-family:var(--sans);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+}
+.nav-index a{
+  padding:10px 16px 9px;color:var(--muted);border-right:1px solid var(--hair);
+}
+.nav-index a:first-child{border-left:1px solid var(--hair)}
+.nav-index a:hover{color:var(--ink);text-decoration:none;background:var(--panel)}
+.nav-index a.hot{color:var(--ink)}
+.nav-index a.hot::after{content:" ●";color:var(--red);font-size:8px;vertical-align:2px}
+
+/* ---------- ticker strip ---------- */
+.ticker{
+  border-bottom:1px solid var(--hair);background:var(--paper-2);
+  overflow:hidden;white-space:nowrap;position:relative;
+}
+.ticker-track{display:inline-flex;animation:tick 48s linear infinite;padding:7px 0}
+.ticker:hover .ticker-track{animation-play-state:paused}
+@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.tick-item{
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;color:var(--ink-soft);
+  padding:0 18px;border-right:1px solid var(--hair);
+}
+.tick-item b{color:var(--ink)}
+.tick-item .up{color:var(--ink)} .tick-item .dn{color:var(--red-soft)}
+.tick-item .lbl{color:var(--faint);font-size:9px;letter-spacing:.18em;margin-right:8px;font-family:var(--sans)}
+
+/* ---------- layout ---------- */
+.sheet{max-width:var(--max);margin:0 auto;padding:0 28px}
+.kicker{
+  font-family:var(--sans);font-size:10.5px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:var(--muted);
+  display:flex;align-items:center;gap:12px;
+}
+.kicker::after{content:"";flex:1;height:1px;background:var(--hair-2)}
+.kicker .red{color:var(--red)}
+.kicker.no-line::after{display:none}
+
+/* lead story */
+.lead{padding:28px 0 22px;border-bottom:1px solid var(--hair)}
+.lead-top{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:baseline;margin-bottom:14px}
+.lead-top .folio{font-family:var(--mono);font-size:11px;color:var(--faint);letter-spacing:.08em}
+.headline{
+  font-size:clamp(38px,5.6vw,76px);line-height:.98;letter-spacing:-.02em;font-weight:700;
+  margin:10px 0 14px;max-width:1050px;text-wrap:balance;
+}
+.headline a:hover{text-decoration:none}
+.headline a:hover .u{text-decoration:underline;text-decoration-color:var(--red);text-decoration-thickness:3px;text-underline-offset:6px}
+.headline .accent{color:var(--red)}
+.deck{
+  font-size:clamp(17px,1.6vw,21px);line-height:1.45;color:var(--ink-soft);max-width:820px;
+  margin:0 0 16px;text-wrap:pretty;
+}
+.deck::first-letter{
+  font-size:3.1em;float:left;line-height:.78;padding:6px 10px 0 0;font-weight:700;color:var(--ink);
+}
+.byline{
+  display:flex;gap:22px;flex-wrap:wrap;align-items:center;
+  border-top:1px solid var(--hair);border-bottom:1px solid var(--hair);
+  padding:9px 0;font-family:var(--sans);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+}
+.byline b{color:var(--ink)}
+.byline .verdict-big{margin-left:auto;font-family:var(--mono);letter-spacing:.1em;font-size:12px}
+.verdict{font-family:var(--sans);font-weight:800;letter-spacing:.18em}
+.verdict.buy{color:var(--ink)} .verdict.sell{color:var(--red-soft)} .verdict.watch{color:var(--amber)} .verdict.hold{color:var(--grey)}
+
+/* two-column flow */
+.flow{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:0}
+.col-main{padding:26px 28px 10px 0;border-right:1px solid var(--hair);min-width:0}
+.col-side{padding:26px 0 10px 28px;min-width:0}
+@media(max-width:1020px){.flow{grid-template-columns:1fr}.col-main{border-right:0;padding-right:0}.col-side{padding-left:0;border-top:1px solid var(--hair)}}
+
+.article-body{
+  columns:2;column-gap:28px;column-rule:1px solid var(--hair);
+  text-align:justify;hyphens:auto;font-size:15.5px;line-height:1.68;color:var(--ink-soft);
+}
+.article-body p{margin:0 0 14px}
+.article-body p:first-child{margin-top:0}
+.article-body strong{color:var(--ink)}
+.article-body .pull{
+  break-inside:avoid;border-top:2px solid var(--red);border-bottom:1px solid var(--hair);
+  padding:12px 0;margin:6px 0 14px;font-size:19px;line-height:1.35;color:var(--ink);font-style:italic;text-align:left;
+}
+@media(max-width:640px){.article-body{columns:1}}
+
+/* verdict box under lead */
+.verdict-box{
+  display:grid;grid-template-columns:auto 1fr auto;gap:20px;align-items:center;
+  border:1px solid var(--hair-2);background:var(--panel);padding:16px 18px;margin:22px 0 8px;
+}
+.verdict-box .big{font-size:30px;letter-spacing:.06em}
+.verdict-box .asset{font-family:var(--mono);font-size:22px;color:var(--ink)}
+.verdict-box .conf{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.08em}
+.conf-bar{height:3px;background:var(--hair);margin-top:8px;position:relative}
+.conf-bar i{position:absolute;inset:0 auto 0 0;background:var(--red)}
+.verdict-box .why-link{font-family:var(--sans);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);text-align:right;line-height:1.7}
+.verdict-box .why-link a{color:var(--ink)}
+@media(max-width:640px){.verdict-box{grid-template-columns:1fr}}
+
+/* ---------- map band ---------- */
+.map-band{border-top:1px solid var(--hair);border-bottom:1px solid var(--hair);padding:20px 0 16px;margin-top:20px}
+.map-head{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:baseline;margin-bottom:12px}
+.map-head h2{font-size:22px;margin:6px 0 0;letter-spacing:-.01em}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-family:var(--sans);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.legend i{font-style:normal;display:inline-flex;align-items:center;gap:6px}
+.legend .sw{width:8px;height:8px;border-radius:50%;display:inline-block}
+.sw.quake{background:var(--ink)} .sw.storm{background:transparent;border:1.5px solid var(--ink)} .sw.conflict{background:var(--red)} .sw.ship{background:var(--amber)} .sw.sat{background:transparent;border:1px solid var(--muted);border-radius:0}
+.map-wrap{position:relative;border:1px solid var(--hair);background:#0a0a08;overflow:hidden}
+.map-wrap svg{display:block;width:100%;height:auto}
+.map-note{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:0;border-top:1px solid var(--hair);margin-top:0;
+  font-size:12px;
+}
+.map-note div{padding:10px 12px 4px;border-right:1px solid var(--hair);line-height:1.5;color:var(--muted)}
+.map-note div:last-child{border-right:0}
+.map-note b{display:block;font-family:var(--sans);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink);margin-bottom:3px}
+.map-note .mono{font-family:var(--mono);font-size:11px;color:var(--ink-soft)}
+@media(max-width:820px){.map-note{grid-template-columns:1fr 1fr}.map-note div{border-bottom:1px solid var(--hair)}}
+.pin{cursor:pointer}
+.pin:hover .pin-ring{stroke:var(--red);stroke-width:1.5}
+.pin-label{font-family:var(--mono);font-size:9px;fill:var(--muted);letter-spacing:.06em}
+.pin-label.hot{fill:var(--ink)}
+
+/* ---------- ranked signals ---------- */
+.section{padding:26px 0 8px}
+.section-head{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;border-bottom:2px solid var(--ink);padding-bottom:8px;margin-bottom:0}
+.section-head h2{font-size:28px;margin:0;letter-spacing:-.02em}
+.section-head .count{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.signal{border-bottom:1px solid var(--hair);transition:background .18s ease}
+.signal.open{background:var(--paper-2)}
+.signal-head{
+  display:grid;grid-template-columns:64px 1fr auto;gap:16px;width:100%;text-align:left;
+  background:none;border:0;color:inherit;padding:16px 10px 15px;align-items:start;
+}
+.signal-head:hover{background:var(--panel)}
+.signal-head:hover .sig-title{text-decoration:underline;text-decoration-color:var(--red);text-underline-offset:4px}
+.num{font-size:34px;line-height:.9;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.num small{display:block;font-family:var(--sans);font-size:8.5px;letter-spacing:.22em;color:var(--faint);font-weight:700;margin-top:5px;text-transform:uppercase}
+.sig-title{font-size:19px;line-height:1.25;margin:0 0 6px;font-weight:700;letter-spacing:-.01em}
+.sig-meta{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--sans);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);align-items:center}
+.sig-asset{font-family:var(--mono);font-size:11.5px;color:var(--ink);letter-spacing:.04em;border:1px solid var(--hair-2);padding:2px 7px}
+.sig-right{text-align:right;min-width:110px}
+.sig-right .v{font-size:14px}
+.sig-right .c{font-family:var(--mono);font-size:20px;color:var(--ink);display:block;margin-top:4px}
+.sig-right .c small{font-size:11px;color:var(--muted)}
+.sig-right .ago{font-family:var(--sans);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-top:3px}
+.plus{font-family:var(--mono);color:var(--red);font-size:16px;margin-left:8px}
+.why{
+  max-height:0;overflow:hidden;transition:max-height .35s ease,padding .3s ease;
+  padding:0 10px 0 90px;
+}
+.signal.open .why{max-height:420px;padding-bottom:18px}
+.why-inner{border-left:2px solid var(--red);padding-left:16px}
+.why-inner p{margin:0 0 10px;font-size:14.5px;line-height:1.65;color:var(--ink-soft);text-align:justify;max-width:640px}
+.why-inner .src{font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.8}
+.why-inner .src a{color:var(--ink-soft)}
+@media(max-width:640px){.signal-head{grid-template-columns:48px 1fr}.sig-right{grid-column:2;text-align:left;display:flex;gap:14px;align-items:baseline}.why{padding-left:64px}}
+
+/* ---------- markets table ---------- */
+.markets{margin-top:8px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+thead th{
+  font-family:var(--sans);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);font-weight:700;
+  text-align:right;padding:10px 10px 8px;border-bottom:1px solid var(--hair-2);
+}
+thead th:first-child{text-align:left}
+tbody td{padding:9px 10px;border-bottom:1px solid var(--hair);text-align:right;font-family:var(--mono);font-size:12.5px;color:var(--ink-soft)}
+tbody td:first-child{text-align:left;font-family:var(--sans);font-size:12.5px}
+tbody td .sym{font-family:var(--mono);font-weight:700;color:var(--ink);letter-spacing:.04em}
+tbody td .name{color:var(--faint);font-size:11px;margin-left:8px;font-family:var(--serif);font-style:italic}
+tbody tr{transition:background .15s ease,box-shadow .15s ease}
+tbody tr:hover{background:#161612;box-shadow:inset 3px 0 0 var(--red)}
+tbody tr:hover td{color:var(--ink)}
+.chg-up::after{content:" ▲";font-size:9px}
+.chg-dn{color:var(--red-soft)!important}
+.chg-dn::after{content:" ▼";font-size:9px}
+.flash-up{animation:fu .6s ease} .flash-dn{animation:fd .6s ease}
+@keyframes fu{0%{background:#1d2416}100%{background:transparent}}
+@keyframes fd{0%{background:#241214}100%{background:transparent}}
+.markets-foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:9px 2px 0;font-family:var(--mono);font-size:10.5px;color:var(--faint)}
+.markets-foot a{color:var(--muted)}
+
+/* ---------- side column ---------- */
+.side-block{border-bottom:1px solid var(--hair);padding-bottom:20px;margin-bottom:20px}
+.side-block:last-child{border-bottom:0}
+.side-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;border-bottom:1px solid var(--hair-2);padding-bottom:7px;margin-bottom:4px}
+.side-head h3{font-family:var(--sans);font-size:11px;letter-spacing:.24em;text-transform:uppercase;margin:0;color:var(--ink)}
+.side-head .meta{font-family:var(--mono);font-size:10px;color:var(--faint)}
+
+/* LIVE NOW */
+.live-item{
+  display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;
+  padding:12px 8px;border-bottom:1px solid var(--hair);transition:background .15s ease;
+}
+.live-item:hover{background:var(--panel)}
+.live-item:hover .live-title{text-decoration:underline;text-decoration-color:var(--red);text-underline-offset:3px}
+.pulse{width:8px;height:8px;border-radius:50%;background:var(--red);margin-top:5px;position:relative;flex:none}
+.pulse::after{content:"";position:absolute;inset:-5px;border:1px solid var(--red);border-radius:50%;animation:pulse 1.8s ease-out infinite}
+@keyframes pulse{0%{transform:scale(.5);opacity:1}100%{transform:scale(1.4);opacity:0}}
+.plat{font-family:var(--sans);font-size:9px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.plat b{color:var(--ink)}
+.live-title{font-size:15.5px;line-height:1.3;margin:3px 0 4px;font-weight:700}
+.live-sub{font-size:12.5px;color:var(--muted);line-height:1.5}
+.viewers{font-family:var(--mono);font-size:11px;color:var(--ink);text-align:right;line-height:1.5}
+.viewers small{display:block;color:var(--faint);font-size:9px;letter-spacing:.14em;font-family:var(--sans);text-transform:uppercase}
+.live-more{padding:10px 8px 0;font-family:var(--sans);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.live-more a{color:var(--ink)}
+
+/* X feed */
+.x-item{padding:13px 8px;border-bottom:1px solid var(--hair);transition:background .15s ease}
+.x-item:hover{background:var(--panel)}
+.x-item:hover .x-text{text-decoration:underline;text-decoration-color:var(--hair-2);text-underline-offset:3px}
+.x-top{display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:5px}
+.x-handle{font-family:var(--sans);font-size:12px}
+.x-handle b{color:var(--ink)} .x-handle span{color:var(--faint);font-family:var(--mono);font-size:11px}
+.x-time{font-family:var(--mono);font-size:10.5px;color:var(--faint);flex:none}
+.x-text{font-size:14px;line-height:1.55;color:var(--ink-soft);margin:0 0 7px}
+.x-text a{color:var(--ink)}
+.x-stats{font-family:var(--mono);font-size:10.5px;color:var(--faint);display:flex;gap:14px}
+.x-stats span:hover{color:var(--ink)}
+
+/* Horizon */
+.horizon-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding-top:10px}
+.chip{
+  display:block;text-align:left;background:none;border:1px solid var(--hair-2);color:var(--ink);
+  padding:11px 12px 10px;transition:border-color .15s ease,background .15s ease;
+}
+.chip:hover{border-color:var(--red);background:var(--panel)}
+.chip .c-name{font-family:var(--sans);font-size:11px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;display:flex;justify-content:space-between;gap:8px}
+.chip .c-name i{font-style:normal;color:var(--red)}
+.chip .c-handle{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:5px;display:block}
+.chip .c-stat{font-size:11.5px;color:var(--faint);margin-top:4px;line-height:1.5}
+.chip .c-stat b{color:var(--ink-soft);font-weight:400}
+.chip.following{border-color:var(--ink)}
+.chip.following .c-name i{color:var(--ink)}
+.horizon-note{font-size:12.5px;line-height:1.6;color:var(--muted);margin:10px 2px 0}
+
+/* ---------- cinema ---------- */
+.cinema{padding:26px 0 10px}
+.c-tabs{display:flex;gap:0;border-bottom:1px solid var(--hair-2)}
+.c-tab{
+  background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);
+  font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+  padding:10px 16px;margin-bottom:-1px;
+}
+.c-tab:hover{color:var(--ink)}
+.c-tab.active{color:var(--ink);border-bottom-color:var(--red)}
+.c-row{
+  display:grid;grid-template-columns:44px 1fr auto auto;gap:16px;align-items:baseline;
+  padding:12px 10px;border-bottom:1px solid var(--hair);transition:background .15s ease;
+}
+.c-row:hover{background:var(--panel)}
+.c-row:hover .c-title{text-decoration:underline;text-decoration-color:var(--red);text-underline-offset:4px}
+.c-rank{font-size:22px;font-weight:700;color:var(--ink)}
+.c-title{font-size:17px;font-weight:700;line-height:1.2}
+.c-genre{font-size:12px;color:var(--muted);font-style:italic;margin-top:2px}
+.c-meta{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;line-height:1.6}
+.c-delta{font-family:var(--mono);font-size:12px;min-width:64px;text-align:right}
+.c-pane{display:none} .c-pane.active{display:block}
+.c-foot{font-size:12.5px;color:var(--faint);padding:10px 2px 0;line-height:1.6}
+.c-foot a{color:var(--muted)}
+
+/* footer */
+.colophon{
+  border-top:3px solid var(--ink);margin-top:30px;padding:18px 0 42px;
+  display:grid;grid-template-columns:1fr auto 1fr;gap:20px;align-items:start;
+  font-size:12.5px;line-height:1.7;color:var(--muted);
+}
+.colophon .f-logo{font-size:26px;font-weight:700;color:var(--ink);letter-spacing:.02em;line-height:1}
+.colophon .f-logo span{color:var(--red)}
+.colophon nav{display:flex;flex-direction:column;gap:3px;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase}
+.colophon nav a{color:var(--muted)} .colophon nav a:hover{color:var(--ink)}
+.colophon .right{text-align:right;font-family:var(--mono);font-size:11px}
+@media(max-width:760px){.colophon{grid-template-columns:1fr}.colophon .right{text-align:left}}
+
+@media(max-width:640px){
+  .sheet,.masthead{padding-left:16px;padding-right:16px}
+  .c-row{grid-template-columns:36px 1fr auto}.c-meta{display:none}
+  .verdict-box .why-link{text-align:left}
+}
+@media(prefers-reduced-motion:reduce){.ticker-track{animation:none}.pulse::after{animation:none}}
+</style>
+</head>
+<body>
+<div id="progress" aria-hidden="true"></div>
+
+<!-- ================= MASTHEAD ================= -->
+<header class="masthead">
+  <div class="meta-bar">
+    <span><b>Vol. IV</b> &nbsp;·&nbsp; No. 214</span>
+    <span id="dateline">Thursday, 5 November 2026</span>
+    <span>New York — London — Singapore &nbsp;<span class="dot">●</span>&nbsp; <span id="clock">--:--:-- ET</span></span>
+    <span>Price: <b>Free</b> &nbsp;·&nbsp; <a href="#signals">Sign up</a></span>
+  </div>
+
+  <div class="mast-row">
+    <p class="mast-side">Independent signals from <em>conflict, climate, markets &amp; machines</em> — read before the close, not after it.</p>
+    <h1 class="logo">FOX<span>HOLE</span></h1>
+    <p class="mast-side right">“The world, <em>indexed</em>.”<br>Maps below. Verdicts above.</p>
+  </div>
+  <p class="logo-sub">02 — Editorial Dark <i>·</i> Bloomberg-terminal-meets-magazine <i>·</i> Design mockup</p>
+
+  <nav class="nav-index" aria-label="Sections">
+    <a class="hot" href="#lead">Lead</a>
+    <a href="#map">Live Map</a>
+    <a href="#signals">Signals</a>
+    <a href="#markets">Markets</a>
+    <a href="#live">Live Now</a>
+    <a href="#xfeed">X Feed</a>
+    <a href="#cinema">Cinema</a>
+    <a href="#horizon">Horizon</a>
+  </nav>
+</header>
+
+<!-- ================= TICKER STRIP ================= -->
+<div class="ticker" aria-label="Markets strip">
+  <div class="ticker-track" id="tickerTrack"></div>
+</div>
+
+<div class="sheet">
+
+  <!-- ================= LEAD STORY ================= -->
+  <section class="lead" id="lead">
+    <div class="lead-top">
+      <p class="kicker" style="flex:1">Lead Signal · No. 01 · <span class="red">Breaking</span></p>
+      <span class="folio">FOXHOLE / SIGNALS / OIL &amp; SHIPPING</span>
+    </div>
+
+    <h2 class="headline"><a href="#signals"><span class="u">Tanker struck in the Strait of Hormuz — and the price of <span class="accent">oil</span> has already moved.</span></a></h2>
+
+    <p class="deck">A VLCC carrying two million barrels took a hit 40 minutes ago off the Iranian coast. Shipping insurance in the Gulf is up 38% in an hour, spot Brent has added $3.10, and every desk in London is asking the same question: was this a warning, or the first page of something longer?</p>
+
+    <div class="byline">
+      <span>By <b>Maritime Desk</b></span>
+      <span>Hormuz — 04:12 GMT</span>
+      <span>9 sources · Updated 40 min ago</span>
+      <span class="verdict-big"><span class="verdict buy">BUY</span> &nbsp;USO / BRENT &nbsp;·&nbsp; 87% CONFIDENCE</span>
+    </div>
+
+    <div class="flow">
+      <div class="col-main">
+        <div class="article-body">
+          <p><strong>THE STRAIT, 04:12 GMT —</strong> The vessel, identified in multiple AIS and port-agent reports as a very large crude carrier en route to Ras Tanura, reported an explosion abeam the port side. Crew are reported safe; the ship is listing slightly, under tow toward Bandar Abbas, its cargo intact. No claim of responsibility has been made. That silence, traders say, is the loudest signal of all.</p>
+          <p>Within the hour, war-risk premia for Gulf transits repriced across the market. Tanker brokers quoted a 38% rise in additional premiums; two owners have already diverted laden tonnage via the Cape. Brent futures, thin at the Asian open, gapped to $84.20. Onshore, <strong>USO — the United States Oil Fund — is our highest-conviction expression</strong>: it tracks WTI directly, holds no shipping name, and does not ask you to pick a winner in the Gulf.</p>
+          <div class="pull">“Every desk is asking whether this was a warning or the first page. The market has answered the easier question first.”</div>
+          <p>Foxhole rates this <strong>BUY, 87% confidence</strong>. The thesis is narrow and falsifiable: if a second incident follows within 72 hours, or if the crude sits unclaimed for a full trading day, the premium hardens into a supply shock. If the vessel reaches port and the inquiry comes back “accident,” this desk will say so in print. Until then, the tape, the insurance market and the AIS track are pointing the same way.</p>
+          <p>What to watch before the New York open: the second VLCC now dark on AIS south of the strait; any NOTAM extension from Tehran; and the Brent term structure — if the front month lifts while the back does not, this is fear. If the whole curve lifts, it is a story.</p>
+        </div>
+
+        <div class="verdict-box" role="note" aria-label="Lead verdict">
+          <div>
+            <span class="verdict buy big">BUY</span>
+            <div class="conf">CONFIDENCE 87%</div>
+            <div class="conf-bar"><i style="width:87%"></i></div>
+          </div>
+          <div>
+            <div class="asset">USO · $72.18</div>
+            <div style="font-size:13px;color:var(--muted);line-height:1.55;margin-top:4px">Crude exposure without shipping-name risk. Alternative: Brent via <span style="font-family:var(--mono)">BRN</span>.</div>
+          </div>
+          <div class="why-link">Full reasoning<br><a href="#sig-1">Read the “why” ↓</a><br>Invalidates: safe arrival + “accident” finding</div>
+        </div>
+      </div>
+
+      <!-- ===== SIDE COLUMN ===== -->
+      <aside class="col-side">
+        <!-- LIVE NOW -->
+        <section class="side-block" id="live" aria-label="Live now">
+          <div class="side-head"><h3>LIVE NOW</h3><span class="meta">4 CHANNELS · 212K WATCHING</span></div>
+
+          <a class="live-item" href="#" onclick="return false">
+            <span class="pulse" aria-hidden="true"></span>
+            <span>
+              <span class="plat"><b>KICK</b> · HARBOR WATCH</span>
+              <span class="live-title">Hormuz after dark: AIS, VHF and the insurance tape</span>
+              <span class="live-sub">Maritime desk · open-source tracking, no narration</span>
+            </span>
+            <span class="viewers">48.2K<small>Watching</small></span>
+          </a>
+
+          <a class="live-item" href="#" onclick="return false">
+            <span class="pulse" aria-hidden="true"></span>
+            <span>
+              <span class="plat"><b>YOUTUBE</b> · OPENING BELL</span>
+              <span class="live-title">Oil, rates and the Gulf premium — live desk</span>
+              <span class="live-sub">Markets desk · chart-by-chart walkthrough</span>
+            </span>
+            <span class="viewers">91.7K<small>Watching</small></span>
+          </a>
+
+          <a class="live-item" href="#" onclick="return false">
+            <span class="pulse" aria-hidden="true"></span>
+            <span>
+              <span class="plat"><b>RUMBLE</b> · THE SIGNAL</span>
+              <span class="live-title">What a tanker strike does to a portfolio</span>
+              <span class="live-sub">Risk desk · position sizing Q&amp;A</span>
+            </span>
+            <span class="viewers">22.4K<small>Watching</small></span>
+          </a>
+
+          <a class="live-item" href="#" onclick="return false">
+            <span class="pulse" aria-hidden="true"></span>
+            <span>
+              <span class="plat"><b>TWITCH</b> · MAP ROOM</span>
+              <span class="live-title">Taiwan quake → chip supply: mapping the fab corridor</span>
+              <span class="live-sub">Tech desk · live USGS + fab adjacency</span>
+            </span>
+            <span class="viewers">49.8K<small>Watching</small></span>
+          </a>
+
+          <p class="live-more">More live channels <a href="#">— browse the grid →</a></p>
+        </section>
+
+        <!-- X FEED -->
+        <section class="side-block" id="xfeed" aria-label="X feed">
+          <div class="side-head"><h3>X FEED</h3><span class="meta">CURATED · LAST 2H</span></div>
+
+          <article class="x-item">
+            <div class="x-top"><span class="x-handle"><b>Maritime Desk</b> <span>@foxhole_maritime</span></span><span class="x-time">12m</span></div>
+            <p class="x-text">VLCC is under tow, crew safe, cargo intact. War-risk premia +38% in the hour. Second tanker now dark on AIS south of the strait — watching that track closely.</p>
+            <div class="x-stats"><span>↻ 1,204</span><span>♥ 8.9K</span><span>◔ 412K</span></div>
+          </article>
+
+          <article class="x-item">
+            <div class="x-top"><span class="x-handle"><b>Energy Tape</b> <span>@energytape</span></span><span class="x-time">28m</span></div>
+            <p class="x-text">Brent +$3.10 to $84.20. Front month lifting, back end flat. So far this reads as fear, not a supply shock. USO is the cleanest long if it hardens.</p>
+            <div class="x-stats"><span>↻ 642</span><span>♥ 3.1K</span><span>◔ 188K</span></div>
+          </article>
+
+          <article class="x-item">
+            <div class="x-top"><span class="x-handle"><b>Seis Watch</b> <span>@seiswatch</span></span><span class="x-time">51m</span></div>
+            <p class="x-text">M7.0 off Taiwan — depth 34km, no tsunami threat issued. Fab adjacency map is live in the Map Room. TSM fabs report “no abnormality” so far.</p>
+            <div class="x-stats"><span>↻ 911</span><span>♥ 4.4K</span><span>◔ 264K</span></div>
+          </article>
+
+          <article class="x-item">
+            <div class="x-top"><span class="x-handle"><b>Chain Desk</b> <span>@chaindesk</span></span><span class="x-time">1h</span></div>
+            <p class="x-text">Hot wallet drained at a mid-tier exchange — $212M moved in 11 minutes. BTC sentiment flipped bearish on our desk. USDT peg wobbling at $0.985 on thin books.</p>
+            <div class="x-stats"><span>↻ 2.8K</span><span>♥ 6.2K</span><span>◔ 901K</span></div>
+          </article>
+
+          <article class="x-item">
+            <div class="x-top"><span class="x-handle"><b>Screen Society</b> <span>@screensociety</span></span><span class="x-time">2h</span></div>
+            <p class="x-text">Cinema tracking just moved: <a href="#cinema">The Brutalist</a> jumped 4 places on pre-sales after the festival rewatch. Full trending table below.</p>
+            <div class="x-stats"><span>↻ 318</span><span>♥ 2.7K</span><span>◔ 96K</span></div>
+          </article>
+        </section>
+
+        <!-- HORIZON -->
+        <section class="side-block" id="horizon" aria-label="Horizon profiles">
+          <div class="side-head"><h3>HORIZON</h3><span class="meta">FOLLOW A DESK</span></div>
+          <p class="horizon-note" style="margin-top:10px">Five desks, one feed. Follow a profile to get its signals — <em>war, markets, tech, cinema, crypto</em> — before they reach the front page.</p>
+          <div class="horizon-grid">
+            <button class="chip following" type="button" aria-pressed="true"><span class="c-name">WAR <i>✓</i></span><span class="c-handle">@foxhole_war</span><span class="c-stat"><b>1.2M</b> followers · conflict &amp; shipping</span></button>
+            <button class="chip following" type="button" aria-pressed="true"><span class="c-name">MARKETS <i>✓</i></span><span class="c-handle">@foxhole_markets</span><span class="c-stat"><b>986K</b> followers · tape &amp; rates</span></button>
+            <button class="chip" type="button" aria-pressed="false"><span class="c-name">TECH <i>+</i></span><span class="c-handle">@foxhole_tech</span><span class="c-stat"><b>743K</b> followers · chips &amp; AI</span></button>
+            <button class="chip" type="button" aria-pressed="false"><span class="c-name">CINEMA <i>+</i></span><span class="c-handle">@foxhole_cinema</span><span class="c-stat"><b>512K</b> followers · tracking &amp; box office</span></button>
+            <button class="chip" type="button" aria-pressed="false" style="grid-column:1/-1"><span class="c-name">CRYPTO <i>+</i></span><span class="c-handle">@foxhole_crypto</span><span class="c-stat"><b>1.8M</b> followers · on-chain &amp; sentiment</span></button>
+          </div>
+          <p class="horizon-note">Tap a profile to follow. Following changes the order of your personal front page — not the news.</p>
+        </section>
+      </aside>
+    </div>
+
+    <!-- ================= MAP BAND ================= -->
+    <section class="map-band" id="map" aria-label="Live map">
+      <div class="map-head">
+        <div>
+          <p class="kicker">Live Map · The World, Indexed</p>
+          <h2>Everything moving, at a glance.</h2>
+        </div>
+        <div class="legend" aria-hidden="true">
+          <i><span class="sw quake"></span>Quake</i>
+          <i><span class="sw storm"></span>Storm</i>
+          <i><span class="sw conflict"></span>Conflict</i>
+          <i><span class="sw ship"></span>Shipping</i>
+          <i><span class="sw sat"></span>Satellite</i>
+        </div>
+      </div>
+
+      <div class="map-wrap">
+        <svg viewBox="0 0 1200 360" role="img" aria-label="Schematic world map with live events">
+          <defs>
+            <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+              <path d="M60 0H0V60" fill="none" stroke="#1e1e1a" stroke-width="1"/>
+            </pattern>
+          </defs>
+          <rect width="1200" height="360" fill="url(#grid)"/>
+          <!-- graticule equator/primes -->
+          <line x1="0" y1="180" x2="1200" y2="180" stroke="#2e2e28" stroke-width="1"/>
+          <line x1="600" y1="0" x2="600" y2="360" stroke="#2e2e28" stroke-width="1"/>
+          <text x="12" y="172" class="pin-label">EQ</text>
+          <text x="608" y="18" class="pin-label">0°</text>
+          <!-- schematic continents (abstract shapes, hairline) -->
+          <g fill="none" stroke="#3a3a32" stroke-width="1.2">
+            <path d="M120 90 L260 60 L340 90 L320 170 L240 210 L150 170 Z"/>
+            <path d="M430 70 L620 50 L700 110 L640 200 L520 230 L440 170 Z"/>
+            <path d="M760 70 L980 60 L1060 130 L980 230 L830 240 L770 170 Z"/>
+            <path d="M180 240 L300 230 L340 300 L260 330 L190 300 Z"/>
+            <path d="M520 250 L640 240 L680 300 L590 330 L530 300 Z"/>
+            <path d="M850 260 L980 250 L1020 310 L930 335 L860 310 Z"/>
+          </g>
+          <!-- shipping lane Hormuz -> Cape -->
+          <path d="M700 165 C 660 230, 560 260, 480 275 C 400 290, 330 285, 300 260" fill="none" stroke="#c99a3f" stroke-width="1" stroke-dasharray="5 5"/>
+          <!-- satellite orbit -->
+          <path d="M80 300 C 320 60, 880 60, 1120 280" fill="none" stroke="#6b675d" stroke-width="1" stroke-dasharray="2 6"/>
+          <!-- pins: x/y approximate to schematic -->
+          <g class="pin"><circle class="pin-ring" cx="700" cy="165" r="10" fill="none" stroke="#e8281c" stroke-width="1"/><circle cx="700" cy="165" r="4" fill="#e8281c"/><text class="pin-label hot" x="716" y="161">HORMUZ · STRIKE</text><text class="pin-label" x="716" y="174">40m · 9 SRC</text></g>
+          <g class="pin"><circle class="pin-ring" cx="655" cy="200" r="8" fill="none" stroke="#e8281c" stroke-width="1"/><circle cx="655" cy="200" r="3.5" fill="#e8281c"/><text class="pin-label" x="668" y="204">RED SEA</text></g>
+          <g class="pin"><circle cx="970" cy="140" r="9" fill="none" stroke="#ece6d8" stroke-width="1.2"/><circle cx="970" cy="140" r="3" fill="#ece6d8"/><text class="pin-label hot" x="984" y="136">TAIWAN M7.0</text><text class="pin-label" x="984" y="149">60m · USGS</text></g>
+          <g class="pin"><circle cx="210" cy="150" r="12" fill="none" stroke="#ece6d8" stroke-width="1.2"/><circle cx="210" cy="150" r="3" fill="#ece6d8"/><text class="pin-label" x="86" y="132">GULF HURRICANE</text><text class="pin-label" x="86" y="145">CAT 3 · 240m</text></g>
+          <g class="pin"><rect x="596" y="96" width="8" height="8" fill="none" stroke="#8a857a"/><text class="pin-label" x="612" y="104">SENTINEL PASS · 12m</text></g>
+          <g class="pin"><circle cx="540" cy="140" r="3.5" fill="#c99a3f"/><text class="pin-label" x="552" y="144">VLCC TRACK</text></g>
+          <text x="16" y="346" class="pin-label">SCHEMATIC — POSITIONS APPROXIMATE · DEMO DATA</text>
+          <text x="1184" y="346" text-anchor="end" class="pin-label">26.5°N 56.3°E</text>
+        </svg>
+      </div>
+
+      <div class="map-note">
+        <div><b>Quake · Taiwan</b><span class="mono">M7.0 · 60m ago</span><br>Off east coast, 34km depth. No tsunami threat. Fab check in progress.</div>
+        <div><b>Storm · Gulf of Mexico</b><span class="mono">CAT 3 · 4h ago</span><br>Hurricane tracking WNW at 14kt. Houston landfall window: 36h.</div>
+        <div><b>Conflict · Hormuz / Red Sea</b><span class="mono">2 EVENTS · 40m / 3h</span><br>Tanker hit + cargo strike. Premia repricing across both lanes.</div>
+        <div><b>Shipping · VLCC track</b><span class="mono">AIS · LIVE</span><br>Laden tonnage diverting via the Cape. Second hull dark south of strait.</div>
+        <div><b>Satellite · Sentinel pass</b><span class="mono">12m ago</span><br>Next pass in 94m. Imagery tasking queued for Hormuz anchorage.</div>
+      </div>
+    </section>
+
+    <!-- ================= RANKED SIGNALS ================= -->
+    <section class="section" id="signals">
+      <div class="section-head">
+        <h2>The Index of Signals</h2>
+        <span class="count">8 RANKED · CLICK AN ENTRY TO READ THE “WHY”</span>
+      </div>
+
+      <article class="signal open" id="sig-1">
+        <button class="signal-head" type="button" aria-expanded="true" aria-controls="why-1">
+          <span class="num">01<small>Oil</small></span>
+          <span>
+            <span class="sig-title">Tanker hit near the Strait of Hormuz</span>
+            <span class="sig-meta"><span class="sig-asset">USO</span><span>BUY</span><span>·</span><span>Brent $84.20</span><span>·</span><span>9 sources</span></span>
+          </span>
+          <span class="sig-right"><span class="verdict buy v">BUY</span><span class="c">87<small>%</small></span><span class="ago">40m ago<span class="plus">−</span></span></span>
+        </button>
+        <div class="why" id="why-1"><div class="why-inner">
+          <p><strong>Why BUY USO:</strong> A VLCC was struck in the world’s most consequential oil chokepoint; crew safe, cargo intact, no claim of responsibility. War-risk premia jumped 38% within the hour and two laden tankers diverted via the Cape — the insurance market is pricing this as repeatable, not freak. USO gives clean WTI beta with no single-shipping-name risk. <strong>Invalidates:</strong> safe berthing plus an official “accident” finding within 24h.</p>
+          <p class="src">SOURCES: AIS track · Lloyd’s List · port agent, Bandar Abbas · tanker broker quotes (2) · futures tape — <a href="#">evidence pack →</a></p>
+        </div></div>
+      </article>
+
+      <article class="signal" id="sig-2">
+        <button class="signal-head" type="button" aria-expanded="false" aria-controls="why-2">
+          <span class="num">02<small>Chips</small></span>
+          <span>
+            <span class="sig-title">M7.0 earthquake off the east coast of Taiwan</span>
+            <span class="sig-meta"><span class="sig-asset">TSM</span><span>WATCH</span><span>·</span><span>Fab corridor: 3 plants in 80km</span><span>·</span><span>3 sources</span></span>
+          </span>
+          <span class="sig-right"><span class="verdict watch v">WATCH</span><span class="c">74<small>%</small></span><span class="ago">60m ago<span class="plus">+</span></span></span>
+        </button>
+        <div class="why" id="why-2"><div class="why-inner">
+          <p><strong>Why WATCH TSM:</strong> Magnitude and depth suggest shaking, not a plant-ending event — TSM says “no abnormality” so far. But three fabs sit within 80km of the epicentre and a single tool-recalibration stop costs a day of output. We wait for the 09:00 Taipei fab update before upgrading to BUY on any supply-call thesis. <strong>Invalidates:</strong> no lines stopped by end of day.</p>
+          <p class="src">SOURCES: USGS · Central Weather Administration · TSM corporate statement — <a href="#">evidence pack →</a></p>
+        </div></div>
+      </article>
+
+      <article class="signal" id="sig-3">
+        <button class="signal-head" type="button" aria-expanded="false" aria-controls="why-3">
+          <span class="num">03<small>Shipping</small></span>
+          <span>
+            <span class="sig-title">Missile strike on a cargo ship in the Red Sea</span>
+            <span class="sig-meta"><span class="sig-asset">ZIM</span><span>BUY</span><span>·</span><span>Cape diversions +2,400nm</span><span>·</span><span>7 sources</span></span>
+          </span>
+          <span class="sig-right"><span class="verdict buy v">BUY</span><span class="c">81<small>%</small></span><span class="ago">3h ago<span class="plus">+</span></span></span>
+        </button>
+        <div class="why" id="why-3"><div class="why-inner">
+          <p><strong>Why BUY ZIM / STNG complex:</strong> A second Red Sea strike in a week pushes more strings around the Cape, adding transit time and bunker burn. Container and tanker rates harden first; the equities follow with a lag. We prefer the diversified carrier over the single-name tanker on duration. <strong>Invalidates:</strong> naval escort announced and two quiet transits.</p>
+          <p class="src">SOURCES: UKMTO · shipping manifests · freight index — <a href="#">evidence pack →</a></p>
+        </div></div>
+      </article>
+
+      <article class="signal" id="sig-4">
+        <button class="signal-head" type="button" aria-expanded="false" aria-controls="why-4">
+          <span class="num">04<small>Energy</small></span>
+          <span>
+            <span class="sig-title">Hurricane heading into the Gulf of Mexico</span>
+            <span class="sig-meta"><span class="sig-asset">UNG</span><span>WATCH</span><span>·</span><span>Cat 3 · landfall 36h</span><span>·</span><span>5 sources</span></span>
+          </span>
+          <span class="sig-right"><span class="verdict watch v">WATCH</span><span class="c">66<small>%</small></span><span class="ago">4h ago<span class="plus">+</span></span></span>
+        </button>
+        <div class="why" id="why-4"><div class="why-inner">
+          <p><strong>Why WATCH UNG:</strong> A Gulf landfall threatens shut-ins at the platform level and demand destruction at the city level — the two effects pull gas in opposite directions. Until the cone narrows over Houston, direction is a coin flip; sizing is not. We hold WATCH and let the 18:00 advisory decide. <strong>Invalidates:</strong> track shifts east of Texas.</p>
+          <p class="src">SOURCES: NHC advisory · platform operator filings · EIA shut-in estimates — <a href="#">evidence pack →</a></p>
+        </div></div>
+      </article>
+
+      <article class="signal" id="sig-5">
+        <button class="signal-head" type="button" aria-expanded="false" aria-controls="why-5">
+          <span class="num">05<small>Policy</small></span>
+          <span>
+            <span class="sig-title">New tariffs announced on imported chips</span>
+            <span class="sig-meta"><span class="sig-asset">SOXX</span><span>SELL</span><span>·</span><span>25% on advanced nodes</span><span>·</span><span>8 sources</span></span>
+          </span>
+          <span class="sig-right"><span class="verdict sell v">SELL</span><span class="c">68<small>%</small></span><span class="ago">90m ago<span class="plus">+</span></span></span>
+        </button>
+        <div class="why" id="why-5"><div class="why-inner">
+          <p><strong>Why SELL SOXX:</strong> A 25% tariff on advanced-node imports taxes the exact supply chain the ETF holds. Pass-through splits between margins and prices; either way, near-term earnings revisions point down. This is a policy ratchet, not a headline — it rarely reverses in an election year. <strong>Invalidates:</strong> carve-out for allied fabs within 30 days.</p>
+          <p class="src">SOURCES: Federal Register notice · customs counsel · sell-side models (3) — <a href="#">evidence pack →</a></p>
+        </div></div>
+      </article>
+
+      <article class="signal" id="sig-6">
+        <button class="signal-head" type="button" aria-expanded="false" aria-controls="why-6">
+          <span class="num">06<small>Crypto</small></span>
+          <span>
+            <span class="sig-title">Stablecoin peg break: token slips below $0.97</span>
+            <span class="sig-meta"><span class="sig-asset">BTC</span><span>SELL</span><span>·</span><span>USDT $0.985 · thin books</span><span>·</span><span>3 sources</span></span>
+          </span>
+          <span class="sig-right"><span class="verdict sell v">SELL</span><span class="c">79<small>%</small></span><span class="ago">20m ago<span class="plus">+</span></span></span>
+        </button>
+        <div class="why" id="why-6"><div class="why-inner">
+          <p><strong>Why SELL (into BTC weakness):</strong> A peg slip is a plumbing problem, not a price problem — it means exit liquidity is thinning exactly when the hot-wallet story has everyone asking who holds what. Our own sentiment feed flipped bearish on BTC (−0.34) and ETH (−0.41) in the same hour. Hold cash-like positions elsewhere; do not catch the peg. <strong>Invalidates:</strong> peg restores above $0.995 for 6 straight hours.</p>
+          <p class="src">SOURCES: exchange order books (2) · issuer attestation feed · Foxhole sentiment model — <a href="#">evidence pack →</a></p>
+        </div></div>
+      </article>
+
+      <article class="signal" id="sig-7">
+        <button class="signal-head" type="button" aria-expanded="false" aria-controls="why-7">
+          <span class="num">07<small>Trade</small></span>
+          <span>
+            <span class="sig-title">Dockworkers strike at Rotterdam port</span>
+            <span class="sig-meta"><span class="sig-asset">ZIM</span><span>WATCH</span><span>·</span><span>Day 6 · talks stalled</span><span>·</span><span>3 sources</span></span>
+          </span>
+          <span class="sig-right"><span class="verdict watch v">WATCH</span><span class="c">58<small>%</small></span><span class="ago">8h ago<span class="plus">+</span></span></span>
+        </button>
+        <div class="why" id="why-7"><div class="why-inner">
+          <p><strong>Why WATCH:</strong> Rotterdam is Europe’s overflow valve; six days in, berth queues are pricing the strike properly but congestion has not yet forced peak-season diversions to Antwerp. If talks fail tonight, this upgrades. Until then, the freight market is telling the truth and it is not screaming. <strong>Invalidates:</strong> framework deal signed.</p>
+          <p class="src">SOURCES: Port of Rotterdam · union statement · liner advisories — <a href="#">evidence pack →</a></p>
+        </div></div>
+      </article>
+
+      <article class="signal" id="sig-8">
+        <button class="signal-head" type="button" aria-expanded="false" aria-controls="why-8">
+          <span class="num">08<small>Crypto</small></span>
+          <span>
+            <span class="sig-title">Exchange says hot wallet drained: $212M in 11 minutes</span>
+            <span class="sig-meta"><span class="sig-asset">ETH</span><span>WATCH</span><span>·</span><span>On-chain trace live</span><span>·</span><span>5 sources</span></span>
+          </span>
+          <span class="sig-right"><span class="verdict watch v">WATCH</span><span class="c">71<small>%</small></span><span class="ago">50m ago<span class="plus">+</span></span></span>
+        </button>
+        <div class="why" id="why-8"><div class="why-inner">
+          <p><strong>Why WATCH ETH, not SELL:</strong> The drain is real and fast, but the asset mix is mostly BTC and stables; ETH exposure is the smaller share of the loot. Contagion — not the hack itself — is the trade: watch the peg (Signal 06) and exchange withdrawal queues. If either breaks, this becomes a SELL. <strong>Invalidates:</strong> trace leads to a frozen mixer deposit within 48h.</p>
+          <p class="src">SOURCES: exchange statement · on-chain labelling (2) · withdrawal-queue monitors — <a href="#">evidence pack →</a></p>
+        </div></div>
+      </article>
+    </section>
+
+    <!-- ================= MARKETS TABLE ================= -->
+    <section class="section markets" id="markets">
+      <div class="section-head">
+        <h2>Markets</h2>
+        <span class="count">CLOSE OF PLAY · <span id="mUpdated">DEMO TAPE</span></span>
+      </div>
+      <table aria-label="Markets table">
+        <thead>
+          <tr><th>Symbol</th><th>Last</th><th>Chg</th><th>Chg %</th><th>Vol (M)</th><th>Signal</th></tr>
+        </thead>
+        <tbody id="mBody">
+          <tr data-sym="SPY"><td><span class="sym">SPY</span><span class="name">S&amp;P 500 ETF</span></td><td class="px">578.42</td><td class="chg chg-up">+4.81</td><td class="chg chg-up">+0.84%</td><td>62.4</td><td><span class="verdict hold">HOLD</span></td></tr>
+          <tr data-sym="BTC"><td><span class="sym">BTC</span><span class="name">Bitcoin</span></td><td class="px">97,420</td><td class="chg chg-dn">−2,310</td><td class="chg chg-dn">−2.31%</td><td>38.9</td><td><span class="verdict sell">SELL</span></td></tr>
+          <tr data-sym="ETH"><td><span class="sym">ETH</span><span class="name">Ethereum</span></td><td class="px">3,412.08</td><td class="chg chg-dn">−58.44</td><td class="chg chg-dn">−1.68%</td><td>21.3</td><td><span class="verdict watch">WATCH</span></td></tr>
+          <tr data-sym="USO"><td><span class="sym">USO</span><span class="name">US Oil Fund</span></td><td class="px">72.18</td><td class="chg chg-up">+2.39</td><td class="chg chg-up">+3.42%</td><td>18.7</td><td><span class="verdict buy">BUY</span></td></tr>
+          <tr data-sym="GLD"><td><span class="sym">GLD</span><span class="name">Gold Trust</span></td><td class="px">238.65</td><td class="chg chg-up">+1.82</td><td class="chg chg-up">+0.77%</td><td>9.2</td><td><span class="verdict hold">HOLD</span></td></tr>
+          <tr data-sym="TSM"><td><span class="sym">TSM</span><span class="name">TSMC</span></td><td class="px">192.40</td><td class="chg chg-up">+0.95</td><td class="chg chg-up">+0.50%</td><td>11.6</td><td><span class="verdict watch">WATCH</span></td></tr>
+          <tr data-sym="SOXX"><td><span class="sym">SOXX</span><span class="name">Semiconductor ETF</span></td><td class="px">231.08</td><td class="chg chg-dn">−4.62</td><td class="chg chg-dn">−1.96%</td><td>7.4</td><td><span class="verdict sell">SELL</span></td></tr>
+          <tr data-sym="ZIM"><td><span class="sym">ZIM</span><span class="name">ZIM Integrated</span></td><td class="px">19.84</td><td class="chg chg-up">+0.71</td><td class="chg chg-up">+3.71%</td><td>4.1</td><td><span class="verdict buy">BUY</span></td></tr>
+          <tr data-sym="STNG"><td><span class="sym">STNG</span><span class="name">Scorpio Tankers</span></td><td class="px">58.32</td><td class="chg chg-up">+2.04</td><td class="chg chg-up">+3.63%</td><td>2.8</td><td><span class="verdict buy">BUY</span></td></tr>
+          <tr data-sym="WEAT"><td><span class="sym">WEAT</span><span class="name">Wheat Fund</span></td><td class="px">5.62</td><td class="chg chg-dn">−0.04</td><td class="chg chg-dn">−0.71%</td><td>1.9</td><td><span class="verdict hold">HOLD</span></td></tr>
+          <tr data-sym="CORN"><td><span class="sym">CORN</span><span class="name">Corn Fund</span></td><td class="px">18.47</td><td class="chg chg-up">+0.12</td><td class="chg chg-up">+0.65%</td><td>1.2</td><td><span class="verdict hold">HOLD</span></td></tr>
+          <tr data-sym="UNG"><td><span class="sym">UNG</span><span class="name">Nat Gas Fund</span></td><td class="px">14.06</td><td class="chg chg-dn">−0.21</td><td class="chg chg-dn">−1.47%</td><td>16.5</td><td><span class="verdict watch">WATCH</span></td></tr>
+        </tbody>
+      </table>
+      <div class="markets-foot">
+        <span>Demo tape for the mockup — prices flicker every few seconds. Hover a row; the red rule marks the cursor.</span>
+        <span><a href="#">Full markets →</a> &nbsp;·&nbsp; <a href="#">Methodology</a></span>
+      </div>
+    </section>
+
+    <!-- ================= CINEMA ================= -->
+    <section class="section cinema" id="cinema">
+      <div class="section-head">
+        <h2>Cinema</h2>
+        <span class="count">TRENDING &amp; TRACKING · WEEK 46</span>
+      </div>
+
+      <div class="c-tabs" role="tablist" aria-label="Cinema views">
+        <button class="c-tab active" type="button" role="tab" aria-selected="true" data-pane="pane-trending">Trending</button>
+        <button class="c-tab" type="button" role="tab" aria-selected="false" data-pane="pane-tracking">Tracking</button>
+      </div>
+
+      <div class="c-pane active" id="pane-trending">
+        <div class="c-row"><span class="c-rank">1</span><span><span class="c-title">The Brutalist</span><span class="c-genre" style="display:block">Drama · 215 min · A24</span></span><span class="c-meta">PRE-SALES<br>$14.2M</span><span class="c-delta chg-up">▲ 4</span></div>
+        <div class="c-row"><span class="c-rank">2</span><span><span class="c-title">Anora</span><span class="c-genre" style="display:block">Comedy-drama · 139 min · Neon</span></span><span class="c-meta">PRE-SALES<br>$11.8M</span><span class="c-delta chg-up">▲ 1</span></div>
+        <div class="c-row"><span class="c-rank">3</span><span><span class="c-title">Dune: Part Two</span><span class="c-genre" style="display:block">Sci-fi epic · 166 min · Warner Bros.</span></span><span class="c-meta">(REISSUE)<br>$9.6M</span><span class="c-delta">— 0</span></div>
+        <div class="c-row"><span class="c-rank">4</span><span><span class="c-title">Conclave</span><span class="c-genre" style="display:block">Thriller · 120 min · Focus</span></span><span class="c-meta">PRE-SALES<br>$7.4M</span><span class="c-delta chg-dn">▼ 2</span></div>
+        <div class="c-row"><span class="c-rank">5</span><span><span class="c-title">Wicked</span><span class="c-genre" style="display:block">Musical · 160 min · Universal</span></span><span class="c-meta">PRE-SALES<br>$6.9M</span><span class="c-delta chg-up">▲ 2</span></div>
+      </div>
+
+      <div class="c-pane" id="pane-tracking">
+        <div class="c-row"><span class="c-rank">1</span><span><span class="c-title">Mickey 17</span><span class="c-genre" style="display:block">Sci-fi · Opens Mar 2026 · tracking 41%</span></span><span class="c-meta">AWARENESS<br>41%</span><span class="c-delta chg-up">▲ 9</span></div>
+        <div class="c-row"><span class="c-rank">2</span><span><span class="c-title">Sinners</span><span class="c-genre" style="display:block">Horror · Opens Apr 2026 · tracking 38%</span></span><span class="c-meta">AWARENESS<br>38%</span><span class="c-delta chg-up">▲ 5</span></div>
+        <div class="c-row"><span class="c-rank">3</span><span><span class="c-title">One Battle After Another</span><span class="c-genre" style="display:block">Drama · Opens Sep 2026 · tracking 33%</span></span><span class="c-meta">AWARENESS<br>33%</span><span class="c-delta">— 1</span></div>
+        <div class="c-row"><span class="c-rank">4</span><span><span class="c-title">Superman</span><span class="c-genre" style="display:block">Superhero · Opens Jul 2026 · tracking 61%</span></span><span class="c-meta">AWARENESS<br>61%</span><span class="c-delta chg-dn">▼ 3</span></div>
+      </div>
+
+      <p class="c-foot">Trending measures tickets moving now; tracking measures intent before release. When the two disagree, the disagreement <em>is</em> the story. <a href="#">Full Cinema desk →</a></p>
+    </section>
+  </section>
+</div>
+
+<!-- ================= FOOTER ================= -->
+<footer class="sheet">
+  <div class="colophon">
+    <div>
+      <p class="f-logo">FOX<span>HOLE</span></p>
+      <p style="margin:10px 0 0;max-width:340px">02 — Editorial Dark. A design mockup: Bloomberg-terminal data set in magazine type. All prices, signals and posts are static demo data.</p>
+    </div>
+    <nav aria-label="Footer">
+      <a href="#lead">Lead</a>
+      <a href="#signals">Signals</a>
+      <a href="#markets">Markets</a>
+      <a href="#live">Live Now</a>
+      <a href="#cinema">Cinema</a>
+    </nav>
+    <p class="right">SET IN GEORGIA<br>MONO FOR DATA ONLY<br>© 2026 FOXHOLE · MOCKUP<br><span id="footClock"></span></p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- clock + dateline ---------- */
+  var clockEl = document.getElementById('clock');
+  var footEl  = document.getElementById('footClock');
+  var dateEl  = document.getElementById('dateline');
+  function pad(n){ return (n<10?'0':'')+n; }
+  function tickClock(){
+    try{
+      var now = new Date();
+      var et  = new Date(now.toLocaleString('en-US',{timeZone:'America/New_York'}));
+      var s = pad(et.getHours())+':'+pad(et.getMinutes())+':'+pad(et.getSeconds())+' ET';
+      if(clockEl) clockEl.textContent = s;
+      if(footEl)  footEl.textContent  = s;
+      if(dateEl){
+        dateEl.textContent = now.toLocaleDateString('en-GB',{weekday:'long', day:'numeric', month:'long', year:'numeric'});
+      }
+    }catch(e){ /* keep static fallback */ }
+  }
+  tickClock(); setInterval(tickClock, 1000);
+
+  /* ---------- reading progress ---------- */
+  var bar = document.getElementById('progress');
+  function onScroll(){
+    var h = document.documentElement;
+    var max = h.scrollHeight - h.clientHeight;
+    bar.style.width = (max > 0 ? (h.scrollTop / max) * 100 : 0) + '%';
+  }
+  addEventListener('scroll', onScroll, {passive:true}); onScroll();
+
+  /* ---------- ticker strip (duplicated for seamless loop) ---------- */
+  var tick = [
+    ['SPY','578.42','+0.84%',1],['BTC','97,420','−2.31%',0],['ETH','3,412.08','−1.68%',0],
+    ['USO','72.18','+3.42%',1],['GLD','238.65','+0.77%',1],['TSM','192.40','+0.50%',1],
+    ['SOXX','231.08','−1.96%',0],['ZIM','19.84','+3.71%',1],['STNG','58.32','+3.63%',1],
+    ['WEAT','5.62','−0.71%',0],['CORN','18.47','+0.65%',1],['UNG','14.06','−1.47%',0]
+  ];
+  var track = document.getElementById('tickerTrack');
+  function tickHTML(){
+    return tick.map(function(t){
+      return '<span class="tick-item"><span class="lbl">MKT</span><b>'+t[0]+'</b> '+t[1]+' <span class="'+(t[3]?'up':'dn')+'">'+t[2]+'</span></span>';
+    }).join('');
+  }
+  track.innerHTML = tickHTML() + tickHTML();
+
+  /* ---------- signals: click to expand the "why" ---------- */
+  var heads = document.querySelectorAll('.signal-head');
+  heads.forEach(function(head){
+    head.addEventListener('click', function(){
+      var art = head.closest('.signal');
+      var open = art.classList.toggle('open');
+      head.setAttribute('aria-expanded', open ? 'true' : 'false');
+      var plus = head.querySelector('.plus');
+      if(plus) plus.textContent = open ? '−' : '+';
+    });
+  });
+
+  /* Allow only one open at a time after first interaction (keeps the column tidy) */
+  var userOpened = false;
+  heads.forEach(function(h){ h.addEventListener('click', function(){ userOpened = true; }); });
+  document.addEventListener('click', function(e){
+    var h = e.target.closest('.signal-head'); if(!h || !userOpened) return;
+    var clicked = h.closest('.signal');
+    if(!clicked.classList.contains('open')) return;
+    document.querySelectorAll('.signal.open').forEach(function(o){
+      if(o !== clicked){
+        o.classList.remove('open');
+        var oh = o.querySelector('.signal-head'); if(oh) oh.setAttribute('aria-expanded','false');
+        var op = o.querySelector('.plus'); if(op) op.textContent = '+';
+      }
+    });
+  });
+
+  /* ---------- markets: gentle demo-tape flicker ---------- */
+  var rows = Array.prototype.slice.call(document.querySelectorAll('#mBody tr'));
+  var mUp = document.getElementById('mUpdated');
+  function flicker(){
+    var row = rows[Math.floor(Math.random()*rows.length)];
+    var px = row.querySelector('.px'); if(!px) return;
+    var raw = px.textContent.replace(/,/g,'');
+    var v = parseFloat(raw); if(!isFinite(v)) return;
+    var drift = (Math.random()-0.5) * 0.0012;
+    var nv = v * (1+drift);
+    var dec = (String(raw).split('.')[1]||'').length;
+    px.textContent = dec > 0 ? nv.toFixed(dec) : Math.round(nv).toLocaleString('en-US');
+    px.classList.remove('flash-up','flash-dn'); void px.offsetWidth;
+    px.classList.add(drift >= 0 ? 'flash-up' : 'flash-dn');
+    if(mUp) mUp.textContent = 'TAPE ' + new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }
+  setInterval(flicker, 2600);
+
+  /* ---------- cinema tabs ---------- */
+  var tabs = document.querySelectorAll('.c-tab');
+  tabs.forEach(function(tab){
+    tab.addEventListener('click', function(){
+      tabs.forEach(function(t){ t.classList.remove('active'); t.setAttribute('aria-selected','false'); });
+      tab.classList.add('active'); tab.setAttribute('aria-selected','true');
+      document.querySelectorAll('.c-pane').forEach(function(p){ p.classList.remove('active'); });
+      var pane = document.getElementById(tab.dataset.pane);
+      if(pane) pane.classList.add('active');
+    });
+  });
+
+  /* ---------- horizon follow toggles ---------- */
+  document.querySelectorAll('.chip').forEach(function(chip){
+    chip.addEventListener('click', function(){
+      var on = chip.classList.toggle('following');
+      chip.setAttribute('aria-pressed', on ? 'true' : 'false');
+      var mark = chip.querySelector('.c-name i');
+      if(mark) mark.textContent = on ? '✓' : '+';
+    });
+  });
+
+  /* ---------- map pins: title tooltips for a11y ---------- */
+  document.querySelectorAll('.pin').forEach(function(p){
+    var label = p.querySelector('.pin-label.hot') || p.querySelector('.pin-label');
+    if(label) p.setAttribute('aria-label', label.textContent.trim());
+  });
+})();
+</script>
+</body>
+</html>
