@@ -21,20 +21,15 @@ export default function MarketsChart({ signals = [], trad = {}, crypto = {}, spa
       // (server/feeds/markets.js). No synthetic fallback — skip the
       // series until the server has at least two points for it.
       const raw = Array.isArray(prices[s.id]?.hist) ? prices[s.id].hist.filter((v) => typeof v === 'number') : [];
-      // Hide the flat prefill prefix (server repeats the first live price on
-      // every refresh): drop leading points equal to prefill so the visible
-      // line starts at real movement; the prefill anchor stays at x=0.
-      const prefill = typeof prices[s.id]?.prefill === 'number' ? prices[s.id].prefill : raw[0];
-      let start = 0;
-      while (start < raw.length - 1 && raw[start] === prefill) start++;
-      const hist = raw.slice(raw.length - 40);
+      // Plot the last 40 ticks right-aligned (latest at the right edge).
+      // When history is shorter than the window, left-pad with the earliest
+      // observed value — that pre-window region is unknown, not a move.
+      const window = raw.slice(-40);
       let pts;
-      if (hist.length >= 2) {
-        const trimmed = raw.length <= 40 ? raw : hist;
-        pts = trimmed.slice(start > 0 && raw.length > 40 ? start : 0);
-        if (pts.length < 2) pts = trimmed;
+      if (window.length >= 2) {
+        pts = [...window];
         // normalize to a 40-point window for the x-scale
-        while (pts.length < 40) pts.unshift(prefill ?? pts[0]);
+        while (pts.length < 40) pts.unshift(window[0]);
       } else {
         pts = [];
       }
