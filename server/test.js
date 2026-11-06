@@ -243,7 +243,9 @@ console.log('PASS: ships subscription builder returns 6 boxes and the 2 message 
 console.log('PASS: ships key text is never present in any log line');
 
 // Phase 2 Step 2c: satellite position function (same code the browser uses).
-const satsNow = await fetchSats();
+// force:true refetches TLEs but must NOT rewrite server/cache/sats.json,
+// so a test run leaves the working tree untouched.
+const satsNow = await fetchSats({ force: true });
 const iss = satsNow.sats.find((s) => /ISS|ZARYA/i.test(s.name));
 assert.ok(iss, 'the fetched TLE set contains the ISS entry');
 const issPos = satPosition(satrecOf(iss), new Date());

@@ -60,7 +60,7 @@ async function fetchGroup(g) {
 }
 
 // Cache-first. Fetches at most every 3 hours. A failed group is reported and skipped.
-// options.force ignores the 3 hour cache age (used by tests).
+// options.force ignores the 3 hour cache age AND skips the cache write (used by tests).
 export async function fetchSats(options = {}) {
   const notes = [];
   const force = Boolean(options.force);
@@ -91,7 +91,7 @@ export async function fetchSats(options = {}) {
     live.sats.error = notes.join('; ') || 'no TLE data';
     return { sats: [], notes };
   }
-  writeCache(sats);
+  if (!force) writeCache(sats);
   live.sats.data = sats;
   live.sats.status = 'ok';
   live.sats.error = '';
