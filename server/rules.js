@@ -56,6 +56,21 @@ export const RULES = [
     wrongIf: "Crop reports stay normal.",
   },
   {
+    // Flood/drought headlines geocoded inside the farm-belt box: GDELT
+    // kindOf only emits blockade/conflict/sanction, so a GDELT disaster
+    // headline never reaches midwest-crop (kinds flood/drought). This box
+    // rule only fires on flood/drought via boxKindOk, and shares the box
+    // with box-midwest — both may fire, which is intentional (a flood is
+    // both farm activity and crop weather).
+    id: "box-flood-crop",
+    title: "Flood or drought near farmland",
+    match: { box: [37, 45, -100, -85], minSize: 0.4 },
+    base: 0.45, windowH: 168, window: "3 to 7 days",
+    effects: [{ a: "CORN", d: 1, w: 0.8 }, { a: "WEAT", d: 1, w: 0.6 }],
+    why: "A flood or drought near {place} can cut crop yields, which lifts corn and wheat.",
+    wrongIf: "Waters recede and crop reports stay normal.",
+  },
+  {
     id: "gulf-conflict",
     title: "Conflict near Gulf oil routes",
     match: { kinds: ["conflict", "blockade"], regions: ["gulf", "redsea", "suez", "middle_east"], minSize: 0.25 },
@@ -218,18 +233,6 @@ export const RULES = [
     effects: [{ a: "USO", d: 1, w: 0.7 }, { a: "ZIM", d: 1, w: 0.5 }, { a: "STNG", d: 1, w: 0.4 }],
     why: "Headlines naming {place} raise shipping-insurance premia on those routes, which lifts oil and shipping stocks.",
     wrongIf: "Traffic through the strait keeps moving and premia do not rise.",
-  },
-  {
-    // A large flood or drought (EONET natural event) inside a box can cut
-    // farm output; the midwest-crop kind rule only covers us_midwest, and
-    // box rules cover quakes/eruptions — floods had no agricultural rule.
-    id: "box-flood-crop",
-    title: "Flood or drought near farmland",
-    match: { box: [37, 45, -100, -85], minSize: 0.4 },
-    base: 0.45, windowH: 168, window: "3 to 7 days",
-    effects: [{ a: "CORN", d: 1, w: 0.8 }, { a: "WEAT", d: 1, w: 0.6 }],
-    why: "A flood or drought near {place} can cut crop yields, which lifts corn and wheat.",
-    wrongIf: "Waters recede and crop reports stay normal.",
   },
 ];
 

@@ -29,13 +29,13 @@ export async function fetchSentiment() {
   if (Date.now() < backoffUntil) return {};
   const out = {};
   let saw403 = false;
-  await Promise.all(CRYPTO.filter((s) => s !== 'USDT').map(async (sym) => {
+  await Promise.all(CRYPTO.map(async (sym) => {
     try {
       const r = await fetch(`${cfg.cryptoBase}/api/ai/sentiment?asset=${sym}`, { headers: UA, signal: AbortSignal.timeout(12000) });
       if (r.status === 403) { saw403 = true; return; }
       if (!r.ok) throw new Error('HTTP ' + r.status);
       out[sym] = normSentiment(await r.json());
-    } catch { /* leave missing */ }
+    } catch (e) { /* intentional: a failed symbol is simply absent from sentiment; 403 stats drive backoff */ }
   }));
   if (saw403 && Object.keys(out).length === 0) backoffUntil = Date.now() + 5 * 60000;
   return out;

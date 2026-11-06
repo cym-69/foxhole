@@ -182,7 +182,9 @@ export async function refreshLiveWatchlist(options = {}) {
         handle: entry.handle,
       };
     });
-    lastSnapshot = { ok: true, updatedAt: new Date().toISOString(), items };
+    // An empty watchlist is not a failure, but it is not live either — the
+    // TopBar pill will say so instead of showing a dead "Live" chip.
+    lastSnapshot = { ok: items.length > 0, updatedAt: new Date().toISOString(), items };
     return lastSnapshot;
   } catch { /* intentional: refreshLiveWatchlist never rejects; fall back to an empty snapshot */ }
   lastSnapshot = { ok: false, updatedAt: new Date().toISOString(), items: [] };

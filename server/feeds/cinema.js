@@ -139,16 +139,20 @@ export async function refreshCinema(fetchImpl = fetch) {
     `${TMDB_BASE}/tv/airing_today?api_key=${key}&page=1`,
   ];
   try {
-    const [trendingJson, nowPlayingJson, upcomingJson, airingJson] = await Promise.all(
+    // Partial outage should not blank the whole rail: fill each list
+    // independently, keep live status when any list resolves.
+    const [tRes, npRes, upRes, atRes] = await Promise.allSettled(
       urls.map((url) => fetchJson(url, fetchImpl)),
     );
-    lastSnapshot = makeSnapshot('live', new Date().toISOString(), {
-      trending: normalizeList(trendingJson, 'movie', true),
-      nowPlaying: normalizeList(nowPlayingJson, 'movie'),
-      upcoming: normalizeList(upcomingJson, 'movie'),
-      airingToday: normalizeList(airingJson, 'tv'),
+    const failed = [tRes, npRes, upRes, atRes].filter((r) => r.status === 'rejected');
+    const pick = (r) => (r.status === 'fulfilled' ? r.value : null);
+    lastSnapshot = makeSnapshot(failed.length === 4 ? 'error' : 'live', new Date().toISOString(), {
+      trending: normalizeList(pick(tRes), 'movie', true),
+      nowPlaying: normalizeList(pick(npRes), 'movie'),
+      upcoming: normalizeList(pick(upRes), 'movie'),
+      airingToday: normalizeList(pick(atRes), 'tv'),
     });
-    lastGoodSnapshot = lastSnapshot;
+    if (failed.length < 4) lastGoodSnapshot = lastSnapshot;
     return lastSnapshot;
   } catch (err) {
     if (err?.status === 401) {

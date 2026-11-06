@@ -46,8 +46,8 @@ assert.equal(ext.url, 'https://example.com/a');
 // refreshXFeed with always-failing fake fetch: resolves with an ok snapshot
 const failingFetch = async () => ({ ok: false, status: 500, text: async () => 'err' });
 const snap = await refreshXFeed(failingFetch);
-assert.equal(snap.ok, true);
+assert.equal(snap.ok, false, 'empty merge is not ok — TopBar should not show a dead Live chip');
 assert.ok(Array.isArray(snap.items));
-assert.equal(xFeedSnapshot().ok, true);
+assert.equal(xFeedSnapshot().ok, false);
 
 console.log('all xfeed tests passed');

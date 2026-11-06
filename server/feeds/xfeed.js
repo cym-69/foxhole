@@ -127,7 +127,7 @@ export async function refreshXFeed(fetchImpl) {
       }
     }
     const merged = Array.from(byUrl.values()).sort((a, b) => b.ts - a.ts).slice(0, SNAPSHOT_ITEMS);
-    snapshot = { ok: true, updatedAt: Date.now(), items: merged };
+    snapshot = { ok: merged.length > 0, updatedAt: Date.now(), items: merged };
   } catch { // intentional: refreshXFeed must never reject
     snapshot = { ok: false, updatedAt: Date.now(), items: snapshot.items };
   }

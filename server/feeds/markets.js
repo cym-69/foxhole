@@ -48,9 +48,13 @@ export async function refreshTrad(symbols = TRAD, maxAgeMs = 20000) {
     return;
   }
   let ok = 0, fail = 0, lastErr = '';
-  for (const s of due) {
-    try { const q = await finnhubQuote(s); push(s, q.price, q.pct, null, false); ok++; }
-    catch (e) { fail++; lastErr = e.message; }
+  const results = await Promise.allSettled(due.map(async (s) => {
+    const q = await finnhubQuote(s);
+    push(s, q.price, q.pct, null, false);
+  }));
+  for (const r of results) {
+    if (r.status === 'fulfilled') ok++;
+    else { fail++; lastErr = r.reason?.message || 'failed'; }
   }
   if (ok > 0 || store.get(TRAD[0])?.demo === false) status.markets = { mode: 'live', note: fail ? `${fail} symbols failed (${lastErr})` : '' };
   else if (fail) status.markets = { mode: 'error', note: `Finnhub error: ${lastErr}` };
@@ -70,8 +74,11 @@ export async function refreshCrypto() {
     if (!n) throw new Error('empty reply');
     status.cryptoPrices = { mode: 'live', note: '' };
   } catch (e) {
-    CRYPTO.forEach(demoStep);
-    status.cryptoPrices = { mode: 'demo', note: `Crypto prices unavailable (${e.message}).` };
+    // Partial outage: only step symbols that have no price yet — never
+    // overwrite a good live price with a demo price for another coin.
+    for (const s of CRYPTO) if (!store.get(s)) demoStep(s);
+    if (store.get(CRYPTO[0])?.demo === false) status.cryptoPrices = { mode: 'live', note: `${e.message} — keeping last live prices.` };
+    else status.cryptoPrices = { mode: 'demo', note: `Crypto prices unavailable (${e.message}).` };
   }
 }
 
