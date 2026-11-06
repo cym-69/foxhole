@@ -17,6 +17,7 @@ function itemsOf(data) {
 
 export default function LiveWatchPanel({ onLiveChange }) {
   const [items, setItems] = useState([]);
+  const [filterChecked, setFilterChecked] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -33,24 +34,44 @@ export default function LiveWatchPanel({ onLiveChange }) {
     return () => { alive = false; clearInterval(id); };
   }, []);
 
+  const visibleItems = filterChecked
+    ? items.filter((it) => it && !it.unknown)
+    : items;
+
   useEffect(() => {
     const liveCount = items.filter((it) => it && it.live === true).length;
     onLiveChange?.(liveCount);
   }, [items, onLiveChange]);
 
   const thumbOf = (item) => safeUrl(item.thumbnail || item.thumbnail_url || item.thumbnailUrl || item.image);
+  const unknownCount = items.filter((it) => it && it.unknown).length;
 
   return (
     <div className="sb-card overflow-hidden">
-      <div className="border-b-2 border-black bg-[#FFD23F] px-3 py-1.5">
+      <div className="flex items-center gap-2 border-b-2 border-black bg-[#FFD23F] px-3 py-1.5">
         <span className="text-[10px] font-black uppercase tracking-wide text-black">Live watch</span>
+        {unknownCount > 0 ? (
+          <label className="ml-auto flex cursor-pointer items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-black">
+            <input
+              type="checkbox"
+              checked={filterChecked}
+              onChange={(e) => setFilterChecked(e.target.checked)}
+              className="h-3 w-3 accent-black"
+              aria-label="Hide channels with no confirmed status"
+            />
+            hide unconfirmed ({unknownCount})
+          </label>
+        ) : null}
       </div>
       <div className="px-3 py-2">
-        {items.length === 0 ? (
-          <p className="text-[12px] text-mute">No live channels are being tracked right now.</p>
+        {visibleItems.length === 0 ? (
+          <p className="text-[12px] text-mute">
+            {items.length === 0 ? 'No live channels are being tracked right now.'
+              : 'All channels are unconfirmed — uncheck "hide unconfirmed" to see them.'}
+          </p>
         ) : (
           <ul className="flex max-h-[320px] flex-col gap-1.5 overflow-y-auto">
-            {items.map((item, i) => {
+            {visibleItems.map((item, i) => {
               const thumbnail = thumbOf(item);
               const url = safeUrl(item.url);
               return (
@@ -62,7 +83,7 @@ export default function LiveWatchPanel({ onLiveChange }) {
                       <span className="shrink-0 animate-pulse rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-semibold text-white">LIVE</span>
                     ) : null}
                     {item.unknown ? (
-                      <span className="shrink-0 rounded border border-line px-1.5 py-0.5 text-[10px]">check</span>
+                      <span className="shrink-0 rounded border border-line px-1.5 py-0.5 text-[10px]" title="No free check API for this platform — open to verify">unconfirmed</span>
                     ) : null}
                   </div>
                   {thumbnail ? (
