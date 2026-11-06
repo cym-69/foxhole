@@ -81,7 +81,7 @@ export function snapshot(syms) {
   const o = {};
   for (const s of syms) {
     const q = store.get(s);
-    if (q) o[s] = { sym: s, label: ASSETS[s].label, kind: ASSETS[s].kind, price: q.price, pct: q.pct, vol: q.vol, hist: q.hist, demo: q.demo, ts: q.ts };
+    if (q) o[s] = { sym: s, label: ASSETS[s].label, kind: ASSETS[s].kind, price: q.price, pct: q.pct, vol: q.vol, hist: q.hist, prefill: q.prefill, demo: q.demo, ts: q.ts };
   }
   return o;
 }
