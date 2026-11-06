@@ -20,13 +20,21 @@ export default function MarketsChart({ signals = [], trad = {}, crypto = {}, spa
       // Real history only: server accumulates hist[] from live prices
       // (server/feeds/markets.js). No synthetic fallback — skip the
       // series until the server has at least two points for it.
-      const hist = Array.isArray(prices[s.id]?.hist) ? prices[s.id].hist.filter((v) => typeof v === 'number') : [];
+      const raw = Array.isArray(prices[s.id]?.hist) ? prices[s.id].hist.filter((v) => typeof v === 'number') : [];
+      // Hide the flat prefill prefix (server repeats the first live price on
+      // every refresh): drop leading points equal to prefill so the visible
+      // line starts at real movement; the prefill anchor stays at x=0.
+      const prefill = typeof prices[s.id]?.prefill === 'number' ? prices[s.id].prefill : raw[0];
+      let start = 0;
+      while (start < raw.length - 1 && raw[start] === prefill) start++;
+      const hist = raw.slice(raw.length - 40);
       let pts;
       if (hist.length >= 2) {
-        const tail = Math.min(40, hist.length);
-        pts = hist.slice(-tail);
+        const trimmed = raw.length <= 40 ? raw : hist;
+        pts = trimmed.slice(start > 0 && raw.length > 40 ? start : 0);
+        if (pts.length < 2) pts = trimmed;
         // normalize to a 40-point window for the x-scale
-        while (pts.length < 40) pts.unshift(pts[0]);
+        while (pts.length < 40) pts.unshift(prefill ?? pts[0]);
       } else {
         pts = [];
       }
@@ -34,9 +42,7 @@ export default function MarketsChart({ signals = [], trad = {}, crypto = {}, spa
     }).filter((s) => s.pts.length > 0);
   }, [active, trad, crypto]);
 
-  // Tick a "history building" note when only the prefill (single live price
-  // repeated by the server) is available — the server fills hist[] with the
-  // latest price on every refresh, so real movement appears over time.
+  // Tick a "history building" note when only the prefill is available.
   const pending = SERIES.filter((s) => {
     const live = (trad?.[s.id]?.price ?? crypto?.[s.id]?.price);
     return typeof live === 'number' && !series.some((x) => x.id === s.id);

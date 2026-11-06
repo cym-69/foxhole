@@ -13,7 +13,13 @@ function push(sym, price, pct, vol, demo) {
   const hist = prev?.hist ? [...prev.hist] : [];
   hist.push(price);
   if (hist.length > HIST) hist.shift();
-  store.set(sym, { price, pct, vol, ts: Date.now(), hist, demo });
+  // Prefill marker: the first observation for a symbol is the live price at
+  // server start. Repeating it in hist[] would paint a flat segment that
+  // looks like real movement is missing. MarketsChart hides runs of the
+  // prefill value by rendering the series starting at the first distinct
+  // price — the prefill point itself stays the x=0 anchor.
+  const prefill = hist.length === 1 ? price : prev?.prefill ?? price;
+  store.set(sym, { price, pct, vol, ts: Date.now(), hist, prefill, demo });
 }
 
 function demoStep(sym) {
