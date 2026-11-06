@@ -11,6 +11,12 @@ const SNAPSHOT_ITEMS = 120;
 const MAX_HANDLES = 30;
 const UA = 'Foxhole/1.0 (personal project)';
 
+// Jittered poll: ±25% around REFRESH_MS so the 30 nitter RSS fetches do not
+// fire in lockstep with the other pollers.
+export function xfeedIntervalMs(base = REFRESH_MS) {
+  return Math.round(base * (1 + (Math.random() - 0.5) * 0.5));
+}
+
 function loadHandles() {
   try {
     const here = path.dirname(fileURLToPath(import.meta.url));
@@ -138,13 +144,21 @@ export function startXFeed() {
   if (started) return stopXFeed;
   started = true;
   refreshXFeed().catch(() => { /* intentional: background refresh swallows errors */ });
-  const timer = setInterval(() => { refreshXFeed().catch(() => { /* intentional: background refresh swallows errors */ }); }, REFRESH_MS);
-  timer.unref();
   let stopped = false;
+  let timer;
+  const schedule = () => {
+    timer = setTimeout(() => {
+      if (stopped) return;
+      refreshXFeed().catch(() => { /* intentional: background refresh swallows errors */ });
+      schedule();
+    }, xfeedIntervalMs());
+  };
+  schedule();
+  timer.unref();
   function stopXFeed() {
     if (stopped) return;
     stopped = true;
-    clearInterval(timer);
+    clearTimeout(timer);
     started = false;
   }
   return stopXFeed;

@@ -6,6 +6,13 @@ import '../config.js';
 const PLATFORMS = new Set(['kick', 'twitch', 'youtube', 'rumble']);
 const TIMEOUT_MS = 15000;
 const MAX_ENTRIES = 60;
+const REFRESH_MS = 120_000;
+
+// Jittered poll: ±25% around REFRESH_MS so the combined Kick + YouTube +
+// Rumble watchlist fan-out does not fire in lockstep with other pollers.
+export function livewatchIntervalMs(base = REFRESH_MS) {
+  return Math.round(base * (1 + (Math.random() - 0.5) * 0.5));
+}
 
 function defaultUrl(platform, handle) {
   if (platform === 'kick') return `https://kick.com/${handle}`;
@@ -195,7 +202,7 @@ let intervalId = null;
 
 function stopLiveWatchlist() {
   if (intervalId !== null) {
-    clearInterval(intervalId);
+    clearTimeout(intervalId);
     intervalId = null;
   }
 }
@@ -203,9 +210,15 @@ function stopLiveWatchlist() {
 export function startLiveWatchlist() {
   if (intervalId !== null) return stopLiveWatchlist;
   refreshLiveWatchlist().catch(() => { /* intentional: refreshLiveWatchlist resolves with an error snapshot */ });
-  intervalId = setInterval(() => {
-    refreshLiveWatchlist().catch(() => { /* intentional: refreshLiveWatchlist resolves with an error snapshot */ });
-  }, 60_000);
+  let timer;
+  const schedule = () => {
+    timer = setTimeout(() => {
+      refreshLiveWatchlist().catch(() => { /* intentional: refreshLiveWatchlist resolves with an error snapshot */ });
+      schedule();
+    }, livewatchIntervalMs());
+  };
+  schedule();
+  intervalId = timer;
   if (typeof intervalId.unref === 'function') intervalId.unref();
   return stopLiveWatchlist;
 }

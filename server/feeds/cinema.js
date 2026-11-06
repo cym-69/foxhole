@@ -172,17 +172,29 @@ let intervalId = null;
 
 function stopCinema() {
   if (intervalId !== null) {
-    clearInterval(intervalId);
+    clearTimeout(intervalId);
     intervalId = null;
   }
+}
+
+// Jittered poll interval: cinema polls hourly; ±25% avoids lockstep spikes.
+export function cinemaIntervalMs(base = 60 * 60 * 1000) {
+  return Math.round(base * (1 + (Math.random() - 0.5) * 0.5));
 }
 
 export function startCinema() {
   if (intervalId !== null) return stopCinema;
   refreshCinema().catch(() => { /* intentional: refreshCinema resolves with an error-status snapshot */ });
-  intervalId = setInterval(() => {
-    refreshCinema().catch(() => { /* intentional: refreshCinema resolves with an error-status snapshot */ });
-  }, 60 * 60 * 1000);
+  console.log('[cinema] hourly poll with jitter');
+  let timer;
+  const schedule = () => {
+    timer = setTimeout(() => {
+      refreshCinema().catch(() => { /* intentional: refreshCinema resolves with an error-status snapshot */ });
+      schedule();
+    }, cinemaIntervalMs());
+  };
+  schedule();
+  intervalId = timer;
   if (typeof intervalId.unref === 'function') intervalId.unref();
   return stopCinema;
 }
