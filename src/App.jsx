@@ -226,16 +226,20 @@ export default function App() {
 
   return (
     <div className="grid h-screen w-screen grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden">
+      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-[60] focus:border-2 focus:border-black focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:font-bold focus:shadow-[2px_2px_0_#111]">
+        Skip to map
+      </a>
       <TopBar state={state} online={online} onSetup={() => setSetupOpen(true)} tvOpen={tvOpen} onTv={() => setTvOpen((v) => !v)} />
+      <BestSignals signals={state.signals} top={state.top} ai={state.ai} onPick={select} onSetup={() => setSetupOpen(true)} />
+
       {isDemoBanner && (
-        <div role="status" className="border-b-2 border-black bg-[#FFD23F] px-3 py-1 text-center text-[11px] font-bold text-black">
+        <div role="status" className="border-t-2 border-black bg-[#FFD23F] px-3 py-1 text-center text-[11px] font-bold text-black">
           Demo events — live feed unavailable. Nothing here is current news.
         </div>
       )}
-      <BestSignals signals={state.signals} top={state.top} ai={state.ai} onPick={select} onSetup={() => setSetupOpen(true)} />
 
       {wide ? (
-      <main className="grid min-h-0 grid-cols-[340px_minmax(0,1fr)_360px]">
+      <main id="main" className="grid min-h-0 grid-cols-[340px_minmax(0,1fr)_360px]">
         <div className="flex min-h-0 flex-col border-r-2 border-black">
           <div className="flex flex-wrap items-center gap-1 border-b-2 border-black px-2 py-1.5">
             {[['signals', 'Signals'], ['cinema', 'Cinema'], ['horizon', 'Horizon'], ['live', `Live${liveCount > 0 ? ` ${liveCount}` : ''}`], ['x', 'X']].map(([id, label]) => (
@@ -321,7 +325,7 @@ export default function App() {
         </div>
       </main>
       ) : (
-      <main className="grid min-h-0 grid-rows-[minmax(0,1fr)_auto] overflow-hidden max-lg:grid-rows-[minmax(0,1fr)_minmax(0,1fr)] lg:block">
+      <main id="main" className="grid min-h-0 grid-rows-[minmax(0,1fr)_auto] overflow-hidden max-lg:grid-rows-[minmax(0,1fr)_minmax(0,1fr)] lg:block border-t-2 border-black">
         <section className="relative min-h-0 overflow-hidden max-lg:flex max-lg:flex-col max-lg:overflow-y-auto" style={{ background: 'radial-gradient(ellipse at 50% 45%, #FFFDF5 0%, #FAF6EF 70%)' }}>
           <Suspense fallback={GlobeFallback}>
             <Globe3D ref={globe} events={visible.filter((e) => mapLayerOn(e, mapLayers))} context={visibleCtx} selectedId={selectedId} onSelect={(id) => (id ? select(id) : setSelectedId(null))} aircraft={mapLayers.military ? live.aircraft : []} ships={mapLayers.ships ? live.ships : []} shipNames={live.shipNames} sats={mapLayers.sats ? sats : []} pulse={live.pulse} />
