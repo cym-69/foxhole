@@ -11,7 +11,7 @@ import { startShips, stopShips, shipClass, buildSubscription, SHIP_BOXES, shipBo
 import { fetchSats, parseTle, readCache } from './feeds/sats.js';
 import { satrecOf, satPosition } from '../src/lib/sats.js';
 import { PROFILES } from '../src/lib/profiles.js';
-import { parseFeedXml, ingest, cleanTitle, eventToFeedItem } from './feeds/headlines.js';
+import { parseFeedXml, parseHnJson, ingest, cleanTitle, eventToFeedItem } from './feeds/headlines.js';
 
 const ctx = { stats: {}, aiWhy: new Map(), sentiment: { BTC: { label: 'bearish', score: -0.3 } } };
 const r = analyze(demoEvents(), ctx);
@@ -343,6 +343,25 @@ assert.equal(feedItem.eventId, 'demo:hormuz', 'event id is carried');
 assert.deepEqual(feedItem.tickers, ['USO', 'STNG'], 'linked tickers are carried');
 assert.equal(feedItem.text, 'Hormuz tension', 'event title becomes the text');
 console.log('PASS: an event becomes a feed item with its kind, eventId and tickers');
+
+// Slice 2: HN Algolia JSON parsing
+{
+  const hnJson = JSON.stringify({ hits: [
+    { objectID: 123, title: 'Oil rerouted around the cape', url: 'https://example.com/a', created_at: new Date(nowMs - 60000).toISOString() },
+    { objectID: 124, title: 'Show HN: Chips', created_at: new Date(nowMs - 120000).toISOString() },
+    { objectID: 125, title: '', url: 'https://example.com/empty', created_at: new Date(nowMs - 120000).toISOString() },
+  ] });
+  const hn = parseHnJson(hnJson, 'hn');
+  assert.equal(hn.length, 2, 'HN hits parse, empty title skipped');
+  assert.equal(hn[0].text, 'Oil rerouted around the cape', 'HN title kept');
+  assert.equal(hn[0].url, 'https://example.com/a', 'HN url kept');
+  assert.equal(hn[1].url, 'https://news.ycombinator.com/item?id=124', 'HN missing url falls back to comment thread');
+  const hnObj = parseHnJson({ hits: [{ objectID: 9, title: 'Object form', url: 'https://example.com/o', created_at: new Date(nowMs - 60000).toISOString() }] }, 'hn');
+  assert.equal(hnObj.length, 1, 'HN object form parses');
+  assert.deepEqual(parseHnJson('not json', 'hn'), [], 'bad JSON returns empty');
+  assert.deepEqual(parseHnJson({ hits: [] }, 'hn'), [], 'empty hits returns empty');
+  console.log('PASS: HN Algolia JSON parses (fallback url, bad JSON, empty hits)');
+}
 
 // H1 regression: SPA fallback must not swallow unknown /api/* routes.
 // Assumes a live server on 127.0.0.1:4180; skips honestly when it is not running.

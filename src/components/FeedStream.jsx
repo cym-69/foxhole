@@ -27,6 +27,8 @@ const FILTER_TABS = [
   { id: 'tech', label: 'Tech' },
   { id: 'science', label: 'Science' },
   { id: 'cinema', label: 'Cinema' },
+  { id: 'hn', label: 'HN' },
+  { id: 'arxiv', label: 'arXiv' },
   { id: 'x', label: 'X' },
   { id: 'live', label: 'Live' },
 ];
@@ -34,6 +36,8 @@ const FILTER_TABS = [
 function matchesFilter(it, filter) {
   if (filter === 'all') return true;
   if (filter === 'x') return it.srcName === 'x' || it.srcName === 'x/News' || it.kind === 'x';
+  if (filter === 'hn') return it.srcName === 'Hacker News';
+  if (filter === 'arxiv') return it.srcName === 'arXiv';
   if (filter === 'live') return it.kind === 'live' || /kick|rumble|twitch|youtube/i.test(it.srcName || '');
   if (filter === 'cinema') return /cinema|movie|tmdb|box office/i.test(`${it.srcName || ''} ${it.text || ''}`);
   if (filter === 'war') return ['conflict', 'blockade'].includes(it.kind) || /\bwar|ukraine|russia|strike|missile|iran|houthi|red sea|gaza|israel|china|taiwan/i.test(it.text || '');

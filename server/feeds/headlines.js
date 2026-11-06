@@ -25,6 +25,9 @@ const SOURCES = [
   { id: 'gnews-war', name: 'Google News · War', url: 'https://news.google.com/rss/search?q=ukraine+russia+when%3A1d&hl=en-US&gl=US&ceid=US%3Aen' },
   { id: 'gnews-trade', name: 'Google News · Trade', url: 'https://news.google.com/rss/search?q=tariffs+trade+when%3A1d&hl=en-US&gl=US&ceid=US%3Aen' },
   { id: 'gnews-semis', name: 'Google News · Semis', url: 'https://news.google.com/rss/search?q=semiconductors+chips+when%3A1d&hl=en-US&gl=US&ceid=US%3Aen' },
+  { id: 'hn', name: 'Hacker News', kind: 'json', format: 'hn', url: 'https://hn.algolia.com/api/v1/search_by_date?tags=story&hitsPerPage=20' },
+  // arXiv is a native Atom feed (already handled by parseFeedXml); poll slower (≥10 min per upstream guidance).
+  { id: 'arxiv', name: 'arXiv', kind: 'xml', pollMs: 600000, url: 'https://export.arxiv.org/api/query?search_query=cat:cs.AI+OR+cat:cs.LG+OR+cat:cs.CY&sortBy=submittedDate&sortOrder=descending&max_results=10' },
 ];
 
 // FOXHOLE_RSS_URLS=host-a,host-b replaces the list (names = host name).
@@ -79,6 +82,22 @@ function atomLink(entry) {
 function parseTime(v) {
   const t = Date.parse(String(v || ''));
   return Number.isFinite(t) ? t : Date.now();
+}
+
+// Turn one HN Algolia JSON document into items: {id, ts, text, url}.
+export function parseHnJson(json, src) {
+  let hits = [];
+  if (typeof json === 'string') { try { hits = JSON.parse(json).hits || []; } catch { return []; } }
+  else if (json && typeof json === 'object') hits = json.hits || [];
+  const rawItems = [];
+  for (const hit of hits) {
+    if (!hit || typeof hit !== 'object') continue;
+    const url = typeof hit.url === 'string' && /^https?:\/\//i.test(hit.url) ? hit.url : 'https://news.ycombinator.com/item?id=' + String(hit.objectID || '');
+    const text = cleanTitle(hit.title || '');
+    if (!text) continue;
+    rawItems.push({ id: src + ':' + String(hit.objectID || url), ts: parseTime(hit.created_at), text, url });
+  }
+  return rawItems;
 }
 
 // Turn one parsed feed document into items: {id, ts, text, url}.
@@ -167,23 +186,33 @@ export function headlineRaw() { return items.slice(); }export function headlineS
   };
 }
 
+function isJsonSource(s) { return s.format === 'hn' || s.kind === 'json'; }
+function acceptFor(s) { return isJsonSource(s) ? 'application/json, */*;q=0.8' : 'application/rss+xml, application/xml;q=0.9, */*;q=0.8'; }
+
+function validateBody(s, body) {
+  if (isJsonSource(s)) {
+    let doc; try { doc = JSON.parse(body); } catch { throw new Error('bad JSON body'); }
+    if (!doc || !Array.isArray(doc.hits) || !doc.hits.length) throw new Error('no hits in body');
+  } else if (!/<item[\s>]/.test(body) && !/<entry[\s>]/.test(body)) throw new Error('no <item or <entry in body');
+}
+
 async function probe(s) {
-  const r = await fetch(s.url, { headers: { 'User-Agent': UA, Accept: 'application/rss+xml, application/xml;q=0.9, */*;q=0.8' }, signal: AbortSignal.timeout(FETCH_MS) });
+  const r = await fetch(s.url, { headers: { 'User-Agent': UA, Accept: acceptFor(s) }, signal: AbortSignal.timeout(FETCH_MS) });
   if (!r.ok) throw new Error('HTTP ' + r.status);
   const body = await r.text();
-  if (!/<item[\s>]/.test(body) && !/<entry[\s>]/.test(body)) throw new Error('no <item or <entry in body');
+  validateBody(s, body);
   return { body, etag: r.headers.get('etag') || '', lastModified: r.headers.get('last-modified') || '' };
 }
 
 async function pollSource(s) {
-  const headers = { 'User-Agent': UA, Accept: 'application/rss+xml, application/xml;q=0.9, */*;q=0.8' };
+  const headers = { 'User-Agent': UA, Accept: acceptFor(s) };
   if (s.etag) headers['If-None-Match'] = s.etag;
   if (s.lastModified) headers['If-Modified-Since'] = s.lastModified;
   const r = await fetch(s.url, { headers, signal: AbortSignal.timeout(FETCH_MS) });
   if (r.status === 304) { s.ok = true; s.error = ''; s.lastFetch = Date.now(); return; }
   if (!r.ok) throw new Error('HTTP ' + r.status);
   const body = await r.text();
-  if (!/<item[\s>]/.test(body) && !/<entry[\s>]/.test(body)) throw new Error('no <item or <entry in body');
+  validateBody(s, body);
   s.etag = r.headers.get('etag') || '';
   s.lastModified = r.headers.get('last-modified') || '';
   s.ok = true; s.error = ''; s.lastFetch = Date.now();
@@ -192,7 +221,7 @@ async function pollSource(s) {
 
 // Turn one body into items, then apply the dedupe and first-fetch rules.
 export function ingest(s, body) {
-  const fresh = parseFeedXml(body, s.id);
+  const fresh = isJsonSource(s) ? parseHnJson(body, s.id) : parseFeedXml(body, s.id);
   let kept = fresh;
   if (!s.firstDone) {
     const cutoff = Date.now() - FIRST_FETCH_HOURS * 3600000;
@@ -212,15 +241,16 @@ export function ingest(s, body) {
 }
 
 function startSource(s, index) {
+  const pollMs = Number(s.pollMs) || BASE_MS;
   setTimeout(async () => {
     const run = async () => {
       try { await pollSource(s); s.fails = 0; }
       catch (e) {
         s.ok = false; s.error = e.message; s.fails++;
-        setTimeout(run, Math.min(MAX_DELAY_MS, BASE_MS * 2 ** s.fails));
+        setTimeout(run, Math.min(MAX_DELAY_MS, pollMs * 2 ** s.fails));
         return;
       }
-      setTimeout(run, BASE_MS);
+      setTimeout(run, pollMs);
     };
     run();
   }, index * STAGGER_MS);
