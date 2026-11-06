@@ -20,14 +20,23 @@ export function normSentiment(j) {
   return { label: label || (value > 0.15 ? 'bullish' : value < -0.15 ? 'bearish' : 'neutral'), score: Number(value.toFixed(2)), value: Math.max(-1, Math.min(1, value)) };
 }
 
+// Backoff: cryptocurrency.cv is rate-limiting us with 403s. After a 403
+// we pause sentiment pulls for 5 minutes instead of hammering it every
+// 90s and keeping the rate limit alive.
+let backoffUntil = 0;
+
 export async function fetchSentiment() {
+  if (Date.now() < backoffUntil) return {};
   const out = {};
+  let saw403 = false;
   await Promise.all(CRYPTO.filter((s) => s !== 'USDT').map(async (sym) => {
     try {
       const r = await fetch(`${cfg.cryptoBase}/api/ai/sentiment?asset=${sym}`, { headers: UA, signal: AbortSignal.timeout(12000) });
+      if (r.status === 403) { saw403 = true; return; }
       if (!r.ok) throw new Error('HTTP ' + r.status);
       out[sym] = normSentiment(await r.json());
     } catch { /* leave missing */ }
   }));
+  if (saw403 && Object.keys(out).length === 0) backoffUntil = Date.now() + 5 * 60000;
   return out;
 }
