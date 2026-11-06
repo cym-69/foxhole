@@ -1,4 +1,4 @@
-// Located conflict, blockade and sanction events from GDELT's raw 15-minute event files.
+// Located conflict, blockade, sanction, strike and drought events from GDELT's raw 15-minute event files.
 // Free, no key. Replaces the GEO API, which now returns 404.
 // Column positions follow the GDELT 2.0 event table. If GDELT ever changes them, edit COL only.
 import zlib from 'node:zlib';
@@ -8,7 +8,7 @@ const BASES = ['https://data.gdeltproject.org/gdeltv2/', 'http://data.gdeltproje
 const WINDOW_FILES = 24;   // 6 hours of files kept
 export const COL = { baseCode: 27, rootCode: 28, mentions: 31, sources: 32, geoType: 51, geoName: 52, lat: 56, lng: 57, added: 59, url: 60, minCols: 58 };
 
-const LAYER = { conflict: 'conflict', blockade: 'trade', sanction: 'policy' };
+const LAYER = { conflict: 'conflict', blockade: 'trade', sanction: 'policy', strike: 'trade', drought: 'nature' };
 
 // Whole-word relevance list (single array). Optional trailing "s" allowed.
 export const GDELT_WORDS = [
@@ -17,6 +17,7 @@ export const GDELT_WORDS = [
   'port', 'houthi', 'red sea', 'hormuz', 'suez', 'taiwan', 'chip', 'semiconductor',
   'grain', 'wheat', 'corn', 'harvest', 'airline', 'airport', 'missile', 'drone',
   'strike', 'attack', 'ceasefire', 'truce', 'war', 'nuclear', 'military',
+  'drought', 'flood', 'famine', 'wildfire',
 ];
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 export const GDELT_RE = new RegExp(GDELT_WORDS.map((w) => `\\b${esc(w)}s?\\b`).join('|'), 'i');
@@ -28,10 +29,16 @@ export function relevant(title, url, kind) {
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
 
 // CAMEO codes. Fighting (19, 20) and bombings only. Crime-type assaults (18x) are skipped on purpose.
-export function kindOf(root, base) {
+// Strike (base 19x but work-stoppage wording) and drought (154) are
+// classified by a keyword pass on the row so port-strike, freight and
+// midwest-crop rules can fire from GDELT, not just demo/EONET.
+export function kindOf(root, base, title = '') {
   if (base === '191') return 'blockade';
-  if ((root === '19') || root === '20' || base === '183') return 'conflict';
+  if ((root === '19') || root === '20' || base === '183') {
+    return /\b(strike|dockwork|longshore|walkout)\b/i.test(title) ? 'strike' : 'conflict';
+  }
   if (base === '163' || base === '172') return 'sanction';
+  if (root === '15') return 'drought';
   return null;
 }
 
@@ -46,7 +53,8 @@ export function parseExport(text) {
     if (!line) continue;
     const c = line.split('\t');
     if (c.length < COL.minCols) continue;
-    const kind = kindOf(c[COL.rootCode], c[COL.baseCode]);
+    const url = (c[COL.url] || '').trim();
+    const kind = kindOf(c[COL.rootCode], c[COL.baseCode], `${slugTitle(url)} ${url}`);
     if (!kind) continue;
     if (!['3', '4', '5'].includes(c[COL.geoType])) continue; // skip country-level centroids
     const lat = parseFloat(c[COL.lat]);
@@ -55,7 +63,7 @@ export function parseExport(text) {
     rows.push({
       kind, lat, lng, name: (c[COL.geoName] || '').split(',')[0].trim(),
       mentions: Number(c[COL.mentions]) || 0, sources: Number(c[COL.sources]) || 0,
-      ts: parseTs((c[COL.added] || '').trim()), url: (c[COL.url] || '').trim(),
+      ts: parseTs((c[COL.added] || '').trim()), url,
     });
   }
   return rows;

@@ -56,12 +56,10 @@ export const RULES = [
     wrongIf: "Crop reports stay normal.",
   },
   {
-    // Flood/drought headlines geocoded inside the farm-belt box: GDELT
-    // kindOf only emits blockade/conflict/sanction, so a GDELT disaster
-    // headline never reaches midwest-crop (kinds flood/drought). This box
-    // rule only fires on flood/drought via boxKindOk, and shares the box
-    // with box-midwest — both may fire, which is intentional (a flood is
-    // both farm activity and crop weather).
+    // GDELT disaster headlines (root 15 -> drought) near the farm belt
+    // also reach midwest-crop; this box rule shares the box, and both may
+    // fire, which is intentional (a flood is both farm activity and crop
+    // weather).
     id: "box-flood-crop",
     title: "Flood or drought near farmland",
     match: { box: [37, 45, -100, -85], minSize: 0.4 },

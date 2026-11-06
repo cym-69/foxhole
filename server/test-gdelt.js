@@ -23,6 +23,8 @@ const text = [
   row({ root: '17', base: '172', lat: 55.7, lng: 37.6, name: 'Moscow, Russia', mentions: 200, sources: 8, url: 'https://news.example.com/world/2026/10/new-sanctions-announced-on-russian-oil' }),
   row({ root: '19', base: '191', lat: 14, lng: 42.5, name: 'Red Sea', mentions: 120, sources: 9, url: 'https://news.example.com/world/2026/10/houthi-blockade-hits-shipping-lanes' }),
   row({ root: '18', base: '183', lat: 31.4, lng: 34.3, name: 'Gaza, Israel', mentions: 300, sources: 14, url: 'https://news.example.com/world/2026/10/missile-strike-hits-gaza-city-center' }),
+  row({ root: '19', base: '193', lat: 31.2, lng: 32.3, name: 'Suez Canal, Egypt', mentions: 130, sources: 6, url: 'https://news.example.com/world/2026/10/dockworkers-strike-halts-operations-at-port' }),
+  row({ root: '15', base: '154', lat: 12.8, lng: 45, name: 'Aden, Yemen', mentions: 110, sources: 5, url: 'https://news.example.com/world/2026/10/severe-drought-threatens-yemen-food-supplies' }),
   'short\tline',
 ].join('\n');
 
@@ -30,15 +32,18 @@ const text = [
 assert.equal(kindOf('19', '191'), 'blockade');
 assert.equal(kindOf('18', '186'), null);
 assert.equal(kindOf('18', '183'), 'conflict');
+assert.equal(kindOf('19', '193', 'dockworkers strike halts operations at port'), 'strike');
+assert.equal(kindOf('19', '193', 'tanker struck near strait'), 'conflict');
 assert.equal(kindOf('17', '172'), 'sanction');
+assert.equal(kindOf('15', '154'), 'drought');
 
 // parsing keeps only usable rows
 const rows = parseExport(text);
-assert.equal(rows.length, 7, 'crime, country-level and short rows are skipped');
+assert.equal(rows.length, 9, 'crime, country-level and short rows are skipped');
 
 // grouping and thresholds
 const evs = aggregate(rows);
-assert.equal(evs.length, 4, 'thin cell dropped');
+assert.equal(evs.length, 6, 'thin cell dropped');
 const hormuz = evs.find((e) => e.kind === 'conflict' && e.place.startsWith('Strait'));
 assert.ok(hormuz && hormuz.sources === 12 && hormuz.size > 0.5 && hormuz.size < 0.7);
 assert.equal(hormuz.title, 'Tanker struck near strait of hormuz');
