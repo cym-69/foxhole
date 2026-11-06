@@ -11,12 +11,12 @@ const CAP_FAR = 30;
 const CAP_NEAR = 90;
 
 const dotSize = (impact) => Math.round(16 + Math.min(1, impact) * 24);
-// Spike height grows with impact. Color: green = lead asset up, red = down, amber = unsure.
-const COL = { up: '#5FD39A', down: '#E5706B', warn: '#E0B45A', sel: '#D6E0DA' };
+// Solar Brutalist pulse colors: green = lead asset up, red = down, amber = unsure.
+const COL = { up: '#22A352', down: '#E64A2E', warn: '#E6A700', sel: '#111111' };
 const leadColor = (ev, sel) => (sel ? COL.sel : !ev.lead || ev.lead.action === 'WATCH' ? COL.warn : ev.lead.dir > 0 ? COL.up : COL.down);
 const altOf = (ev) => 0.025 + Math.min(1, ev.impact) * 0.16;
-// Ships: 0 other (dim grey), 1 cargo (light grey-blue), 2 tanker (amber).
-export const SHIP_CLASS = { 0: '#7C8C84', 1: '#A9BFD6', 2: '#E0B45A' };
+// Ships: 0 other (dim grey), 1 cargo (light slate), 2 tanker (amber).
+export const SHIP_CLASS = { 0: '#5A564C', 1: '#8AA0B5', 2: '#E6A700' };
 const SHIP_CLASS_NAME = { 0: 'other', 1: 'cargo', 2: 'tanker' };
 const SHIP_ALT = 0.008;
 const labelOf = (ev) => {
@@ -193,22 +193,23 @@ const Globe3D = forwardRef(function Globe3D({ events, context = [], selectedId, 
     const el = host.current;
     const g = Globe({ animateIn: false })(el)
       .backgroundColor('rgba(0,0,0,0)')
-      .showAtmosphere(true).atmosphereColor('#8FA89B').atmosphereAltitude(0.18).showGraticules(true)
+      .showAtmosphere(true).atmosphereColor('#FFD23F').atmosphereAltitude(0.18).showGraticules(true)
+      .globeMaterial(new (Object.getPrototypeOf(g.globeMaterial()).constructor)({
+        color: 0xFFFDF5, emissive: 0xFAF6EF, shininess: 4, specular: 0x111111,
+      }))
       .pointLat((d) => d.lat).pointLng((d) => d.lng).pointAltitude((d) => d.alt).pointRadius((d) => d.r).pointColor((d) => d.color).pointResolution(5).pointsMerge(true)
       .hexPolygonsData(land).hexPolygonResolution(3).hexPolygonAltitude(0.004).hexPolygonMargin(0.5).hexPolygonUseDots(true)
-      .hexPolygonColor(() => 'rgba(143,168,155,0.5)')
+      .hexPolygonColor(() => 'rgba(17,17,17,0.22)')
       .htmlLat((d) => d.lat).htmlLng((d) => d.lng).htmlAltitude((d) => d.alt ?? 0.01).htmlElement((d) => d.el)
       .htmlTransitionDuration(reduced ? 0 : 600)
       .ringLat((d) => d.lat).ringLng((d) => d.lng).ringMaxRadius((d) => d.r)
       .ringPropagationSpeed(2).ringRepeatPeriod((d) => d.repeat)
-      .ringColor(() => (t) => `rgba(143,168,155,${1 - t})`)
+      .ringColor(() => (t) => `rgba(34,163,82,${1 - t})`)
       .onGlobeClick(() => latest.current.onSelect(null));
     g.htmlElementVisibilityModifier((node, visible) => {
       node.style.opacity = visible ? '1' : '0';
       node.style.pointerEvents = visible ? 'auto' : 'none';
     });
-    const mat = g.globeMaterial();
-    mat.color.set('#121A17'); mat.emissive.set('#0A100E'); mat.shininess = 0;
 
     const c = g.controls();
     c.autoRotate = !reduced; c.autoRotateSpeed = 0.35; c.enableDamping = true;

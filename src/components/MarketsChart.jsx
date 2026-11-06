@@ -16,34 +16,22 @@ export default function MarketsChart({ signals = [], trad = {}, crypto = {}, spa
 
   const series = useMemo(() => {
     const prices = { ...trad, ...crypto };
-    return SERIES.filter((s) => active.has(s.id)).map((s, si) => {
-      // Real history when available; a gentle wobble ending at the live price otherwise.
+    return SERIES.filter((s) => active.has(s.id)).map((s) => {
+      // Real history only: server accumulates hist[] from live prices
+      // (server/feeds/markets.js). No synthetic fallback — skip the
+      // series until the server has at least two points for it.
       const hist = Array.isArray(prices[s.id]?.hist) ? prices[s.id].hist.filter((v) => typeof v === 'number') : [];
-      const live = prices[s.id]?.price;
       let pts;
       if (hist.length >= 2) {
         const tail = Math.min(40, hist.length);
         pts = hist.slice(-tail);
         // normalize to a 40-point window for the x-scale
         while (pts.length < 40) pts.unshift(pts[0]);
-      } else if (typeof live === 'number') {
-        pts = [];
-        for (let i = 0; i < 40; i++) {
-          const wobble = Math.sin(i * 0.45 + si * 1.9) * live * 0.004 + Math.cos(i * 0.19 + si) * live * 0.002;
-          const drift = i * (si % 2 ? 1 : -1) * live * 0.000;
-          pts.push(live - ((39 - i) * live * 0.0002) + wobble + drift);
-        }
       } else {
-        const base = 100 + si * 137;
         pts = [];
-        for (let i = 0; i < 40; i++) {
-          const wobble = Math.sin(i * 0.45 + si * 1.9) * 4 + Math.cos(i * 0.19 + si) * 2.5;
-          const drift = i * (si % 2 ? 0.35 : -0.22);
-          pts.push(base + wobble + drift);
-        }
       }
       return { ...s, pts };
-    });
+    }).filter((s) => s.pts.length > 0);
   }, [active, trad, crypto]);
 
   const toggle = (id) => setActive((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
