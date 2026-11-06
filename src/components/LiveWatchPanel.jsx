@@ -41,9 +41,9 @@ export default function LiveWatchPanel({ onLiveChange }) {
   const thumbOf = (item) => safeUrl(item.thumbnail || item.thumbnail_url || item.thumbnailUrl || item.image);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-line bg-panel/95 shadow-lg backdrop-blur">
-      <div className="border-b border-line px-3 py-1.5">
-        <span className="text-[10px] font-semibold uppercase tracking-wide text-mute">Live watch</span>
+    <div className="sb-card overflow-hidden">
+      <div className="border-b-2 border-black bg-[#FFD23F] px-3 py-1.5">
+        <span className="text-[10px] font-black uppercase tracking-wide text-black">Live watch</span>
       </div>
       <div className="px-3 py-2">
         {items.length === 0 ? (

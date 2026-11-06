@@ -66,13 +66,13 @@ export default function HorizonPanel() {
     : profiles;
 
   return (
-    <div className="overflow-hidden rounded-xl border border-line bg-panel/95 shadow-lg backdrop-blur">
-      <div className="border-b border-line px-3 py-1.5">
-        <span className="text-[10px] font-semibold uppercase tracking-wide text-mute">Horizon</span>
+    <div className="sb-card overflow-hidden">
+      <div className="border-b-2 border-black bg-[#FFD23F] px-3 py-1.5">
+        <span className="text-[10px] font-black uppercase tracking-wide text-black">Horizon</span>
       </div>
 
       <div className="px-3 py-2">
-        <div className="text-[10px] font-semibold uppercase tracking-wide text-mute">Profiles</div>
+        <div className="text-[10px] font-black uppercase tracking-wide text-black">Profiles</div>
         {displayProfiles.length === 0 ? (
           <p className="mt-1 text-[12px] text-mute">No horizon profiles yet.</p>
         ) : (
@@ -87,12 +87,12 @@ export default function HorizonPanel() {
                     type="button"
                     onClick={() => select(profile)}
                     aria-pressed={active}
-                    className={`flex w-full items-start gap-2 rounded-md border px-2 py-1.5 text-left ${active ? 'border-accent/60 bg-accent/10 text-ink' : 'border-line text-mute hover:text-ink'}`}
-                    style={profile.accent || profile.color ? { borderLeft: `2px solid ${profile.accent || profile.color}` } : undefined}
+                    className={`flex w-full items-start gap-2 rounded-md border-2 border-black px-2 py-1.5 text-left focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-black ${active ? 'bg-white text-black shadow-[2px_2px_0_#111]' : 'bg-white/40 text-black/70 hover:bg-white/70'}`}
+                    style={profile.accent || profile.color ? { borderLeft: `4px solid ${profile.accent || profile.color}` } : undefined}
                   >
-                    <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full" style={{ background: profile.accent || profile.color || '#7C8C84' }} />
+                    <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full border-2 border-black" style={{ background: profile.accent || profile.color || '#7C8C84' }} />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[13px] leading-snug text-ink">{profile.name || profile.title || profile.id}</span>
+                      <span className="block truncate text-[13px] font-black leading-snug text-ink">{profile.name || profile.title || profile.id}</span>
                       {profile.description ? <span className="mt-0.5 block text-[11px] leading-snug text-mute">{profile.description}</span> : null}
                       <span className="mt-0.5 block text-[11px] text-mute">
                         {count != null ? `${count} items` : ''}
