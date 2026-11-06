@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { buildSeriesPts } from '../lib/markets-window.js';
 
 /* Brutalist markets chart: sprite bars + confidence-per-signal scatter, crosshair on hover. */
 
@@ -20,20 +21,7 @@ export default function MarketsChart({ signals = [], trad = {}, crypto = {}, spa
       // Real history only: server accumulates hist[] from live prices
       // (server/feeds/markets.js). No synthetic fallback — skip the
       // series until the server has at least two points for it.
-      const raw = Array.isArray(prices[s.id]?.hist) ? prices[s.id].hist.filter((v) => typeof v === 'number') : [];
-      // Plot the last 40 ticks right-aligned (latest at the right edge).
-      // When history is shorter than the window, left-pad with the earliest
-      // observed value — that pre-window region is unknown, not a move.
-      const window = raw.slice(-40);
-      let pts;
-      if (window.length >= 2) {
-        pts = [...window];
-        // normalize to a 40-point window for the x-scale
-        while (pts.length < 40) pts.unshift(window[0]);
-      } else {
-        pts = [];
-      }
-      return { ...s, pts };
+      return { ...s, pts: buildSeriesPts(prices[s.id]?.hist, prices[s.id]?.prefill) };
     }).filter((s) => s.pts.length > 0);
   }, [active, trad, crypto]);
 
