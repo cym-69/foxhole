@@ -19,6 +19,7 @@
     "fast-xml-parser": "^4.5.0",
     "framer-motion": "^11.11.0",
     "globe.gl": "^2.40.0",
+    "hls.js": "^1.7.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "satellite.js": "^5.0.0",

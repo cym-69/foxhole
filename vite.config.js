@@ -18,6 +18,7 @@ export default defineConfig({
             if (id.includes('/three/') || id.endsWith('/three/index.js') || id.includes('node_modules\\\\three')) return 'vendor-three';
             if (id.includes('globe.gl') || id.includes('topojson-client') || id.includes('world-atlas')) return 'vendor-globe';
             if (id.includes('satellite.js')) return 'vendor-sats';
+            if (id.includes('hls.js')) return 'vendor-hls';
             if (id.includes('framer-motion')) return 'vendor-motion';
             if (id.includes('react') || id.includes('scheduler')) return 'vendor-react';
           }
