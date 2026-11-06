@@ -20,21 +20,22 @@ export default function TvPanel({ open, onClose }) {
   const ch = TV_CHANNELS.find((c) => c.id === sel) || TV_CHANNELS[0];
 
   return (
-    <div className="absolute bottom-3 right-4 left-4 z-20 overflow-hidden rounded-xl border border-line bg-panel/95 shadow-lg backdrop-blur sm:left-auto sm:w-[420px]">
-      <div className="flex items-center gap-1 border-b border-line px-2 py-1.5">
-        <span className="px-1 text-[10px] font-semibold uppercase tracking-wide text-mute">TV</span>
+    <div className="sb-card absolute bottom-3 right-4 left-4 z-20 overflow-hidden sm:left-auto sm:w-[420px]">
+      <div className="flex items-center gap-1 border-b-2 border-black bg-[#FFD23F] px-2 py-1.5">
+        <span className="px-1 text-[10px] font-black uppercase tracking-wide text-black">TV</span>
         <div className="flex flex-1 flex-wrap gap-1">
           {TV_CHANNELS.map((c) => (
             <button
               key={c.id}
               onClick={() => setSel(c.id)}
-              className={`rounded-full border px-2 py-0.5 text-[11px] ${c.id === sel ? 'border-accent/60 bg-accent/10 text-ink' : 'border-line text-mute hover:text-ink'}`}
+              aria-pressed={c.id === sel}
+              className={`rounded-full border-2 border-black px-2 py-0.5 text-[11px] font-bold ${c.id === sel ? 'bg-white text-black' : 'bg-white/40 text-black/70 hover:bg-white/70'}`}
             >
               {c.name}
             </button>
           ))}
         </div>
-        <button onClick={onClose} title="Close TV" className="ml-1 rounded-full border border-line px-2 py-0.5 text-[11px] text-mute hover:text-ink">x</button>
+        <button onClick={onClose} title="Close TV" className="ml-1 rounded-full border-2 border-black bg-white px-2 py-0.5 text-[11px] font-black text-black hover:bg-[#FF7A59]">x</button>
       </div>
       <div className="relative aspect-video w-full bg-black">
         <iframe

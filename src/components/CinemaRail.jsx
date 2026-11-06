@@ -94,13 +94,13 @@ export default function CinemaRail() {
   const inCinemas = [...(snapshot?.nowPlaying || []), ...(snapshot?.upcoming || []), ...(snapshot?.airingToday || [])];
 
   return (
-    <div className="overflow-hidden rounded-xl border border-line bg-panel/95 shadow-lg backdrop-blur">
-      <div className="border-b border-line px-3 py-1.5">
-        <span className="text-[10px] font-semibold uppercase tracking-wide text-mute">Cinema</span>
+    <div className="sb-card overflow-hidden">
+      <div className="border-b-2 border-black bg-[#FFD23F] px-3 py-1.5">
+        <span className="text-[10px] font-black uppercase tracking-wide text-black">Cinema</span>
       </div>
 
       <div className="px-3 py-2">
-        <div className="text-[10px] font-semibold uppercase tracking-wide text-mute">What&rsquo;s trending</div>
+        <div className="text-[10px] font-black uppercase tracking-wide text-black">What&rsquo;s trending</div>
         {snapshot?.status === 'missing-key' ? (
           <p className="mt-1 text-[12px] leading-snug text-mute">Add TMDB_API_KEY to .env to enable live trending</p>
         ) : trending.length === 0 ? (
@@ -132,7 +132,7 @@ export default function CinemaRail() {
       </div>
 
       <div className="border-t border-line px-3 py-2">
-        <div className="text-[10px] font-semibold uppercase tracking-wide text-mute">Now in cinemas / Airing today</div>
+        <div className="text-[10px] font-black uppercase tracking-wide text-black">Now in cinemas / Airing today</div>
         {inCinemas.length === 0 ? (
           <p className="mt-1 text-[12px] text-mute">Nothing listed right now.</p>
         ) : (
@@ -149,7 +149,7 @@ export default function CinemaRail() {
                     <div className="grid h-14 w-10 shrink-0 place-items-center rounded bg-panel/80 text-[9px] uppercase tracking-wide text-mute">—</div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-[13px] leading-snug text-ink">{item.title}</div>
+                    <div className="truncate text-[13px] font-bold leading-snug text-ink">{item.title}</div>
                     <div className="text-[11px] text-mute">
                       {year || ''}
                       {rate ? ` · ★ ${rate}` : ''}
@@ -162,22 +162,22 @@ export default function CinemaRail() {
         )}
       </div>
 
-      <div className="border-t border-line px-3 py-2">
-        <div className="text-[10px] font-semibold uppercase tracking-wide text-mute">What I&rsquo;m tracking</div>
+      <div className="border-t-2 border-black px-3 py-2">
+        <div className="text-[10px] font-black uppercase tracking-wide text-black">What I&rsquo;m tracking</div>
         {tracking.length === 0 ? (
           <p className="mt-1 text-[12px] text-mute">Nothing tracked yet. Add a title below.</p>
         ) : (
           <ul className="mt-2 flex max-h-[220px] flex-col gap-1.5 overflow-y-auto">
             {tracking.map((entry, i) => (
-              <li key={`${entry.id ?? i}-${i}`} className="rounded-md border border-line bg-panel/55 px-2 py-1.5">
+              <li key={`${entry.id ?? i}-${i}`} className="rounded-md border-2 border-black bg-white px-2 py-1.5 shadow-[2px_2px_0_#111]">
                 <div className="flex items-center gap-2">
-                  <span className="min-w-0 flex-1 truncate text-[13px] leading-snug text-ink">{entry.title}</span>
-                  <span className="shrink-0 rounded-full border border-line px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-mute">{entry.status}</span>
-                  <button type="button" onClick={() => cycleStatus(entry.id, -1)} title="Previous status" aria-label="Previous status" className="rounded-full border border-line px-1.5 py-0.5 text-[11px] text-mute hover:text-ink">−</button>
-                  <button type="button" onClick={() => cycleStatus(entry.id, 1)} title="Next status" aria-label="Next status" className="rounded-full border border-line px-1.5 py-0.5 text-[11px] text-mute hover:text-ink">+</button>
-                  <button type="button" onClick={() => removeEntry(entry.id)} title="Remove" aria-label="Remove" className="rounded-full border border-line px-1.5 py-0.5 text-[11px] text-mute hover:text-ink">×</button>
+                  <span className="min-w-0 flex-1 truncate text-[13px] font-bold leading-snug text-ink">{entry.title}</span>
+                  <span className="shrink-0 rounded-full border-2 border-black bg-[#FFD23F] px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-black">{entry.status}</span>
+                  <button type="button" onClick={() => cycleStatus(entry.id, -1)} title="Previous status" aria-label="Previous status" className="rounded-full border-2 border-black bg-white px-1.5 py-0.5 text-[11px] font-black text-black hover:bg-[#C6E265]">−</button>
+                  <button type="button" onClick={() => cycleStatus(entry.id, 1)} title="Next status" aria-label="Next status" className="rounded-full border-2 border-black bg-white px-1.5 py-0.5 text-[11px] font-black text-black hover:bg-[#C6E265]">+</button>
+                  <button type="button" onClick={() => removeEntry(entry.id)} title="Remove" aria-label="Remove" className="rounded-full border-2 border-black bg-white px-1.5 py-0.5 text-[11px] font-black text-black hover:bg-[#FF7A59]">×</button>
                 </div>
-                {entry.note ? <p className="mt-1 text-[11px] leading-snug text-mute">{entry.note}</p> : null}
+                {entry.note ? <p className="mt-1 text-[11px] font-bold leading-snug text-mute">{entry.note}</p> : null}
               </li>
             ))}
           </ul>
@@ -188,9 +188,9 @@ export default function CinemaRail() {
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') addEntry(); }}
             placeholder="Add a title to track…"
-            className="min-w-0 flex-1 rounded-md border border-line bg-panel/55 px-2 py-1 text-[12px] text-ink placeholder:text-mute"
+            className="min-w-0 flex-1 rounded-md border-2 border-black bg-white px-2 py-1 text-[12px] font-bold text-ink placeholder:text-mute"
           />
-          <button type="button" onClick={addEntry} className="shrink-0 rounded-full border border-accent/60 bg-accent/10 px-2.5 py-0.5 text-[11px] text-ink">Add</button>
+          <button type="button" onClick={addEntry} className="shrink-0 rounded-full border-2 border-black bg-[#C6E265] px-2.5 py-0.5 text-[11px] font-black text-black">Add</button>
         </div>
       </div>
     </div>
