@@ -34,6 +34,14 @@ export default function MarketsChart({ signals = [], trad = {}, crypto = {}, spa
     }).filter((s) => s.pts.length > 0);
   }, [active, trad, crypto]);
 
+  // Tick a "history building" note when only the prefill (single live price
+  // repeated by the server) is available — the server fills hist[] with the
+  // latest price on every refresh, so real movement appears over time.
+  const pending = SERIES.filter((s) => {
+    const live = (trad?.[s.id]?.price ?? crypto?.[s.id]?.price);
+    return typeof live === 'number' && !series.some((x) => x.id === s.id);
+  }).map((s) => s.id);
+
   const toggle = (id) => setActive((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
   const W = 640, H = 220, PAD = 28;
@@ -93,7 +101,7 @@ export default function MarketsChart({ signals = [], trad = {}, crypto = {}, spa
           )}
         </svg>
       </div>
-      <p className="num text-[11px] font-bold text-mute">{hover != null ? `t-${39 - hover} · ` : ''}{series.map((s) => `${s.id} ${hover != null ? s.pts[hover].toFixed(1) : s.pts[39].toFixed(1)}`).join(' · ') || 'no series'}{spawnAlerts.length ? ` · ${spawnAlerts[0].label}` : ''}</p>
+      <p className="num text-[11px] font-bold text-mute">{hover != null ? `t-${39 - hover} · ` : ''}{series.map((s) => `${s.id} ${hover != null ? s.pts[hover].toFixed(1) : s.pts[39].toFixed(1)}`).join(' · ') || 'no series'}{pending.length ? ` · hist building (${pending.join(', ')})` : ''}{spawnAlerts.length ? ` · ${spawnAlerts[0].label}` : ''}</p>
     </section>
   );
 }

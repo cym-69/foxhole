@@ -194,9 +194,6 @@ const Globe3D = forwardRef(function Globe3D({ events, context = [], selectedId, 
     const g = Globe({ animateIn: false })(el)
       .backgroundColor('rgba(0,0,0,0)')
       .showAtmosphere(true).atmosphereColor('#FFD23F').atmosphereAltitude(0.18).showGraticules(true)
-      .globeMaterial(new (Object.getPrototypeOf(g.globeMaterial()).constructor)({
-        color: 0xFFFDF5, emissive: 0xFAF6EF, shininess: 4, specular: 0x111111,
-      }))
       .pointLat((d) => d.lat).pointLng((d) => d.lng).pointAltitude((d) => d.alt).pointRadius((d) => d.r).pointColor((d) => d.color).pointResolution(5).pointsMerge(true)
       .hexPolygonsData(land).hexPolygonResolution(3).hexPolygonAltitude(0.004).hexPolygonMargin(0.5).hexPolygonUseDots(true)
       .hexPolygonColor(() => 'rgba(17,17,17,0.22)')
@@ -210,6 +207,14 @@ const Globe3D = forwardRef(function Globe3D({ events, context = [], selectedId, 
       node.style.opacity = visible ? '1' : '0';
       node.style.pointerEvents = visible ? 'auto' : 'none';
     });
+    /* Reach into the Three.js material the globe library built for us and
+       recolor it to the cream Solar Brutalist ocean. Mutating the live
+       material (rather than replacing it) keeps lighting intact. */
+    const mat = g.globeMaterial();
+    mat.color.set('#FFFDF5');
+    mat.emissive.set('#FAF6EF');
+    mat.shininess = 4;
+    mat.specular.set('#111111');
 
     const c = g.controls();
     c.autoRotate = !reduced; c.autoRotateSpeed = 0.35; c.enableDamping = true;
