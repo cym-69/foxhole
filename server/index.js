@@ -357,10 +357,13 @@ async function start() {
   startLiveWatchlist();
   startXFeed();
   await Promise.allSettled([refreshSimple(), markets.refreshTrad(TRAD, 0), markets.refreshCrypto(), refreshSentiment()]);
-  setInterval(refreshSimple, 60000);
-  setInterval(() => markets.refreshTrad(TRAD, 19000).catch(() => {}), 20000);
-  setInterval(() => markets.refreshCrypto().catch(() => {}), 30000);
-  setInterval(refreshSentiment, 90000);
+  // Polling jitter (+/- 20%) avoids thundering-herd alignment across feeds.
+  // Recursive setTimeout (not setInterval) so the delay is re-jittered each iteration.
+  const schedule = (fn, ms) => { const jitter = () => Math.round(ms + (Math.random() - 0.5) * 0.4 * ms); const loop = () => setTimeout(() => { fn(); loop(); }, jitter()); loop(); };
+  schedule(() => refreshSimple().catch(() => {}), 60000);
+  schedule(() => markets.refreshTrad(TRAD, 19000).catch(() => {}), 20000);
+  schedule(() => markets.refreshCrypto().catch(() => {}), 30000);
+  schedule(() => refreshSentiment().catch(() => {}), 90000);
   const gdeltStart = Date.now();
   try {
     await Promise.race([

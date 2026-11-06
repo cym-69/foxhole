@@ -21,6 +21,8 @@ async function getJSON(url, ms = 20000) {
 
 function poll(key, baseMs, fetchFn) {
   const s = live[key];
+  // Delay with +/- 20% jitter so multiple pollers don't thundering-herd together.
+  const jittered = (ms) => ms + (Math.random() - 0.5) * 0.4 * ms;
   const run = async () => {
     let delay = baseMs;
     try {
@@ -34,7 +36,7 @@ function poll(key, baseMs, fetchFn) {
       delay = Math.min(MAX_BACKOFF, baseMs * 2 ** s._fails);
     }
     emit(key);
-    setTimeout(run, delay);
+    setTimeout(run, jittered(delay));
   };
   run();
 }
