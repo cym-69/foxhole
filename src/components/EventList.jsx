@@ -4,14 +4,15 @@ import { ago, cleanText } from '../lib/format.js';
 
 export default function EventList({ events, contextCount = 0, total, layers, onToggle, selectedId, onSelect, now }) {
   return (
-    <aside className="flex min-h-0 flex-col border-r border-line">
-      <div className="flex flex-wrap gap-1.5 border-b border-line p-3">
+    <aside className="flex min-h-0 flex-col border-r-2 border-black">
+      <div className="flex flex-wrap gap-1.5 border-b-2 border-black p-3">
         {LAYERS.map((l) => {
           const on = layers.has(l.id);
           return (
             <button
               key={l.id} onClick={() => onToggle(l.id)} aria-pressed={on}
-              className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-colors ${on ? 'border-accent/60 bg-accent/10 text-ink' : 'border-line text-mute hover:text-ink'}`}
+              className="sb-chip flex items-center gap-1.5 px-2.5 py-1 text-xs"
+              style={{ background: on ? '#FFD23F' : '#fff', color: on ? '#111' : '#5A564C' }}
             >
               <Icon layer={l.id} size={13} /> {l.label}
             </button>
@@ -29,10 +30,10 @@ export default function EventList({ events, contextCount = 0, total, layers, onT
             <li key={e.id}>
               <button
                 data-event={e.id} onClick={() => onSelect(e.id)}
-                className={`relative mb-1 w-full rounded-lg border px-2.5 py-2 text-left transition-colors ${sel ? 'border-accent/60 bg-panel' : 'border-transparent hover:bg-panel/70'}`}
+                className={`relative mb-1 w-full rounded-lg border-2 px-2.5 py-2 text-left transition-colors ${sel ? 'border-black bg-white shadow-[3px_3px_0_#111]' : 'border-transparent hover:bg-white/70'}`}
               >
                 <div className="flex gap-2.5">
-                  <span className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full border ${sel ? 'border-accent bg-accent text-bg' : 'border-accent/50 text-accent'}`}>
+                  <span className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 border-black ${sel ? 'bg-black text-white' : 'bg-white text-black'}`}>
                     <Icon layer={e.layer} size={13} />
                   </span>
                   <div className="min-w-0 flex-1">
@@ -43,15 +44,15 @@ export default function EventList({ events, contextCount = 0, total, layers, onT
                     </div>
                   </div>
                 </div>
-                <div className="mt-2 h-[3px] overflow-hidden rounded-full bg-line">
-                  <div className="h-full rounded-full bg-accent" style={{ width: `${Math.min(100, Math.round(e.impact * 110))}%` }} />
+                <div className="mt-2 h-[5px] overflow-hidden rounded-full border border-black bg-white">
+                  <div className="h-full" style={{ width: `${Math.min(100, Math.round(e.impact * 110))}%`, background: '#111' }} />
                 </div>
               </button>
             </li>
           );
         })}
       </ul>
-      {contextCount > 0 && <p className="border-t border-line px-3 py-2 text-[11px] leading-snug text-mute">{contextCount} more events have no trade link. They show as dim dots on the globe and never get a signal.</p>}
+      {contextCount > 0 && <p className="border-t-2 border-black px-3 py-2 text-[11px] leading-snug text-mute bg-[#FFD23F]/30">{contextCount} more events have no trade link. They show as dim dots on the globe and never get a signal.</p>}
     </aside>
   );
 }

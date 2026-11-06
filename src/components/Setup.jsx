@@ -19,7 +19,7 @@ function Field({ label, children }) {
     </label>
   );
 }
-const inputCls = 'w-full rounded-lg border border-line bg-bg px-3 py-2 text-sm text-ink placeholder:text-mute/60 focus:border-accent focus:outline-none';
+const inputCls = 'w-full rounded-lg border-2 border-black bg-white px-3 py-2 text-sm text-ink placeholder:text-mute/60 focus:border-black focus:outline-none shadow-[2px_2px_0_#111]';
 
 
 // Loads the provider's model list and lets you search it. Falls back to typing if the list cannot load.
@@ -131,7 +131,7 @@ export default function Setup({ open, state, onClose, onChanged }) {
       {open && (
         <motion.div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
           <motion.div role="dialog" aria-modal="true" aria-label="Set up Foxhole" initial={{ y: 16, scale: 0.98 }} animate={{ y: 0, scale: 1 }} exit={{ y: 16, opacity: 0 }} transition={{ duration: 0.2 }}
-            className="thin-scroll max-h-[92vh] w-full max-w-[560px] overflow-y-auto rounded-2xl border border-line bg-panel p-6">
+            className="thin-scroll max-h-[92vh] w-full max-w-[560px] overflow-y-auto rounded-2xl border-2 border-black bg-white p-6 shadow-[6px_6px_0_#111]">
             <h2 className="text-lg font-semibold tracking-tight">Connect an AI</h2>
             <p className="mt-1.5 text-sm leading-relaxed text-mute">
               Foxhole already works without one. Connect one and every signal is explained in plain words, and a two-sentence brief of what matters now shows up at the top. Free options take about a minute.
@@ -139,7 +139,7 @@ export default function Setup({ open, state, onClose, onChanged }) {
             <p className="mt-2 text-xs leading-relaxed text-mute">The AI only rewords. The rules still decide every buy, sell, and watch, and the AI cannot add numbers or facts.</p>
 
             {ai?.connected && !changing ? (
-              <div className="mt-5 flex items-center justify-between rounded-xl border border-accent/50 bg-accent/10 px-4 py-3">
+              <div className="mt-5 flex items-center justify-between rounded-xl border-2 border-black bg-[#C6E265] px-4 py-3 shadow-[3px_3px_0_#111]">
                 <div className="min-w-0 text-sm"><span className="text-accent">Connected</span> <span className="ml-1 break-all text-mute">{ai.model}</span></div>
                 <div className="flex shrink-0 gap-4 pl-3 text-xs">
                   <button onClick={() => { setForm({ ...form, model: ai.model }); setMsg(null); setChanging(true); }} className="text-accent underline">Change model</button>
@@ -152,7 +152,7 @@ export default function Setup({ open, state, onClose, onChanged }) {
                   <div className="mt-5 grid grid-cols-2 gap-2">
                     {PRESETS.map((p) => (
                       <button key={p.id} onClick={() => setPid(p.id)} aria-pressed={pid === p.id}
-                        className={`rounded-xl border px-3 py-2.5 text-left transition-colors ${pid === p.id ? 'border-accent bg-accent/10' : 'border-line hover:border-accent/50'}`}>
+                        className={`rounded-xl border-2 px-3 py-2.5 text-left transition-colors ${pid === p.id ? 'border-black bg-[#FFD23F] shadow-[3px_3px_0_#111]' : 'border-black hover:bg-[#FAF6EF]'}`}>
                         <div className="text-sm font-medium">{p.name}</div>
                         <div className="text-[11px] text-mute">{p.tag}</div>
                       </button>
@@ -176,8 +176,8 @@ export default function Setup({ open, state, onClose, onChanged }) {
                   />
                   {!changing && preset.hint && <p className="text-xs text-mute">{preset.hint}</p>}
                   <div className="flex gap-2">
-                    {changing && <button onClick={() => { setChanging(false); setMsg(null); }} className="rounded-lg border border-line px-4 text-sm text-mute hover:text-ink">Cancel</button>}
-                    <button onClick={connect} disabled={busy || !form.model.trim()} className="flex-1 rounded-lg bg-accent py-2.5 text-sm font-medium text-bg hover:brightness-110 disabled:opacity-60">
+                    {changing && <button onClick={() => { setChanging(false); setMsg(null); }} className="sb-btn rounded-lg px-4 text-sm font-bold">Cancel</button>}
+                    <button onClick={connect} disabled={busy || !form.model.trim()} className="sb-btn flex-1 rounded-lg py-2.5 text-sm font-bold disabled:opacity-60" style={{ background: '#111', color: '#FFFDF5' }}>
                       {busy ? 'Testing...' : changing ? 'Use this model' : 'Connect and test'}
                     </button>
                   </div>
@@ -186,7 +186,7 @@ export default function Setup({ open, state, onClose, onChanged }) {
             )}
             {msg && <p className={`mt-3 text-sm ${msg.ok ? 'text-up' : 'text-down'}`}>{msg.text}</p>}
 
-            <div className="mt-7 border-t border-line pt-5">
+            <div className="mt-7 border-t-2 border-black pt-5">
               <h3 className="text-sm font-medium">Live prices</h3>
               <p className="mt-1 text-xs leading-relaxed text-mute">
                 {state?.keys?.finnhub ? 'Live stock and commodity prices are on.' : 'Prices are demo values until you add a free Finnhub key. Signal track records only count live prices.'}
@@ -194,7 +194,7 @@ export default function Setup({ open, state, onClose, onChanged }) {
               {!state?.keys?.finnhub && (
                 <div className="mt-3 flex gap-2">
                   <input className={inputCls} type="password" autoComplete="off" value={fkey} onChange={(e) => setFkey(e.target.value)} placeholder="Finnhub API key" />
-                  <button onClick={saveKey} className="shrink-0 rounded-lg border border-accent px-4 text-sm text-accent hover:bg-accent/10">Save</button>
+                  <button onClick={saveKey} className="sb-btn shrink-0 rounded-lg px-4 text-sm font-bold">Save</button>
                 </div>
               )}
               {!state?.keys?.finnhub && <a href="https://finnhub.io/register" target="_blank" rel="noreferrer" className="mt-2 inline-block text-xs text-accent underline">Get a free Finnhub key</a>}
@@ -202,7 +202,7 @@ export default function Setup({ open, state, onClose, onChanged }) {
             </div>
 
             <div className="mt-6 flex justify-end">
-              <button onClick={onClose} className="rounded-lg border border-line px-4 py-2 text-sm text-mute hover:text-ink">{ai?.connected ? 'Done' : 'Skip for now'}</button>
+              <button onClick={onClose} className="sb-btn rounded-lg px-4 py-2 text-sm font-bold">{ai?.connected ? 'Done' : 'Skip for now'}</button>
             </div>
           </motion.div>
         </motion.div>

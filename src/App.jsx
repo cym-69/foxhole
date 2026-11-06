@@ -213,6 +213,7 @@ export default function App() {
       <TopBar state={state} online={online} onSetup={() => setSetupOpen(true)} tvOpen={tvOpen} onTv={() => setTvOpen((v) => !v)} />
       <BestSignals signals={state.signals} top={state.top} ai={state.ai} onPick={select} onSetup={() => setSetupOpen(true)} />
 
+      {wide ? (
       <main className="grid min-h-0 grid-cols-[340px_minmax(0,1fr)_360px]">
         <div className="flex min-h-0 flex-col border-r-2 border-black">
           <div className="flex flex-wrap items-center gap-1 border-b-2 border-black px-2 py-1.5">
@@ -298,6 +299,55 @@ export default function App() {
           )}
         </div>
       </main>
+      ) : (
+      <main className="grid min-h-0 grid-rows-[minmax(0,1fr)_auto] overflow-hidden max-lg:grid-rows-[minmax(0,1fr)_minmax(0,1fr)] lg:block">
+        <section className="relative min-h-0 overflow-hidden max-lg:flex max-lg:flex-col max-lg:overflow-y-auto" style={{ background: 'radial-gradient(ellipse at 50% 45%, #FFFDF5 0%, #FAF6EF 70%)' }}>
+          <Suspense fallback={GlobeFallback}>
+            <Globe3D ref={globe} events={visible.filter((e) => mapLayerOn(e, mapLayers))} context={visibleCtx} selectedId={selectedId} onSelect={(id) => (id ? select(id) : setSelectedId(null))} aircraft={mapLayers.military ? live.aircraft : []} ships={mapLayers.ships ? live.ships : []} shipNames={live.shipNames} sats={mapLayers.sats ? sats : []} pulse={live.pulse} />
+          </Suspense>
+          <div className="absolute left-4 top-3 flex flex-col gap-1.5 pr-[220px]">
+            <div className="flex flex-wrap items-center gap-2 text-xs text-mute">
+              {PROFILES.map((p) => (
+                <button key={p.id} data-profile={p.id} onClick={() => applyProfile(p.id)} aria-pressed={activeProfile === p.id} className="sb-chip px-3 py-1" style={{ background: activeProfile === p.id ? '#111' : '#fff', color: activeProfile === p.id ? '#fff' : '#111' }}>{p.label}</button>
+              ))}
+            </div>
+          </div>
+          <div className="absolute bottom-3 left-4 flex gap-1.5">
+            {PRESETS.map((p) => (
+              <button key={p.label} onClick={() => globe.current?.flyTo(p.lat, p.lng, p.alt)} className="sb-chip px-3 py-1 text-xs text-ink">{p.label}</button>
+            ))}
+          </div>
+          <div className="flex min-h-0 flex-1 flex-col border-t-2 border-black lg:hidden">
+            <div className="flex flex-wrap items-center gap-1 border-b-2 border-black px-2 py-1.5">
+              {[['signals', 'Signals'], ['cinema', 'Cinema'], ['horizon', 'Horizon'], ['live', `Live${liveCount > 0 ? ` ${liveCount}` : ''}`], ['x', 'X']].map(([id, label]) => (
+                <button key={id} onClick={() => setRailTab(id)} className="sb-chip px-2.5 py-1 text-xs" style={{ background: railTab === id ? '#111' : '#fff', color: railTab === id ? '#fff' : '#111' }}>{label}</button>
+              ))}
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <Suspense fallback={<div className="grid place-items-center py-8 text-sm text-mute">Loading…</div>}>
+                {railTab === 'signals' && <EventList events={visible} contextCount={state.context.length} total={state.events.length} layers={layers} onToggle={toggle} selectedId={selectedId} onSelect={select} now={state.now} />}
+                {railTab === 'cinema' && <CinemaRail />}
+                {railTab === 'horizon' && <HorizonPanel />}
+                {railTab === 'live' && <LiveWatchPanel onLiveChange={setLiveCount} />}
+                {railTab === 'x' && <XFeedPanel />}
+              </Suspense>
+            </div>
+          </div>
+        </section>
+        <div className="flex min-h-0 flex-col border-t-2 border-black max-lg:max-h-[40vh] lg:hidden">
+          <div className="min-h-0 flex-[1.4]">
+            <Suspense fallback={PanelsFallback}>
+              <SignalKanban signals={state.signals} onPick={select} selectedId={selectedId} />
+            </Suspense>
+          </div>
+          <div className="min-h-0 flex-1 border-t-2 border-black p-2">
+            <Suspense fallback={PanelsFallback}>
+              <MarketsChart signals={state.signals} trad={state.trad} crypto={state.crypto} spawnAlerts={spawnAlerts} />
+            </Suspense>
+          </div>
+        </div>
+      </main>
+      )}
 
       <AssetStrip trad={state.trad} crypto={state.crypto} signals={state.signals} selectedSignals={selectedSignals} />
       <Suspense fallback={null}>
