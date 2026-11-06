@@ -208,5 +208,16 @@ export const RULES = [
     why: "Approval news for crypto funds tends to draw buyers.",
     wrongIf: "The approval was widely expected and is already priced in.",
   },
+  {
+    // GDELT conflict headlines that are geographically vague (no region tag
+    // but mention a chokepoint) still lift shipping/insurnace premia.
+    id: "chokepoint-mention",
+    title: "Chokepoint named in headlines",
+    match: { kinds: ["conflict", "blockade", "sanction"], text: /hormuz|bab el|red sea|suez|panama canal|strait/i, minSize: 0.2 },
+    base: 0.4, windowH: 72, window: "1 to 3 days",
+    effects: [{ a: "USO", d: 1, w: 0.7 }, { a: "ZIM", d: 1, w: 0.5 }, { a: "STNG", d: 1, w: 0.4 }],
+    why: "Headlines naming {place} raise shipping-insurance premia on those routes, which lifts oil and shipping stocks.",
+    wrongIf: "Traffic through the strait keeps moving and premia do not rise.",
+  },
 ];
 
