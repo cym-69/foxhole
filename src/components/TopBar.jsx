@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import LiveTicker from './LiveTicker.jsx';
 
 const DOT = { live: 'bg-up', demo: 'bg-warn', error: 'bg-down', none: 'bg-mute', 'missing-key': 'bg-mute' };
@@ -7,6 +8,48 @@ function Chip({ label, mode, title }) {
     <span title={title} className="sb-chip flex items-center gap-1.5 px-2.5 py-1 text-xs text-ink">
       <span className={`h-2 w-2 rounded-full border border-black ${DOT[mode] || DOT.none}`} />
       {label}
+    </span>
+  );
+}
+
+// SSE health: /stream sends a ping every 20s. We track the last ping
+// time and show a pulsing dot when healthy, a grey dot when stale.
+function StreamHealth() {
+  const [lastPing, setLastPing] = useState(null);
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    let alive = true;
+    const ctrl = new AbortController();
+    const load = async () => {
+      try {
+        const res = await fetch('/stream', { signal: ctrl.signal });
+        const reader = res.body?.getReader();
+        const decoder = new TextDecoder();
+        if (!reader) return;
+        while (alive) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const text = decoder.decode(value);
+          if (text.includes('ping') || text.includes('snapshot') || text.includes('feed') || text.includes('event')) {
+            if (alive) setLastPing(Date.now());
+          }
+        }
+      } catch { /* intentional: a dropped stream is shown via stale dot */ }
+    };
+    load();
+    const id = setInterval(() => setNow(Date.now()), 5000);
+    return () => { alive = false; ctrl.abort(); clearInterval(id); };
+  }, []);
+
+  const stale = !lastPing || now - lastPing > 40000;
+  return (
+    <span
+      title={stale ? 'Live stream stale — reconnecting…' : 'Live stream healthy (SSE)'}
+      className="sb-chip flex items-center gap-1.5 px-2.5 py-1 text-xs text-ink"
+    >
+      <span className={`h-2 w-2 rounded-full border border-black ${stale ? 'bg-mute' : 'bg-up animate-pulse'}`} />
+      Stream
     </span>
   );
 }
@@ -38,6 +81,7 @@ export default function TopBar({ state, online, onSetup, tvOpen, onTv }) {
             ))}
           </>
         )}
+        {online && <StreamHealth />}
         {!online && <span className="sb-chip px-2.5 py-1 text-xs" style={{ background: '#FF7A59' }}>Cannot reach the Foxhole server. Is it running?</span>}
       </div>
       {anyDemo && (
