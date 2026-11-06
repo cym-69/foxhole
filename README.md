@@ -87,6 +87,7 @@ Stored only on your machine in the `data` folder. The server listens on 127.0.0.
 
 - Live-price history starts flat: `hist[]` begins at server start, so the Markets chart shows "history building" until enough ticks accumulate. The prefill point is hidden from the line but kept as the anchor.
 - GDELT events are grouped into half-degree map cells. Two reports on opposite sides of a cell edge can be counted as two smaller events. Event size comes from how many articles mention it, so big stories rank higher.
-- The board is desktop-first (`min-width: 1100px`); narrower screens stack the globe above the kanban.
+- Layout is responsive: wide screens use the full grid when `min-width: 1100px`; narrower screens fall back to a stacked, scrollable column (globe + panels), because the wheel-zoom globe needs the mouse.
 - cryptocurrency.cv can 403 with rate-limit abuse when polled too hard — the server pauses sentiment pulls for 5 minutes after a full-403 batch. The Events chip shows the detail on hover.
 - Signals require a live rule match. A quiet news day genuinely produces "No signals yet".
+- The app validates its own health in a browser (not just curl): CI runs `npm run lint` + `npm test` + `npm run build`; deploys should click through the map at desktop and @390px widths and confirm zero console/page errors (CSP is scoped: strict `default-src 'none'; sandbox` for `/api`/`/__test`, self-hosted policy for the HTML shell and `/assets`).
