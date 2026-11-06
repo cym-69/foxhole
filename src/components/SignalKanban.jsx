@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { sprout, verdictBg } from '../lib/format.js';
+import { sprout, cleanText } from '../lib/format.js';
 
 const COLS = [
   { id: 'WATCH', label: 'WATCH', bg: '#FFD23F' },
@@ -81,11 +81,11 @@ export default function SignalKanban({ signals = [], onPick, selectedId }) {
                 style={{ opacity: selectedId && s.eventId === selectedId ? 1 : 1, outline: selectedId && s.eventId === selectedId ? '3px solid #111' : 'none' }}
               >
                 <div className="flex items-center gap-2">
-                  <span className="sb-verdict text-[11px]" style={{ background: verdictBg(s.action) === '' ? c.bg : c.bg }}>{s.action}</span>
-                  <span className="truncate text-sm font-black">{s.asset || s.label}</span>
+                  <span className="sb-verdict text-[11px]" style={{ background: c.bg }}>{s.action}</span>
+                  <span className="truncate text-sm font-black">{s.asset || cleanText(s.label)}</span>
                   <span className="ml-auto text-base" title="sprouts = confidence">{sprout(s.conf ?? 0)}</span>
                 </div>
-                <p className="mt-1 line-clamp-2 text-xs leading-snug text-mute">{s.why || s.label}</p>
+                <p className="mt-1 line-clamp-2 text-xs leading-snug text-mute">{cleanText(s.why || s.label)}</p>
                 <div className="mt-2 flex items-center gap-2">
                   <ConfidenceBar c={s.conf} />
                   <span className="num text-[11px] font-bold">{Math.round((s.conf ?? 0) * 100)}%</span>

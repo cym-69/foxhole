@@ -24,6 +24,12 @@ export const actionBg = (a) => (a === 'BUY' ? 'bg-up/15 text-up' : a === 'SELL' 
 export const verdictBg = (a) =>
   a === 'BUY' ? 'background:#C6E265;color:#111' : a === 'SELL' ? 'background:#FF7A59;color:#111' : 'background:#FFD23F;color:#111';
 export const sprout = (n) => '🌱'.repeat(Math.max(0, Math.min(5, Math.round(n * 5))));
+
+/* Strip any raw HTML (e.g. headline titles from feeds) before display. */
+export function cleanText(s) {
+  if (typeof s !== 'string') return '';
+  return s.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').trim();
+}
 export function usd(n) {
   if (n == null) return '';
   if (n >= 1e9) return `$${(n / 1e9).toFixed(1)}B`;

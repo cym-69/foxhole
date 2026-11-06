@@ -1,6 +1,6 @@
 import Icon from './Icon.jsx';
 import { LAYERS } from '../lib/icons.js';
-import { ago } from '../lib/format.js';
+import { ago, cleanText } from '../lib/format.js';
 
 export default function EventList({ events, contextCount = 0, total, layers, onToggle, selectedId, onSelect, now }) {
   return (
@@ -36,9 +36,9 @@ export default function EventList({ events, contextCount = 0, total, layers, onT
                     <Icon layer={e.layer} size={13} />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="line-clamp-2 text-[13px] leading-snug">{e.title}</p>
+                    <p className="line-clamp-2 text-[13px] leading-snug">{cleanText(e.title)}</p>
                     <div className="mt-1 flex items-center justify-between gap-2 text-[11px] text-mute">
-                      <span className="truncate">{e.place}</span>
+                      <span className="truncate">{cleanText(e.place)}</span>
                       <span className="shrink-0">{ago(e.ts, now)}</span>
                     </div>
                   </div>

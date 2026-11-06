@@ -9,7 +9,7 @@ const SERIES = [
   { id: 'GLD', color: '#E6A700' },
 ];
 
-export default function MarketsChart({ signals = [], trad = {}, crypto = {} }) {
+export default function MarketsChart({ signals = [], trad = {}, crypto = {}, spawnAlerts = [] }) {
   const [active, setActive] = useState(new Set(['SPY', 'BTC', 'USO', 'GLD']));
   const [hover, setHover] = useState(null);
   const ref = useRef(null);
@@ -17,12 +17,30 @@ export default function MarketsChart({ signals = [], trad = {}, crypto = {} }) {
   const series = useMemo(() => {
     const prices = { ...trad, ...crypto };
     return SERIES.filter((s) => active.has(s.id)).map((s, si) => {
-      const base = prices[s.id]?.price ?? (100 + si * 137);
-      const pts = [];
-      for (let i = 0; i < 40; i++) {
-        const wobble = Math.sin(i * 0.45 + si * 1.9) * 4 + Math.cos(i * 0.19 + si) * 2.5;
-        const drift = i * (si % 2 ? 0.35 : -0.22);
-        pts.push(base + wobble + drift);
+      // Real history when available; a gentle wobble ending at the live price otherwise.
+      const hist = Array.isArray(prices[s.id]?.hist) ? prices[s.id].hist.filter((v) => typeof v === 'number') : [];
+      const live = prices[s.id]?.price;
+      let pts;
+      if (hist.length >= 2) {
+        const tail = Math.min(40, hist.length);
+        pts = hist.slice(-tail);
+        // normalize to a 40-point window for the x-scale
+        while (pts.length < 40) pts.unshift(pts[0]);
+      } else if (typeof live === 'number') {
+        pts = [];
+        for (let i = 0; i < 40; i++) {
+          const wobble = Math.sin(i * 0.45 + si * 1.9) * live * 0.004 + Math.cos(i * 0.19 + si) * live * 0.002;
+          const drift = i * (si % 2 ? 1 : -1) * live * 0.000;
+          pts.push(live - ((39 - i) * live * 0.0002) + wobble + drift);
+        }
+      } else {
+        const base = 100 + si * 137;
+        pts = [];
+        for (let i = 0; i < 40; i++) {
+          const wobble = Math.sin(i * 0.45 + si * 1.9) * 4 + Math.cos(i * 0.19 + si) * 2.5;
+          const drift = i * (si % 2 ? 0.35 : -0.22);
+          pts.push(base + wobble + drift);
+        }
       }
       return { ...s, pts };
     });
@@ -64,14 +82,19 @@ export default function MarketsChart({ signals = [], trad = {}, crypto = {} }) {
           })}
           {/* confidence scatter: each signal is a dot on its series line, sized by confidence */}
           {signals.slice(0, 12).map((s, i) => {
-            const si = SERIES.findIndex((x) => x.id === s.asset);
             const sr = series.find((x) => x.id === s.asset);
             if (!sr) return null;
-            void si;
             const px = x((i * 3 + 2) % 40);
             const py = y(sr.pts[(i * 3 + 2) % 40]);
             return <circle key={s.id} cx={px} cy={py} r={3 + (s.conf ?? 0) * 4} fill={s.action === 'BUY' ? '#22A352' : s.action === 'SELL' ? '#E64A2E' : '#E6A700'} stroke="#111" strokeWidth="1.5" />;
           })}
+          {/* spawn alerts land as tick marks at the right edge */}
+          {spawnAlerts.slice(0, 6).map((a, i) => (
+            <g key={`${a.id}-${i}`}>
+              <line x1={W - PAD - (i * 12)} x2={W - PAD - (i * 12)} y1={PAD} y2={H - PAD} stroke="#E64A2E" strokeOpacity="0.35" strokeDasharray="2 3" />
+              <text x={W - PAD - (i * 12)} y={PAD - 4} textAnchor="middle" fontSize="8" fontWeight="800"><tspan fill="#E64A2E">●</tspan></text>
+            </g>
+          ))}
           {hover != null && (
             <g>
               <line x1={x(hover)} x2={x(hover)} y1={PAD} y2={H - PAD} stroke="#111" strokeWidth="1.5" strokeDasharray="4 3" />
@@ -82,7 +105,7 @@ export default function MarketsChart({ signals = [], trad = {}, crypto = {} }) {
           )}
         </svg>
       </div>
-      <p className="num text-[11px] font-bold text-mute">{hover != null ? `t-${39 - hover} · ` : ''}{series.map((s) => `${s.id} ${hover != null ? s.pts[hover].toFixed(1) : s.pts[39].toFixed(1)}`).join(' · ') || 'no series'}</p>
+      <p className="num text-[11px] font-bold text-mute">{hover != null ? `t-${39 - hover} · ` : ''}{series.map((s) => `${s.id} ${hover != null ? s.pts[hover].toFixed(1) : s.pts[39].toFixed(1)}`).join(' · ') || 'no series'}{spawnAlerts.length ? ` · ${spawnAlerts[0].label}` : ''}</p>
     </section>
   );
 }

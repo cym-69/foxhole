@@ -83,6 +83,7 @@ export default function App() {
   // Live stream: aircraft, ships, satellites, source statuses, headlines, and new/updated events.
   // Auto-reconnect is built into EventSource.
   const [live, setLive] = useState({ sources: null, aircraft: [], ships: [], shipBoxes: [], shipNames: {}, pulse: null, feed: [] });
+  const [spawnAlerts, setSpawnAlerts] = useState([]);
   useEffect(() => {
     const es = new EventSource('/stream');
     es.addEventListener('snapshot', (m) => {
@@ -101,7 +102,14 @@ export default function App() {
     es.addEventListener('ships', (m) => { const d = JSON.parse(m.data); setLive((p) => ({ ...p, ships: d.rows || [], shipBoxes: d.boxes || [] })); });
     es.addEventListener('status', (m) => { const d = JSON.parse(m.data); setLive((p) => ({ ...p, sources: d.sources })); });
     es.addEventListener('feed', (m) => { const d = JSON.parse(m.data); setLive((p) => ({ ...p, feed: [...p.feed, d] })); });
-    es.addEventListener('event_new', (m) => { const e = JSON.parse(m.data); setLive((p) => ({ ...p, pulse: { ...e, at: Date.now() } })); load(); });
+    es.addEventListener('event_new', (m) => {
+      const e = JSON.parse(m.data);
+      // Globe spawn: this is the signal that the 3D globe pulses + the alert stack ticks.
+      setLive((p) => ({ ...p, pulse: { ...e, at: Date.now() } }));
+      const label = `${e.kind || 'event'} · ${typeof e.size === 'number' ? `size ${e.size.toFixed(2)}` : ''}`.trim();
+      setSpawnAlerts((p) => [{ id: e.id, label, kind: e.kind, at: Date.now() }, ...p.filter((x) => x.id !== e.id)].slice(0, 8));
+      load();
+    });
     es.addEventListener('event_update', () => load());
     return () => es.close();
   }, [load]);
@@ -278,9 +286,16 @@ export default function App() {
           </div>
           <div className="min-h-0 flex-1 border-t-2 border-black p-2">
             <Suspense fallback={PanelsFallback}>
-              <MarketsChart signals={state.signals} trad={state.trad} crypto={state.crypto} />
+              <MarketsChart signals={state.signals} trad={state.trad} crypto={state.crypto} spawnAlerts={spawnAlerts} />
             </Suspense>
           </div>
+          {spawnAlerts.length > 0 && (
+            <div className="border-t-2 border-black px-2 py-1 text-[11px] font-bold">
+              {spawnAlerts.slice(0, 3).map((a) => (
+                <p key={a.id} className="num truncate">● {a.label}</p>
+              ))}
+            </div>
+          )}
         </div>
       </main>
 

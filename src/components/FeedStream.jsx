@@ -83,7 +83,9 @@ export default function FeedStream({ incoming = [], onPickEvent, wide = true }) 
     return () => clearInterval(id);
   }, [hover]);
 
-  // Drop items once they have been on screen for 90 s.
+  // Disappearing cascade: items fade out by age (CSS opacity) and are
+  // removed from the DOM after MAX_AGE_MS so the board never fills up.
+  // Hover pauses both the fade and the removal — that's the freeze.
   useEffect(() => {
     const id = setInterval(() => {
       if (hover) return;
@@ -143,6 +145,9 @@ export default function FeedStream({ incoming = [], onPickEvent, wide = true }) 
               </>
             );
             const cls = 'sb-card block w-full px-2 py-1.5 text-left';
+            const ageMs = Date.now() - (it._at || it.ts || Date.now());
+            const faded = ageMs > 30000 && !hover; // second half of life: grey + faded
+            const gone = ageMs > MAX_AGE_MS; // removed by the interval above
             return (
               <motion.li
                 key={it.id}
@@ -151,7 +156,7 @@ export default function FeedStream({ incoming = [], onPickEvent, wide = true }) 
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -12, transition: { duration: 0.2 } }}
                 transition={{ duration: 0.2 }}
-                style={{ borderLeft: `1px solid ${colorOf(it.kind)}`, pointerEvents: 'auto' }}
+                style={{ borderLeft: `3px solid ${colorOf(it.kind)}`, pointerEvents: 'auto', opacity: gone ? 0 : faded ? 0.45 : 1, filter: faded ? 'grayscale(0.6)' : 'none', transition: 'opacity 1.2s ease, filter 1.2s ease' }}
               >
                 {news
                   ? <a href={it.url} target="_blank" rel="noopener noreferrer" className={cls}>{body}</a>

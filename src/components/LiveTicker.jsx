@@ -8,6 +8,7 @@ function itemsOf(data) {
 
 export default function LiveTicker() {
   const [liveItems, setLiveItems] = useState([]);
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
     let alive = true;
@@ -24,6 +25,12 @@ export default function LiveTicker() {
     return () => { alive = false; clearInterval(id); };
   }, []);
 
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+  void tick;
+
   if (liveItems.length === 0) return null;
 
   const title = liveItems.map((it) => it.name || it.id).filter(Boolean).join(', ');
@@ -31,9 +38,10 @@ export default function LiveTicker() {
   return (
     <span
       title={title}
-      className="inline-flex animate-pulse items-center gap-1.5 rounded-full bg-red-600 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white"
+      className="sb-chip inline-flex items-center gap-1.5 bg-red-600 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-white"
+      style={{ boxShadow: '3px 3px 0 #111' }}
     >
-      ● LIVE NOW · {liveItems.length}
+      <span className="animate-pulse">●</span> LIVE NOW · {liveItems.length} · {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
     </span>
   );
 }

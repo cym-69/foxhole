@@ -4,11 +4,11 @@ import { arrow, dirColor, pct, price } from '../lib/format.js';
 
 function Gauge({ value }) {
   const v = Math.max(-1, Math.min(1, value ?? 0));
-  const color = v > 0.1 ? '#5FD39A' : v < -0.1 ? '#E5706B' : '#E0B45A';
+  const color = v > 0.1 ? '#22A352' : v < -0.1 ? '#E64A2E' : '#E6A700';
   return (
-    <div className="relative h-[3px] flex-1 rounded-full bg-line">
-      <span className="absolute left-1/2 top-[-2px] h-[7px] w-px bg-mute/60" />
-      <span className="absolute top-[-2.5px] h-2 w-2 rounded-full" style={{ left: `calc(${((v + 1) / 2) * 100}% - 4px)`, background: color }} />
+    <div className="relative h-[6px] flex-1 border-2 border-black bg-white" style={{ borderRadius: 999 }}>
+      <span className="absolute left-1/2 top-[-3px] h-[10px] w-[2px] bg-black" />
+      <span className="absolute top-[-4px] h-[10px] w-[10px] rounded-full border-2 border-black" style={{ left: `calc(${((v + 1) / 2) * 100}% - 5px)`, background: color }} />
     </div>
   );
 }
@@ -20,22 +20,23 @@ function Card({ q, hit, pressure, isCrypto }) {
   return (
     <motion.div
       layout transition={{ type: 'spring', stiffness: 380, damping: 36 }} data-asset={q.sym}
-      className={`w-[176px] shrink-0 rounded-[10px] border bg-panel px-2.5 py-2 ${hit ? 'border-accent shadow-[0_0_0_1px_rgba(143,168,155,.35),0_0_16px_rgba(143,168,155,.18)]' : 'border-line'}`}
+      className="sb-card w-[176px] shrink-0 px-2.5 py-2"
+      style={hit ? { background: '#FFD23F', boxShadow: '4px 4px 0 #111' } : {}}
     >
       <div className="flex items-center justify-between">
-        <span className="flex items-center gap-1 text-[13px] font-medium">
+        <span className="flex items-center gap-1 text-[13px] font-black">
           {q.sym}
           {hit && <span className={`text-[10px] ${dirColor(hit)}`}>{arrow(hit)}</span>}
         </span>
-        <span className={`num text-xs ${up ? 'text-up' : 'text-down'}`}>{pct(q.pct)}</span>
+        <span className="sb-chip num px-1.5 text-xs" style={{ background: up ? '#C6E265' : '#FF7A59' }}>{pct(q.pct)}</span>
       </div>
       <div className="mt-0.5 flex items-center justify-between">
-        <span className="num text-[13px]">{price(q.price)}</span>
-        <Spark values={q.hist} color={up ? '#5FD39A' : '#E5706B'} w={60} h={18} />
+        <span className="num text-[13px] font-black">{price(q.price)}</span>
+        <Spark values={q.hist} color={up ? '#22A352' : '#E64A2E'} w={60} h={18} />
       </div>
       <div className="mt-1.5 flex items-center gap-2" title={isCrypto ? 'Crypto sentiment from cryptocurrency.cv' : 'Net push from active events on this asset'}>
         <Gauge value={gaugeValue} />
-        <span className="w-[72px] truncate text-right text-[10px] text-mute">{gaugeLabel}</span>
+        <span className="w-[72px] truncate text-right text-[10px] font-bold text-mute">{gaugeLabel}</span>
       </div>
     </motion.div>
   );
@@ -45,7 +46,7 @@ function Row({ title, items, hits, pressure, isCrypto }) {
   const sorted = [...items].sort((a, b) => (hits[b.sym] ? 1 : 0) - (hits[a.sym] ? 1 : 0));
   return (
     <div className="flex items-stretch gap-3">
-      <div className="flex w-[96px] shrink-0 items-center text-xs leading-tight text-mute">{title}</div>
+      <div className="flex w-[96px] shrink-0 items-center text-xs font-black leading-tight">{title}</div>
       <div className="thin-scroll flex min-w-0 flex-1 gap-2 overflow-x-auto pb-1">
         {sorted.map((q) => <Card key={q.sym} q={q} hit={hits[q.sym]} pressure={pressure[q.sym] ?? 0} isCrypto={isCrypto} />)}
       </div>
