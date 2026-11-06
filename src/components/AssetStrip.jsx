@@ -61,10 +61,19 @@ export default function AssetStrip({ trad, crypto, signals, selectedSignals }) {
   const pressure = {};
   signals.forEach((s) => { pressure[s.asset] = (pressure[s.asset] || 0) + s.dir * s.conf; });
   Object.keys(pressure).forEach((k) => { pressure[k] = Math.max(-1, Math.min(1, pressure[k] * 1.5)); });
+  const tradItems = Object.values(trad);
+  const cryptoItems = Object.values(crypto);
+  const noPrices = tradItems.length === 0 && cryptoItems.length === 0;
   return (
-    <footer className="space-y-1.5 border-t border-line px-4 py-2.5">
-      <Row title="Stocks and commodities" items={Object.values(trad)} hits={hits} pressure={pressure} />
-      <Row title="Crypto" items={Object.values(crypto)} hits={hits} pressure={pressure} isCrypto />
+    <footer className="space-y-1.5 border-t-2 border-black bg-paper px-4 py-2.5">
+      {noPrices && (
+        <div className="sb-card mx-auto max-w-md px-3 py-2 text-center">
+          <p className="text-[13px] font-black">Prices loading…</p>
+          <p className="text-[11px] font-bold text-mute">Finnhub / CoinGecko ticks arrive on the first server refresh.</p>
+        </div>
+      )}
+      {!noPrices && <Row title="Stocks and commodities" items={tradItems} hits={hits} pressure={pressure} />}
+      {!noPrices && <Row title="Crypto" items={cryptoItems} hits={hits} pressure={pressure} isCrypto />}
     </footer>
   );
 }
