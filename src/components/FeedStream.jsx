@@ -24,6 +24,8 @@ const FILTER_TABS = [
   { id: 'all', label: 'All' },
   { id: 'war', label: 'War' },
   { id: 'markets', label: 'Markets' },
+  { id: 'tech', label: 'Tech' },
+  { id: 'science', label: 'Science' },
   { id: 'cinema', label: 'Cinema' },
   { id: 'x', label: 'X' },
   { id: 'live', label: 'Live' },
@@ -34,8 +36,10 @@ function matchesFilter(it, filter) {
   if (filter === 'x') return it.srcName === 'x' || it.srcName === 'x/News' || it.kind === 'x';
   if (filter === 'live') return it.kind === 'live' || /kick|rumble|twitch|youtube/i.test(it.srcName || '');
   if (filter === 'cinema') return /cinema|movie|tmdb|box office/i.test(`${it.srcName || ''} ${it.text || ''}`);
-  if (filter === 'war') return ['conflict', 'blockade'].includes(it.kind) || /war|strike|missile|iran|houthi|red sea/i.test(it.text || '');
-  if (filter === 'markets') return ['trade', 'crypto'].includes(it.kind) || /fed|rate|spy|recession|nvidia|bitcoin/i.test(it.text || '');
+  if (filter === 'war') return ['conflict', 'blockade'].includes(it.kind) || /\bwar|ukraine|russia|strike|missile|iran|houthi|red sea|gaza|israel|china|taiwan/i.test(it.text || '');
+  if (filter === 'markets') return ['trade', 'crypto'].includes(it.kind) || /tariff|trade|export|fed|rate|spy|recession|nvidia|bitcoin|oil price|gold/i.test(it.text || '');
+  if (filter === 'tech') return /chip|semiconductor|ai\b|ai |cuda|gpu|tech|silicon/i.test(it.text || '');
+  if (filter === 'science') return /arxiv|quantum|cancer|space|climate|research/i.test(`${it.srcName || ''} ${it.text || ''}`);
   return true;
 }
 const colorOf = (kind) => KIND_COLOR[kind] || '#7C8C84';

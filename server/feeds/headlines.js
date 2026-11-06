@@ -21,6 +21,10 @@ const SOURCES = [
   { id: 'npr', name: 'NPR World', url: 'https://feeds.npr.org/1004/rss.xml' },
   { id: 'bbcbiz', name: 'BBC Business', url: 'https://feeds.bbci.co.uk/news/business/rss.xml' },
   { id: 'marketwatch', name: 'MarketWatch', url: 'https://feeds.content.dowjones.io/public/rss/mw_topstories' },
+  { id: 'euronews', name: 'Euronews', url: 'https://www.euronews.com/rss' },
+  { id: 'gnews-war', name: 'Google News · War', url: 'https://news.google.com/rss/search?q=ukraine+russia+when%3A1d&hl=en-US&gl=US&ceid=US%3Aen' },
+  { id: 'gnews-trade', name: 'Google News · Trade', url: 'https://news.google.com/rss/search?q=tariffs+trade+when%3A1d&hl=en-US&gl=US&ceid=US%3Aen' },
+  { id: 'gnews-semis', name: 'Google News · Semis', url: 'https://news.google.com/rss/search?q=semiconductors+chips+when%3A1d&hl=en-US&gl=US&ceid=US%3Aen' },
 ];
 
 // FOXHOLE_RSS_URLS=host-a,host-b replaces the list (names = host name).
