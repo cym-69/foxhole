@@ -59,6 +59,12 @@ export default function App() {
   const selectedSignals = useMemo(() => (selected ? state.signals.filter((s) => s.eventId === selected.id) : []), [state, selected]);
   const focus = useMemo(() => selectedSignals.map((s) => s.asset).filter((a) => state?.trad[a]).slice(0, 8).join(','), [selectedSignals, state]);
 
+  // Demo-vs-live banner: if the live event source is quiet but demo events are
+  // showing, tell the user this is NOT live data instead of silently passing it off.
+  const liveEventMode = state?.status?.events?.mode;
+  const liveEventCount = state?.status?.events?.counts?.seen ?? 0;
+  const isDemoBanner = liveEventMode === 'demo' || (liveEventMode === 'live' && (liveEventCount === 0 || (state?.events?.length === 0) === true));
+
   const load = useCallback(async () => {
     try {
       const s = await fetchState(focus ? focus.split(',') : []);
@@ -221,6 +227,11 @@ export default function App() {
   return (
     <div className="grid h-screen w-screen grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden">
       <TopBar state={state} online={online} onSetup={() => setSetupOpen(true)} tvOpen={tvOpen} onTv={() => setTvOpen((v) => !v)} />
+      {isDemoBanner && (
+        <div role="status" className="border-b-2 border-black bg-[#FFD23F] px-3 py-1 text-center text-[11px] font-bold text-black">
+          Demo events — live feed unavailable. Nothing here is current news.
+        </div>
+      )}
       <BestSignals signals={state.signals} top={state.top} ai={state.ai} onPick={select} onSetup={() => setSetupOpen(true)} />
 
       {wide ? (
