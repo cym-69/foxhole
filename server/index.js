@@ -119,13 +119,18 @@ function buildState() {
 const app = express();
 app.use(express.json({ limit: '50kb' }));
 
-app.use((_req,res,next)=>{
+app.use((req,res,next)=>{
+  const isHtml = req.method === 'GET' && !req.path.startsWith('/api') && !req.path.startsWith('/stream') && !req.path.startsWith('/assets') && !req.path.startsWith('/__');
   res.set({
     'X-Content-Type-Options':'nosniff',
     'X-Frame-Options':'SAMEORIGIN',
     'Referrer-Policy':'no-referrer',
     'Cross-Origin-Opener-Policy':'same-origin',
-    'Content-Security-Policy':"default-src 'none'; sandbox",
+    // HTML runs our bundled app (self scripts/styles/img, data: icons, blob: three); API stays locked down.
+    // Sandboxed preview iframes (e.g. YouTube in TvPanel) carry their own sandbox attr, not this header.
+    'Content-Security-Policy': isHtml
+      ? "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; media-src 'self' https:; frame-src https:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'self'"
+      : "default-src 'none'; sandbox",
   });
   next();
 });
