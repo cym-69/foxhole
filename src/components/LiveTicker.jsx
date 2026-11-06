@@ -31,13 +31,11 @@ export default function LiveTicker() {
   }, []);
   void tick;
 
-  if (liveItems.length === 0) return null;
-
   const title = liveItems.map((it) => it.name || it.id).filter(Boolean).join(', ');
 
   return (
     <span
-      title={title}
+      title={title || 'Watchlist poller is live, but none of the 8 channels checked are streaming right now.'}
       className="sb-chip inline-flex items-center gap-1.5 bg-red-600 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-white"
       style={{ boxShadow: '3px 3px 0 #111' }}
     >
