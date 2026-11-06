@@ -219,5 +219,17 @@ export const RULES = [
     why: "Headlines naming {place} raise shipping-insurance premia on those routes, which lifts oil and shipping stocks.",
     wrongIf: "Traffic through the strait keeps moving and premia do not rise.",
   },
+  {
+    // A large flood or drought (EONET natural event) inside a box can cut
+    // farm output; the midwest-crop kind rule only covers us_midwest, and
+    // box rules cover quakes/eruptions — floods had no agricultural rule.
+    id: "box-flood-crop",
+    title: "Flood or drought near farmland",
+    match: { box: [37, 45, -100, -85], minSize: 0.4 },
+    base: 0.45, windowH: 168, window: "3 to 7 days",
+    effects: [{ a: "CORN", d: 1, w: 0.8 }, { a: "WEAT", d: 1, w: 0.6 }],
+    why: "A flood or drought near {place} can cut crop yields, which lifts corn and wheat.",
+    wrongIf: "Waters recede and crop reports stay normal.",
+  },
 ];
 
