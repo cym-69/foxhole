@@ -129,7 +129,7 @@ app.use((req,res,next)=>{
     // HTML runs our bundled app (self scripts/styles/img, data: icons, blob: three); API stays locked down.
     // Sandboxed preview iframes (e.g. YouTube in TvPanel) carry their own sandbox attr, not this header.
     'Content-Security-Policy': isHtml
-      ? "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; media-src 'self' https:; frame-src https:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'self'"
+      ? "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; media-src 'self' blob: https:; frame-src https:; connect-src 'self' https:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'"
       : "default-src 'none'; sandbox",
   });
   next();

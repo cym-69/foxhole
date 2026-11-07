@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  server: { port: 5173, proxy: { '/api': 'http://127.0.0.1:4180' } },
+  server: { port: 5173, proxy: { '/api': 'http://127.0.0.1:4180', '/stream': 'http://127.0.0.1:4180' } },
   build: {
     // vendor-globe is split by layer so the heavy three.js + globe.gl
     // land in separate async chunks: 'globe' (the Globe component) is

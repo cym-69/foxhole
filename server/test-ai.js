@@ -2,9 +2,12 @@
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import assert from 'node:assert/strict';
-import { DATA_DIR } from './config.js';
-import { connect, disconnect, listModels, publicInfo } from './ai.js';
+// Keep connection tests away from a user's saved AI settings.
+const DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'foxhole-ai-test-'));
+process.env.FOXHOLE_DATA_DIR = DATA_DIR;
+const { connect, disconnect, listModels, publicInfo } = await import('./ai.js');
 
 const srv = http.createServer((req, res) => {
   let b = ''; req.on('data', (d) => (b += d)).on('end', () => {
@@ -65,5 +68,5 @@ try {
   console.log('all AI tests passed');
 } finally {
   srv.close();
-  try { fs.unlinkSync(path.join(DATA_DIR, 'ai.json')); } catch { /* intentional: cleanup is best-effort */ }
+  fs.rmSync(DATA_DIR, { recursive: true, force: true });
 }

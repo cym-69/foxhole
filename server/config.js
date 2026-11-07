@@ -6,7 +6,7 @@ try { process.umask(0o077); } catch { /* intentional: umask unsupported on some 
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const ROOT = path.resolve(here, '..');
-export const DATA_DIR = path.join(ROOT, 'data');
+export const DATA_DIR = process.env.FOXHOLE_DATA_DIR || path.join(ROOT, 'data');
 fs.mkdirSync(DATA_DIR, { recursive: true, mode: 0o700 });
 try { fs.chmodSync(DATA_DIR, 0o700); } catch { /* intentional: chmod is a no-op on Windows */ }
 

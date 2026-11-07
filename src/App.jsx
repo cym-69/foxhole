@@ -62,8 +62,7 @@ export default function App() {
   // Demo-vs-live banner: if the live event source is quiet but demo events are
   // showing, tell the user this is NOT live data instead of silently passing it off.
   const liveEventMode = state?.status?.events?.mode;
-  const liveEventCount = state?.status?.events?.counts?.seen ?? 0;
-  const isDemoBanner = liveEventMode === 'demo' || (liveEventMode === 'live' && (liveEventCount === 0 || (state?.events?.length === 0) === true));
+  const isDemoBanner = liveEventMode === 'demo';
 
   const load = useCallback(async () => {
     try {
@@ -107,7 +106,7 @@ export default function App() {
     es.addEventListener('aircraft', (m) => { const d = JSON.parse(m.data); setLive((p) => ({ ...p, aircraft: d.aircraft })); });
     es.addEventListener('ships', (m) => { const d = JSON.parse(m.data); setLive((p) => ({ ...p, ships: d.rows || [], shipBoxes: d.boxes || [] })); });
     es.addEventListener('status', (m) => { const d = JSON.parse(m.data); setLive((p) => ({ ...p, sources: d.sources })); });
-    es.addEventListener('feed', (m) => { const d = JSON.parse(m.data); setLive((p) => ({ ...p, feed: [...p.feed, d] })); });
+    es.addEventListener('feed', (m) => { const d = JSON.parse(m.data); setLive((p) => ({ ...p, feed: [...p.feed, d].slice(-100) })); });
     es.addEventListener('event_new', (m) => {
       const e = JSON.parse(m.data);
       // Globe spawn: this is the signal that the 3D globe pulses + the alert stack ticks.
@@ -327,8 +326,8 @@ export default function App() {
         </div>
       </main>
       ) : (
-      <main id="main" className="grid min-h-0 grid-rows-[minmax(0,1fr)_auto] overflow-hidden max-lg:grid-rows-[minmax(0,1fr)_minmax(0,1fr)] lg:block border-t-2 border-black">
-        <section className="relative min-h-0 overflow-hidden max-lg:flex max-lg:flex-col max-lg:overflow-y-auto" style={{ background: 'radial-gradient(ellipse at 50% 45%, #FFFDF5 0%, #FAF6EF 70%)' }}>
+      <main id="main" className="grid min-h-0 grid-rows-[minmax(0,1fr)_auto] overflow-hidden max-[1099px]:grid-rows-[minmax(0,1fr)_minmax(0,1fr)] min-[1100px]:block border-t-2 border-black">
+        <section className="relative min-h-0 overflow-hidden max-[1099px]:flex max-[1099px]:flex-col max-[1099px]:overflow-y-auto" style={{ background: 'radial-gradient(ellipse at 50% 45%, #FFFDF5 0%, #FAF6EF 70%)' }}>
           <Suspense fallback={GlobeFallback}>
             <Globe3D ref={globe} events={visible.filter((e) => mapLayerOn(e, mapLayers))} context={visibleCtx} selectedId={selectedId} onSelect={(id) => (id ? select(id) : setSelectedId(null))} aircraft={mapLayers.military ? live.aircraft : []} ships={mapLayers.ships ? live.ships : []} shipNames={live.shipNames} sats={mapLayers.sats ? sats : []} pulse={live.pulse} />
           </Suspense>
@@ -344,7 +343,7 @@ export default function App() {
               <button key={p.label} onClick={() => globe.current?.flyTo(p.lat, p.lng, p.alt)} className="sb-chip px-3 py-1 text-xs text-ink">{p.label}</button>
             ))}
           </div>
-          <div className="flex min-h-0 flex-1 flex-col border-t-2 border-black lg:hidden">
+          <div className="flex min-h-0 flex-1 flex-col border-t-2 border-black min-[1100px]:hidden">
             <div className="flex flex-wrap items-center gap-1 border-b-2 border-black px-2 py-1.5">
               {[['signals', 'Signals'], ['cinema', 'Cinema'], ['horizon', 'Horizon'], ['live', `Live${liveCount > 0 ? ` ${liveCount}` : ''}`], ['x', 'X']].map(([id, label]) => (
                 <button key={id} onClick={() => setRailTab(id)} className="sb-chip px-2.5 py-1 text-xs" style={{ background: railTab === id ? '#111' : '#fff', color: railTab === id ? '#fff' : '#111' }}>{label}</button>
@@ -361,7 +360,7 @@ export default function App() {
             </div>
           </div>
         </section>
-        <div className="flex min-h-0 flex-col border-t-2 border-black max-lg:max-h-[40vh] lg:hidden">
+        <div className="flex min-h-0 flex-col border-t-2 border-black max-[1099px]:max-h-[40vh] min-[1100px]:hidden">
           <div className="min-h-0 flex-[1.4]">
             <Suspense fallback={PanelsFallback}>
               <SignalKanban signals={state.signals} onPick={select} selectedId={selectedId} />
