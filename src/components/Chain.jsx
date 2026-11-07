@@ -1,16 +1,17 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import Icon from './Icon.jsx';
+import { REDUCED, fadeUp, staggerParent } from '../lib/motion.js';
 import SignalCard from './SignalCard.jsx';
 import { actionBg, ago, arrow, dirColor, pct } from '../lib/format.js';
 
 function Step({ label, last, children }) {
   return (
-    <div className="relative pl-6">
+    <motion.div variants={fadeUp} className="relative pl-6">
       <span className="absolute left-0 top-1.5 h-3 w-3 rounded-full border-2 border-black bg-[#FFD23F] shadow-[1.5px_1.5px_0_#111]" />
       {!last && <span className="absolute bottom-[-14px] left-[5px] top-4 w-0.5 bg-black" />}
       <p className="mb-1.5 text-xs font-black uppercase tracking-wide text-black">{label}</p>
       {children}
-    </div>
+    </motion.div>
   );
 }
 
@@ -19,13 +20,13 @@ export default function Chain({ event, signals, trad, crypto, now, error }) {
     <aside className="thin-scroll min-h-0 overflow-y-auto border-l-2 border-black p-4">
       <AnimatePresence mode="wait">
         {!event ? (
-          <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-10 text-sm leading-relaxed text-mute">
+          <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: REDUCED ? 0 : 0.2 }} className="pt-10 text-sm leading-relaxed text-mute">
             <p className="text-ink">Pick an event to see what it touches.</p>
             <p className="mt-2">Click a dot on the globe or a row in the list. You will get the reason, the assets it hits, and a signal for each.</p>
             {error && <p className="mt-4 text-down">{error}</p>}
           </motion.div>
         ) : (
-          <motion.div key={event.id} initial={{ opacity: 0, x: 14 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 14 }} transition={{ duration: 0.22 }} className="space-y-5">
+          <motion.div key={event.id} variants={staggerParent} initial="hidden" animate="show" exit="exit" className="space-y-5">
             <Step label="Event">
               <div className="flex items-start gap-2.5">
                 <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full border-2 border-black bg-white text-black shadow-[2px_2px_0_#111]"><Icon layer={event.layer} size={15} /></span>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { REDUCED } from '../lib/motion.js';
 import { connectAI, disconnectAI, saveFinnhub, saveTmdb, listModels } from '../api.js';
 
 const PRESETS = [
@@ -137,7 +138,7 @@ export default function Setup({ open, state, onClose, onChanged }) {
     <AnimatePresence>
       {open && (
         <motion.div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-          <motion.div role="dialog" aria-modal="true" aria-label="Set up Foxhole" initial={{ y: 16, scale: 0.98 }} animate={{ y: 0, scale: 1 }} exit={{ y: 16, opacity: 0 }} transition={{ duration: 0.2 }}
+          <motion.div role="dialog" aria-modal="true" aria-label="Set up Foxhole" initial={{ y: REDUCED ? 0 : 18, scale: REDUCED ? 1 : 0.97, opacity: 0 }} animate={{ y: 0, scale: 1, opacity: 1 }} exit={{ y: REDUCED ? 0 : 12, opacity: 0 }} transition={{ duration: REDUCED ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }}
             className="thin-scroll max-h-[92vh] w-full max-w-[560px] overflow-y-auto rounded-2xl border-2 border-black bg-white p-6 shadow-[6px_6px_0_#111]">
             <h2 className="text-lg font-black tracking-tight">Connect an AI</h2>
             <p className="mt-1.5 text-sm font-bold leading-relaxed text-mute">

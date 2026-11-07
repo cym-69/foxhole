@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { REDUCED, SPRING_LAYOUT } from '../lib/motion.js';
 
 // Live headline stream over the globe, along its left edge.
 // Items are queued as they arrive from SSE, then released one at a time.
@@ -162,11 +163,11 @@ export default function FeedStream({ incoming = [], onPickEvent, wide = true }) 
             return (
               <motion.li
                 key={it.id}
-                layout
-                initial={{ opacity: 0, x: -12 }}
+                layout={!REDUCED}
+                initial={{ opacity: 0, x: REDUCED ? 0 : -14 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -12, transition: { duration: 0.2 } }}
-                transition={{ duration: 0.2 }}
+                exit={{ opacity: 0, x: REDUCED ? 0 : -14, transition: { duration: REDUCED ? 0 : 0.2 } }}
+                transition={REDUCED ? { duration: 0 } : SPRING_LAYOUT}
                 style={{ borderLeft: `3px solid ${colorOf(it.kind)}`, pointerEvents: 'auto', opacity: gone ? 0 : faded ? 0.45 : 1, filter: faded ? 'grayscale(0.6)' : 'none', transition: 'opacity 1.2s ease, filter 1.2s ease' }}
               >
                 {news

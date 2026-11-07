@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import Spark from './Spark.jsx';
 import { arrow, dirColor, pct, price } from '../lib/format.js';
+import { REDUCED, SPRING_LAYOUT, fadeUp, staggerParent } from '../lib/motion.js';
 
 function Gauge({ value }) {
   const v = Math.max(-1, Math.min(1, value ?? 0));
@@ -25,7 +26,8 @@ function Card({ q, hit, pressure, isCrypto }) {
     : pressure === 0 ? 'no pressure' : pressure > 0 ? 'upward pressure' : 'downward pressure';
   return (
     <motion.div
-      layout transition={{ type: 'spring', stiffness: 380, damping: 36 }} data-asset={q.sym}
+      layout={!REDUCED} transition={REDUCED ? { duration: 0 } : SPRING_LAYOUT} data-asset={q.sym}
+      variants={fadeUp} initial="hidden" animate="show" exit="exit"
       className="sb-card w-[176px] shrink-0 px-2.5 py-2"
       style={hit ? { background: '#FFD23F', boxShadow: '4px 4px 0 #111' } : {}}
     >
@@ -53,9 +55,9 @@ function Row({ title, items, hits, pressure, isCrypto }) {
   return (
     <div className="flex items-stretch gap-3">
       <div className="flex w-[96px] shrink-0 items-center text-xs font-black leading-tight">{title}</div>
-      <div className="thin-scroll flex min-w-0 flex-1 gap-2 overflow-x-auto pb-1">
+      <motion.div className="thin-scroll flex min-w-0 flex-1 gap-2 overflow-x-auto pb-1" variants={staggerParent} initial="hidden" animate="show">
         {sorted.map((q) => <Card key={q.sym} q={q} hit={hits[q.sym]} pressure={pressure[q.sym] ?? 0} isCrypto={isCrypto} />)}
-      </div>
+      </motion.div>
     </div>
   );
 }
