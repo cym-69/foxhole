@@ -232,6 +232,11 @@ export function ingest(s, body) {
   let added = 0;
   for (const it of kept) {
     if (seen.has(it.id)) continue;
+    // Per-source burst cap: a high-volume source (e.g. HN 20 hits per poll) would
+    // flood the 15-item snapshot / 30-item queue and starve GNews/arXiv/Euronews.
+    // Cap each source at 6 publishes per poll; overflow is skipped (not deduped)
+    // so the next poll can still surface them if they are still fresh.
+    if (added >= 6) continue;
     if (seen.size >= SEEN_MAX) { const oldest = seen.values().next().value; seen.delete(oldest); }
     seen.add(it.id);
     publish(makeItem({ ...it, src: s.id, srcName: s.name, kind: 'news' }));
