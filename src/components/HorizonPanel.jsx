@@ -10,8 +10,10 @@ function scoreOf(item) {
 
 export default function HorizonPanel() {
   const [profiles, setProfiles] = useState([]);
+  const [profilesError, setProfilesError] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
   const [items, setItems] = useState([]);
+  const [feedError, setFeedError] = useState(null);
   const [loadingFeed, setLoadingFeed] = useState(false);
 
   useEffect(() => {
@@ -19,12 +21,17 @@ export default function HorizonPanel() {
     (async () => {
       try {
         const res = await fetch('/api/horizon/profiles');
+        if (!res.ok) throw new Error(`Server error ${res.status}`);
         const data = await res.json();
         if (!alive) return;
+        setProfilesError(null);
         const list = Array.isArray(data) ? data : (Array.isArray(data?.profiles) ? data.profiles : []);
         setProfiles(list);
         if (list.length > 0) setSelectedId((p) => p ?? list[0].id ?? null);
-      } catch { /* intentional: keep empty state when profiles fail */ }
+      } catch (e) {
+        if (!alive) return;
+        setProfilesError(e?.message || 'Could not load horizon profiles.');
+      }
     })();
     return () => { alive = false; };
   }, []);
@@ -32,12 +39,14 @@ export default function HorizonPanel() {
   const loadFeed = useCallback(async (profileId) => {
     if (!profileId) return;
     setLoadingFeed(true);
+    setFeedError(null);
     try {
       const res = await fetch(`/api/horizon/feed?profile=${encodeURIComponent(profileId)}`);
+      if (!res.ok) throw new Error(`Server error ${res.status}`);
       const data = await res.json();
       const list = Array.isArray(data) ? data : (Array.isArray(data?.items) ? data.items : (Array.isArray(data?.feed) ? data.feed : []));
       setItems(list);
-    } catch { /* intentional: keep previous items on failure */ }
+    } catch (e) { setFeedError(e?.message || 'Could not load horizon feed.'); }
     setLoadingFeed(false);
   }, []);
 
@@ -73,7 +82,9 @@ export default function HorizonPanel() {
 
       <div className="px-3 py-2">
         <div className="text-[10px] font-black uppercase tracking-wide text-black">Profiles</div>
-        {displayProfiles.length === 0 ? (
+        {profilesError ? (
+          <p role="alert" className="mt-1 text-[12px] font-bold text-[#E64A2E]">Could not load horizon profiles: {profilesError}</p>
+        ) : displayProfiles.length === 0 ? (
           <p className="mt-1 text-[12px] text-mute">No horizon profiles yet.</p>
         ) : (
           <ul className="mt-2 flex flex-col gap-1.5">
@@ -113,6 +124,8 @@ export default function HorizonPanel() {
         </div>
         {loadingFeed ? (
           <p className="mt-1 text-[12px] text-mute">Loading feed…</p>
+        ) : feedError ? (
+          <p role="alert" className="mt-1 text-[12px] font-bold text-[#E64A2E]">Could not load feed: {feedError}</p>
         ) : items.length === 0 ? (
           <p className="mt-1 text-[12px] text-mute">No items for this profile yet.</p>
         ) : (

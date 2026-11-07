@@ -17,6 +17,7 @@ function itemsOf(data) {
 
 export default function LiveWatchPanel({ onLiveChange }) {
   const [items, setItems] = useState([]);
+  const [error, setError] = useState(null);
   const [filterChecked, setFilterChecked] = useState(false);
 
   useEffect(() => {
@@ -24,10 +25,15 @@ export default function LiveWatchPanel({ onLiveChange }) {
     const load = async () => {
       try {
         const res = await fetch('/api/live/now');
+        if (!res.ok) throw new Error(`Server error ${res.status}`);
         const data = await res.json();
         if (!alive) return;
+        setError(null);
         setItems(itemsOf(data));
-      } catch { /* intentional: keep previous items on failure */ }
+      } catch (e) {
+        if (!alive) return;
+        setError(e?.message || 'Could not load live watch.');
+      }
     };
     load();
     const id = setInterval(load, 60000);
@@ -64,7 +70,9 @@ export default function LiveWatchPanel({ onLiveChange }) {
         ) : null}
       </div>
       <div className="px-3 py-2">
-        {visibleItems.length === 0 ? (
+        {error && items.length === 0 ? (
+          <p role="alert" className="text-[12px] font-bold text-[#E64A2E]">Could not load live watch: {error}</p>
+        ) : visibleItems.length === 0 ? (
           <p className="text-[12px] text-mute">
             {items.length === 0 ? 'No live channels are being tracked right now.'
               : 'All channels are unconfirmed — uncheck "hide unconfirmed" to see them.'}

@@ -148,9 +148,11 @@ export default function App() {
     let alive = true;
     (async () => {
       try {
-        const tle = await (await fetch('/api/sats')).json();
+        const res = await fetch('/api/sats');
+        if (!res.ok) throw new Error(`Server error ${res.status}`);
+        const tle = await res.json();
         if (!alive) return;
-        setSatRecs(tle.map((t) => ({ name: t.name, rec: satrecOf(t) })).filter((x) => x.rec));
+        setSatRecs(Array.isArray(tle) ? tle.map((t) => ({ name: t.name, rec: satrecOf(t) })).filter((x) => x.rec) : []);
       } catch { /* intentional: sats fetch failed → keep previous */ }
     })();
     return () => { alive = false; };

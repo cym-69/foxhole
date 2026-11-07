@@ -31,16 +31,22 @@ function itemsOf(data) {
 
 export default function XFeedPanel() {
   const [items, setItems] = useState([]);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     let alive = true;
     const load = async () => {
       try {
         const res = await fetch('/api/x/feed');
+        if (!res.ok) throw new Error(`Server error ${res.status}`);
         const data = await res.json();
         if (!alive) return;
+        setError(null);
         setItems(itemsOf(data));
-      } catch { /* intentional: keep previous items on failure */ }
+      } catch (e) {
+        if (!alive) return;
+        setError(e?.message || 'Could not load X feed.');
+      }
     };
     load();
     const id = setInterval(load, 60000);
@@ -59,7 +65,9 @@ export default function XFeedPanel() {
         <span className="text-[10px] font-black uppercase tracking-wide text-black">X feed</span>
       </div>
       <div className="px-3 py-2">
-        {sorted.length === 0 ? (
+        {error && sorted.length === 0 ? (
+          <p role="alert" className="text-[12px] font-bold text-[#E64A2E]">Could not load X feed: {error}</p>
+        ) : sorted.length === 0 ? (
           <p className="text-[12px] text-mute">No X posts to show right now.</p>
         ) : (
           <ul className="flex max-h-[320px] flex-col gap-1.5 overflow-y-auto">

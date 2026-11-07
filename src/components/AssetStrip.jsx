@@ -15,8 +15,14 @@ function Gauge({ value }) {
 
 function Card({ q, hit, pressure, isCrypto }) {
   const up = (q.pct ?? 0) >= 0;
-  const gaugeValue = isCrypto ? q.sentiment?.value ?? 0 : pressure;
-  const gaugeLabel = isCrypto ? (q.sentiment ? q.sentiment.label : 'no data') : pressure === 0 ? 'no pressure' : pressure > 0 ? 'upward pressure' : 'downward pressure';
+  const gaugeValue = isCrypto ? (typeof q.sentiment?.value === 'number' ? q.sentiment.value : 0) : pressure;
+  const sentiment = q.sentiment;
+  const sentimentLabel = typeof sentiment?.label === 'string' && sentiment.label.trim()
+    ? sentiment.label
+    : (sentiment != null ? (typeof sentiment.value === 'number' ? 'sentiment unavailable' : (typeof sentiment === 'string' && sentiment.trim() ? sentiment : 'sentiment unavailable')) : 'no data');
+  const gaugeLabel = isCrypto
+    ? sentimentLabel
+    : pressure === 0 ? 'no pressure' : pressure > 0 ? 'upward pressure' : 'downward pressure';
   return (
     <motion.div
       layout transition={{ type: 'spring', stiffness: 380, damping: 36 }} data-asset={q.sym}

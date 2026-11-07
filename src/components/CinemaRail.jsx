@@ -33,6 +33,7 @@ function yearOf(item) {
 
 export default function CinemaRail() {
   const [snapshot, setSnapshot] = useState(null);
+  const [error, setError] = useState(null);
   const [stored, setStored] = useState(() => readStoredTracking());
   const [draft, setDraft] = useState('');
 
@@ -41,8 +42,11 @@ export default function CinemaRail() {
     (async () => {
       try {
         const res = await fetch('/api/cinema/trending');
+        if (!res.ok) throw new Error(`Server error ${res.status}`);
         const data = res && typeof res.json === 'function' ? await res.json() : null;
-        if (!alive || !data) return;
+        if (!alive) return;
+        if (!data) { setError('Empty cinema response.'); return; }
+        setError(null);
         setSnapshot({
           ok: data.ok,
           status: data.status,
@@ -53,7 +57,7 @@ export default function CinemaRail() {
           airingToday: Array.isArray(data.airingToday) ? data.airingToday : [],
           tracking: Array.isArray(data.tracking) ? data.tracking : [],
         });
-      } catch { /* intentional: leave snapshot null so empty states render */ }
+      } catch (e) { if (alive) setError(e?.message || 'Could not load cinema.'); }
     })();
     return () => { alive = false; };
   }, []);
@@ -101,7 +105,9 @@ export default function CinemaRail() {
 
       <div className="px-3 py-2">
         <div className="text-[10px] font-black uppercase tracking-wide text-black">What&rsquo;s trending</div>
-        {snapshot?.status === 'missing-key' ? (
+        {error && !snapshot ? (
+          <p role="alert" className="mt-1 text-[12px] font-bold text-[#E64A2E]">Could not load cinema: {error}</p>
+        ) : snapshot?.status === 'missing-key' ? (
           <p role="status" className="mt-1 border-2 border-dashed border-black/30 px-2 py-1.5 text-[12px] font-bold leading-snug text-black">Cinema is off — add a TMDB key in Setup to enable live trending.</p>
         ) : trending.length === 0 ? (
           <p className="mt-1 text-[12px] text-mute">No trending titles right now.</p>

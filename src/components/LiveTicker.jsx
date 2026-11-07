@@ -8,6 +8,7 @@ function itemsOf(data) {
 
 export default function LiveTicker() {
   const [liveItems, setLiveItems] = useState([]);
+  const [error, setError] = useState(null);
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
@@ -15,10 +16,15 @@ export default function LiveTicker() {
     const load = async () => {
       try {
         const res = await fetch('/api/live/now');
+        if (!res.ok) throw new Error(`Server error ${res.status}`);
         const data = await res.json();
         if (!alive) return;
+        setError(null);
         setLiveItems(itemsOf(data).filter((it) => it && it.live === true));
-      } catch { /* intentional: keep previous ticker state on failure */ }
+      } catch (e) {
+        if (!alive) return;
+        setError(e?.message || 'Could not load live ticker.');
+      }
     };
     load();
     const id = setInterval(load, 60000);
@@ -32,6 +38,19 @@ export default function LiveTicker() {
   void tick;
 
   const title = liveItems.map((it) => it.name || it.id).filter(Boolean).join(', ');
+
+  if (error && liveItems.length === 0) {
+    return (
+      <span
+        role="alert"
+        title={`Live ticker failed to load: ${error}`}
+        className="sb-chip inline-flex items-center gap-1.5 bg-zinc-600 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-white"
+        style={{ boxShadow: '3px 3px 0 #111' }}
+      >
+        <span>○</span> LIVE OFFLINE
+      </span>
+    );
+  }
 
   return (
     <span

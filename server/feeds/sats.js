@@ -41,7 +41,7 @@ export function readCache() {
     const j = JSON.parse(fs.readFileSync(CACHE_FILE, 'utf8'));
     if (!j || !Array.isArray(j.sats) || typeof j.at !== 'number') return null;
     return j;
-  } catch { return null; }
+  } catch { /* intentional: corrupt cache file → treat as no cache */ return null; }
 }
 
 function writeCache(sats) {
@@ -108,5 +108,6 @@ export function startSats() {
     log(`${live.sats.data.length} TLE sets, status ${live.sats.status}`);
   };
   run().catch((e) => { live.sats.status = 'error'; live.sats.error = e.message; });
-  setInterval(() => { fetchSats().catch(() => {}); }, MAX_AGE);
+  // intentional empty catch: background refresh keeps stale cache; fetchSats records status/error itself
+  setInterval(() => { fetchSats().catch((e) => { log('background sats refresh failed: ' + e.message); }); }, MAX_AGE);
 }

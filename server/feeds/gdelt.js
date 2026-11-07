@@ -79,7 +79,7 @@ export function slugTitle(url) {
     const cleaned = t.replace(/^[^a-zA-Z]+/, '');
     if (!cleaned) return '';
     return (cleaned[0].toUpperCase() + cleaned.slice(1)).slice(0, 120);
-  } catch { return ''; }
+  } catch { /* intentional: unparseable URL → no title */ return ''; }
 }
 
 // Group rows by kind and half-degree cell. Size comes from how many articles mention it.
@@ -167,7 +167,7 @@ async function backfill(ts) {
   for (let i = 0; i < targets.length; i += 3) {
     await Promise.all(targets.slice(i, i + 3).map(async (x) => {
       if (win.has(x)) return;
-      try { await loadFile(x); } catch { /* missing file, skip */ }
+      try { await loadFile(x); } catch (e) { /* intentional empty catch: backfill skips missing/unavailable files; refreshGdelt still surfaces lastupdate failures */ if (e && e.code !== 'ENOENT') console.warn(`gdelt backfill skipped ${x}: ${e.message}`); }
     }));
   }
 }
