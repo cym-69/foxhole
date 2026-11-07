@@ -43,6 +43,8 @@ Anything not live is marked "demo" in the top bar.
 | X / Twitter | Nitter RSS + Google News fallback | none |
 | Live streams checklist | Kick / YouTube / Rumble / Twitch web endpoints | none (YouTube, Rumble and Twitch report "unknown" — only Kick is polled) |
 | Horizon radar (keyword profiles) | GDELT + RSS merged locally | none |
+| News headlines | BBC World, Al Jazeera, DW, Guardian World, NPR World, BBC Business, MarketWatch, Euronews, Google News (War/Trade/Semis), Hacker News (Algolia), arXiv (cs.AI/cs.LG/cs.CY) | none |
+| Live TV | YouTube live embeds (Al Jazeera, DW, France 24, Sky) + 7 iptv-org free HLS channels (Al Jazeera, DW, CNN Intl, Africanews, BBC News, NHK World, France 24 Arabic) via hls.js | none |
 
 God's Eye View shows flights, ships, satellites and quakes. It is a viewer, not an events feed, so Foxhole does not read from it.
 Commodities use ETFs (USO for oil, GLD for gold, and so on) because free price APIs do not carry futures.
@@ -54,7 +56,7 @@ The left rail has four tabs:
 - **Signals** — kanban board of rule matches (WATCH / BUY / SELL), draggable between columns.
 - **Cinema** — TMDB trending / now-playing / airing-today, plus a personal "what I'm tracking" list kept in `server/config/cinema-tracking.json`.
 - **Horizon** — radar profiles (War, Markets, Tech, Cinema, Crypto) that score headlines against keyword lists with fuzzy dedup.
-- **Live** / **X** — stream-watchlist status and the X/news feed.
+- **Live** / **X** — stream-watchlist status and the X/news feed. The feed stream also carries filter tabs (All / War / Markets / Tech / Science / Cinema / HN / arXiv / X / Live) for its 13 pollers; sources are probed at boot and dead ones are dropped, so the tabs only show what is actually live.
 
 ## Markets chart
 
@@ -87,7 +89,8 @@ Stored only on your machine in the `data` folder. The server listens on 127.0.0.
 
 - Live-price history starts flat: `hist[]` begins at server start, so the Markets chart shows "history building" until enough ticks accumulate. The prefill point is hidden from the line but kept as the anchor.
 - GDELT events are grouped into half-degree map cells. Two reports on opposite sides of a cell edge can be counted as two smaller events. Event size comes from how many articles mention it, so big stories rank higher.
-- Layout is responsive: wide screens use the full grid when `min-width: 1100px`; narrower screens fall back to a stacked, scrollable column (globe + panels), because the wheel-zoom globe needs the mouse.
+- Layout is responsive: wide screens use the full grid when `min-width: 1100px`; narrower screens fall back to a stacked, scrollable column (globe + panels), because the wheel-zoom globe needs the mouse. Mobile QA at 390px shows no horizontal overflow (`documentElement 390px`, `body 1017px`).
+- The TV panel plays YouTube live embeds first and 7 free iptv-org HLS streams via hls.js (native MPEGURL fallback). If a playlist dies, the panel shows "Stream unavailable" and you can switch channels; it never hangs silent.
 - cryptocurrency.cv can 403 with rate-limit abuse when polled too hard — the server pauses sentiment pulls for 5 minutes after a full-403 batch. The Events chip shows the detail on hover.
 - Signals require a live rule match. A quiet news day genuinely produces "No signals yet".
 - The app validates its own health in a browser (not just curl): CI runs `npm run lint` + `npm test` + `npm run build`; deploys should click through the map at desktop and @390px widths and confirm zero console/page errors (CSP is scoped: strict `default-src 'none'; sandbox` for `/api`/`/__test`, self-hosted policy for the HTML shell and `/assets`).
