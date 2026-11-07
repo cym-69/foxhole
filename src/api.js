@@ -5,6 +5,7 @@ async function j(url, opts) {
   return body;
 }
 export const fetchState = (focus = []) => j(`/api/state${focus.length ? `?focus=${focus.join(',')}` : ''}`);
+export const fetchHealth = () => j('/api/health');
 const post = (url, data) => j(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data || {}) });
 export const connectAI = (cfg) => post('/api/ai/connect', cfg);
 export const disconnectAI = () => post('/api/ai/disconnect');

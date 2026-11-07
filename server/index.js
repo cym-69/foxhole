@@ -205,6 +205,8 @@ function liveStatus() {
   if (live.ships) out.ships.boxes = shipBoxes();
   return out;
 }
+// Health endpoint: aggregated per-source status incl. 429 backoff state (headline pollers are 5m/10m).
+app.get('/api/health', (_req, res) => res.json({ ok: true, ts: Date.now(), sources: liveStatus(), headlines: headlineStatus() }));
 app.get('/api/live', (_req, res) => res.json({ sources: liveStatus(), aircraft: live.aircraft.data, headlines: headlineStatus() }));
 app.get('/api/sats', (_req, res) => res.json(satsRows()));
 // Cinema tracker (TMDB-backed when TMDB_API_KEY is set; honest empty lists otherwise).

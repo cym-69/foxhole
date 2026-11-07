@@ -1,7 +1,30 @@
 import { useEffect, useState } from 'react';
 import LiveTicker from './LiveTicker.jsx';
+import { fetchHealth } from '../api.js';
 
-const DOT = { live: 'bg-up', demo: 'bg-warn', error: 'bg-down', none: 'bg-mute', 'missing-key': 'bg-mute' };
+const DOT = { live: 'bg-up', demo: 'bg-warn', error: 'bg-down', none: 'bg-mute', 'missing-key': 'bg-mute', degraded: 'bg-warn', paused: 'bg-down', checking: 'bg-mute' };
+
+// Headline pollers: one chip if any are rate-limited, green otherwise. Counts arrive via /api/health.
+function HeadlinesChip() {
+  const [info, setInfo] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    const poll = async () => {
+      try { const h = await fetchHealth(); if (alive) setInfo(h.headlines); } catch { /* intentional: chip falls back to unknown */ }
+    };
+    poll();
+    const id = setInterval(poll, 60000);
+    return () => { alive = false; clearInterval(id); };
+  }, []);
+  if (!info) return <Chip label="Headlines" mode="checking" title="Checking headline pollers…" />;
+  const srcs = info.sources || [];
+  const dead = srcs.filter((s) => !s.ok);
+  const paused = srcs.filter((s) => s.status === 429 || s.status === 503);
+  const ok = srcs.filter((s) => s.ok).length;
+  const mode = paused.length ? 'paused' : dead.length ? 'degraded' : 'live';
+  const title = `${ok}/${srcs.length} headline sources live.\n${srcs.map((s) => `${s.name}: ${s.ok ? 'live' : `Error ${s.status || ''} ${(s.error || '').slice(0, 80)}`}`).join('\n')}`;
+  return <Chip label="Headlines" mode={mode} title={title} />;
+}
 
 function Chip({ label, mode, title }) {
   return (
@@ -82,6 +105,7 @@ export default function TopBar({ state, online, onSetup, tvOpen, onTv }) {
           </>
         )}
         {online && <StreamHealth />}
+        {online && (s ? <HeadlinesChip /> : null)}
         {!online && <span className="sb-chip px-2.5 py-1 text-xs" style={{ background: '#FF7A59' }}>Cannot reach the Foxhole server. Is it running?</span>}
       </div>
       {anyDemo && (

@@ -179,10 +179,11 @@ export function pushTestHeadline(body) {
 }
 
 export function headlineItems() { return items.slice(-SNAPSHOT_ITEMS); }
-export function headlineRaw() { return items.slice(); }export function headlineStatus() {
+export function headlineRaw() { return items.slice(); }
+export function headlineStatus() {
   return {
     status: sources.some((s) => s.ok) ? 'ok' : (sources.length ? 'error' : 'none'),
-    sources: sources.map((s) => ({ id: s.id, name: s.name, ok: s.ok, count: s.count, lastFetch: s.lastFetch, error: s.error })),
+    sources: sources.map((s) => ({ id: s.id, name: s.name, ok: s.ok, count: s.count, lastFetch: s.lastFetch, error: s.error, fails: s.fails, status: s.status || 0 })),
   };
 }
 
@@ -198,7 +199,7 @@ function validateBody(s, body) {
 
 async function probe(s) {
   const r = await fetch(s.url, { headers: { 'User-Agent': UA, Accept: acceptFor(s) }, signal: AbortSignal.timeout(FETCH_MS) });
-  if (!r.ok) throw new Error('HTTP ' + r.status);
+  if (!r.ok) { const err = new Error('HTTP ' + r.status); err.status = r.status; throw err; }
   const body = await r.text();
   validateBody(s, body);
   return { body, etag: r.headers.get('etag') || '', lastModified: r.headers.get('last-modified') || '' };
@@ -210,7 +211,7 @@ async function pollSource(s) {
   if (s.lastModified) headers['If-Modified-Since'] = s.lastModified;
   const r = await fetch(s.url, { headers, signal: AbortSignal.timeout(FETCH_MS) });
   if (r.status === 304) { s.ok = true; s.error = ''; s.lastFetch = Date.now(); return; }
-  if (!r.ok) throw new Error('HTTP ' + r.status);
+  if (!r.ok) { const err = new Error('HTTP ' + r.status); err.status = r.status; throw err; }
   const body = await r.text();
   validateBody(s, body);
   s.etag = r.headers.get('etag') || '';
@@ -246,8 +247,11 @@ function startSource(s, index) {
     const run = async () => {
       try { await pollSource(s); s.fails = 0; }
       catch (e) {
-        s.ok = false; s.error = e.message; s.fails++;
-        setTimeout(run, Math.min(MAX_DELAY_MS, pollMs * 2 ** s.fails));
+        s.ok = false; s.error = e.message; s.status = e.status || 0; s.fails++;
+        const backoff = Math.min(MAX_DELAY_MS, pollMs * 2 ** s.fails);
+        // 429/503 = upstream rate-limit: back off harder so we stop hammering the source.
+        const cooldown = (s.status === 429 || s.status === 503) ? backoff * 2 : backoff;
+        setTimeout(run, cooldown);
         return;
       }
       setTimeout(run, pollMs);

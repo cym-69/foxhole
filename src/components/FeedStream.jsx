@@ -111,6 +111,7 @@ export default function FeedStream({ incoming = [], onPickEvent, wide = true }) 
       data-feed-stream=""
       data-feed-hover={hover ? '1' : '0'}
       data-feed-queue={queue.current.length}
+      data-feed-filter={filter}
       className="absolute left-4 top-[104px] w-[300px] overflow-hidden"
       style={{
         height: '55%',
