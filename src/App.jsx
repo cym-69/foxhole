@@ -47,6 +47,11 @@ export default function App() {
   const [state, setState] = useState(null);
   const [online, setOnline] = useState(true);
   const [selectedId, setSelectedId] = useState(null);
+  const detailOrigin = useRef(null);
+  const closeDetails = useCallback(() => {
+    setSelectedId(null);
+    requestAnimationFrame(() => detailOrigin.current?.focus?.());
+  }, []);
   const [layers, setLayers] = useState(() => new Set(LAYERS.map((l) => l.id)));
   const [setupOpen, setSetupOpen] = useState(false);
   const [lines, setLines] = useState([]);
@@ -59,10 +64,10 @@ export default function App() {
   const selected = useMemo(() => state?.events.find((e) => e.id === selectedId) || state?.context.find((e) => e.id === selectedId) || null, [state, selectedId]);
   useEffect(() => {
     if (!selectedId) return;
-    const closeOnEscape = (event) => { if (event.key === 'Escape') setSelectedId(null); };
+    const closeOnEscape = (event) => { if (event.key === 'Escape') closeDetails(); };
     window.addEventListener('keydown', closeOnEscape);
     return () => window.removeEventListener('keydown', closeOnEscape);
-  }, [selectedId]);
+  }, [selectedId, closeDetails]);
   const selectedSignals = useMemo(() => (selected ? state.signals.filter((s) => s.eventId === selected.id) : []), [state, selected]);
   const focus = useMemo(() => selectedSignals.map((s) => s.asset).filter((a) => state?.trad[a]).slice(0, 8).join(','), [selectedSignals, state]);
 
@@ -87,10 +92,11 @@ export default function App() {
   const closeSetup = useCallback(() => { localStorage.setItem('foxhole.setupSeen', '1'); setSetupOpen(false); }, []);
 
   const select = useCallback((id) => {
+    if (id && !selectedId) detailOrigin.current = document.activeElement;
     setSelectedId(id);
     const ev = state?.events.find((e) => e.id === id) || state?.context.find((e) => e.id === id);
     if (ev && typeof ev.lat === 'number') globe.current?.flyTo(ev.lat, ev.lng, 1.8);
-  }, [state]);
+  }, [state, selectedId]);
 
   // Live stream: aircraft, ships, satellites, source statuses, headlines, and new/updated events.
   // Auto-reconnect is built into EventSource.
@@ -385,7 +391,7 @@ export default function App() {
         <div role="dialog" aria-label={`Event details: ${selected.title}`} className="fixed inset-y-3 right-3 z-40 flex w-[min(440px,calc(100vw-1.5rem))] flex-col overflow-hidden border-2 border-black bg-white shadow-[6px_6px_0_#111]">
           <div className="flex shrink-0 items-center justify-between border-b-2 border-black bg-[#FFD23F] px-3 py-2 text-sm font-black">
             <span>EVENT DETAILS</span>
-            <button type="button" autoFocus onClick={() => setSelectedId(null)} aria-label="Close event details" className="rounded border-2 border-black bg-white px-2">Close</button>
+            <button type="button" autoFocus onClick={closeDetails} aria-label="Close event details" className="rounded border-2 border-black bg-white px-2">Close</button>
           </div>
           <Suspense fallback={PanelsFallback}>
             <Chain event={selected} signals={selectedSignals} trad={state.trad} crypto={state.crypto} now={state.now} />
