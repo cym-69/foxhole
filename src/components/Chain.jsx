@@ -32,7 +32,7 @@ export default function Chain({ event, signals, trad, crypto, now, error }) {
                 <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full border-2 border-black bg-white text-black shadow-[2px_2px_0_#111]"><Icon layer={event.layer} size={15} /></span>
                 <div>
                   <p className="text-sm font-black leading-snug">{event.title}</p>
-                  <p className="mt-1 text-xs font-bold text-mute">{event.place}. {ago(event.ts, now)}. {event.sources} {event.sources === 1 ? 'source' : 'sources'}.</p>
+                  <p className="mt-1 text-xs font-bold text-mute">{event.place}. <time dateTime={new Date(event.ts).toISOString()} title={new Date(event.ts).toLocaleString()}>{ago(event.ts, now)}</time>. {event.sources} {event.sources === 1 ? 'source' : 'sources'}{event.src ? ` · ${event.src}` : ''}.</p>
                 </div>
               </div>
               <div className="mt-2.5 flex items-center gap-2 text-xs font-bold text-mute">

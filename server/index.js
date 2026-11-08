@@ -93,9 +93,9 @@ function buildState() {
     .filter((e) => typeof e.lat === 'number')
     .sort((a, b) => b.size * ctxFresh(b) - a.size * ctxFresh(a))
     .slice(0, 60)
-    .map(({ id, kind, layer, title, place, lat, lng, size, sources, ts }) => ({ id, kind, layer, title, place, lat, lng, size, sources, ts, linked: false }));
+    .map(({ id, kind, layer, title, place, lat, lng, size, sources, src, ts }) => ({ id, kind, layer, title, place, lat, lng, size, sources, src, ts, linked: false }));
   const lead = (id) => { const s = result.signals.find((x) => x.eventId === id); return s ? { asset: s.asset, dir: s.dir, action: s.action } : null; };
-  const events = result.events.map(({ id, kind, layer, title, place, lat, lng, size, sources, ts, impact, assets }) => ({ id, kind, layer, title, place, lat, lng, size, sources, ts, impact, assets, lead: lead(id) }));
+  const events = result.events.map(({ id, kind, layer, title, place, lat, lng, size, sources, src, ts, impact, assets }) => ({ id, kind, layer, title, place, lat, lng, size, sources, src, ts, impact, assets, lead: lead(id) }));
   return {
     now: Date.now(),
     status: {
@@ -234,7 +234,7 @@ app.get('/stream', (req, res) => {
   sse(res, 'snapshot', { now: Date.now(), events: result.events.map(eventOut), aircraft: live.aircraft.data, ships: shipsSnapshot(), sources: liveStatus(), feed: headlineItems() });
   req.on('close', () => { clearInterval(ping); clients.delete(client); });
 });
-const eventOut = ({ id, kind, layer, title, place, lat, lng, size, sources, ts, impact, assets }) => ({ id, kind, layer, title, place, lat, lng, size, sources, ts, impact, assets });
+const eventOut = ({ id, kind, layer, title, place, lat, lng, size, sources, src, ts, impact, assets }) => ({ id, kind, layer, title, place, lat, lng, size, sources, src, ts, impact, assets });
 
 // Push changes to clients. Events are checked each time the state is computed.
 let feedBooted = false;
