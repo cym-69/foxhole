@@ -51,12 +51,12 @@ Anything not live is marked "demo" in the top bar.
 God's Eye View shows flights, ships, satellites and quakes. It is a viewer, not an events feed, so Foxhole does not read from it.
 Commodities use ETFs (USO for oil, GLD for gold, and so on) because free price APIs do not carry futures.
 
-## Signal Board — the four tabs
+## Signal Board — the five tabs
 
-The left rail has four tabs:
+The left rail has five tabs:
 
 - **Signals** — kanban board of rule matches (WATCH / BUY / SELL), draggable between columns.
-- **Cinema** — TMDB trending / now-playing / airing-today, plus a personal "what I'm tracking" list kept in `server/config/cinema-tracking.json`.
+- **Cinema** — TMDB trending / now-playing / airing-today, plus a personal "what I'm tracking" list stored in this browser's localStorage. `server/config/cinema-tracking.json` supplies the initial examples.
 - **Horizon** — radar profiles (War, Markets, Tech, Cinema, Crypto) that score headlines against keyword lists with fuzzy dedup.
 - **Live** / **X** — stream-watchlist status and the X/news feed. The feed stream also carries filter tabs (All / War / Markets / Tech / Science / Cinema / HN / arXiv / X / Live) for its 13 pollers; sources are probed at boot and dead ones are dropped, so the tabs only show what is actually live.
 
@@ -72,7 +72,7 @@ x=0 anchor. No synthetic series is drawn.
 1. Every event gets a type, a place, a size, and a source count.
 2. `server/rules.js` is a plain table: event type + region + size gives assets, direction, and time window.
 3. Confidence = rule trust x event size x source count x freshness x the rule's own track record.
-4. An event with no matching rule is dropped. No asset link, no dot.
+4. An event with no matching rule remains visible as context, with a dim dot and no trade signal.
 5. Every BUY or SELL is logged with the live price. When its window ends, Foxhole checks if the price moved the predicted way (0.25% or more). That becomes the rule's record.
 6. A rule with 10+ results and a hit rate under 40% switches itself off. A rule with a good record gets more trust.
 7. If an AI is connected it only rewords the "Why" line. It is blocked from adding numbers.
