@@ -22,9 +22,14 @@ const keysFile = path.join(DATA_DIR, 'keys.json');
 let saved = {};
 try { saved = JSON.parse(fs.readFileSync(keysFile, 'utf8')); } catch { /* intentionally optional: keys file may be absent or empty */ }
 
+const host = process.env.HOST || '127.0.0.1';
+if (!['127.0.0.1', '::1', 'localhost'].includes(host)) {
+  throw new Error('Foxhole is a private local app. HOST must be a loopback address.');
+}
+
 export const cfg = {
   port: Number(process.env.PORT) || 4180,
-  host: process.env.HOST || '127.0.0.1',
+  host,
   demoForced: process.argv.includes('--demo'),
   finnhubBase: process.env.FINNHUB_BASE_URL || 'https://finnhub.io/api/v1',
   cryptoBase: process.env.CRYPTO_NEWS_BASE_URL || 'https://cryptocurrency.cv',
