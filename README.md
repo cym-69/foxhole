@@ -2,6 +2,8 @@
 
 A live world-events map linked to stocks, commodities and crypto, with plain-language signals.
 
+For the finished-product target, release gates, and prioritized continuation work, see [PRODUCT_GOAL.md](PRODUCT_GOAL.md).
+
 ## Run it (Node 18 or newer)
 
 ```
