@@ -5,7 +5,16 @@ import world from 'world-atlas/countries-110m.json';
 import { ICON_SHAPES } from '../lib/icons.js';
 import { altFraction } from '../lib/sats.js';
 
-const land = feature(world, world.objects.countries).features;
+// The atlas includes a zero-area North Korea fragment; H3 rejects it while
+// building hex land cells. Keep each country's valid polygons.
+const validPolygon = (rings) => new Set((rings?.[0] || []).map(([lng, lat]) => `${lng},${lat}`)).size >= 3;
+const land = feature(world, world.objects.countries).features.flatMap((country) => {
+  const geometry = country.geometry;
+  if (geometry.type === 'Polygon') return validPolygon(geometry.coordinates) ? [country] : [];
+  if (geometry.type !== 'MultiPolygon') return [country];
+  const coordinates = geometry.coordinates.filter(validPolygon);
+  return coordinates.length ? [{ ...country, geometry: { ...geometry, coordinates } }] : [];
+});
 const reduced = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const CAP_FAR = 30;
 const CAP_NEAR = 90;
