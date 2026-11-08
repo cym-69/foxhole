@@ -10,6 +10,7 @@ import { PROFILES, matchProfile } from './lib/profiles.js';
 import { satrecOf, satPosition } from './lib/sats.js';
 
 const Globe3D = lazy(() => import('./components/Globe3D.jsx'));
+const Chain = lazy(() => import('./components/Chain.jsx'));
 const Lines = lazy(() => import('./components/Lines.jsx'));
 const Setup = lazy(() => import('./components/Setup.jsx'));
 const TvPanel = lazy(() => import('./components/TvPanel.jsx'));
@@ -56,6 +57,12 @@ export default function App() {
   const firstLoad = useRef(true);
 
   const selected = useMemo(() => state?.events.find((e) => e.id === selectedId) || state?.context.find((e) => e.id === selectedId) || null, [state, selectedId]);
+  useEffect(() => {
+    if (!selectedId) return;
+    const closeOnEscape = (event) => { if (event.key === 'Escape') setSelectedId(null); };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [selectedId]);
   const selectedSignals = useMemo(() => (selected ? state.signals.filter((s) => s.eventId === selected.id) : []), [state, selected]);
   const focus = useMemo(() => selectedSignals.map((s) => s.asset).filter((a) => state?.trad[a]).slice(0, 8).join(','), [selectedSignals, state]);
 
@@ -373,6 +380,17 @@ export default function App() {
           </div>
         </div>
       </main>
+      )}
+      {selected && (
+        <div role="dialog" aria-label={`Event details: ${selected.title}`} className="fixed inset-y-3 right-3 z-40 flex w-[min(440px,calc(100vw-1.5rem))] flex-col overflow-hidden border-2 border-black bg-white shadow-[6px_6px_0_#111]">
+          <div className="flex shrink-0 items-center justify-between border-b-2 border-black bg-[#FFD23F] px-3 py-2 text-sm font-black">
+            <span>EVENT DETAILS</span>
+            <button type="button" autoFocus onClick={() => setSelectedId(null)} aria-label="Close event details" className="rounded border-2 border-black bg-white px-2">Close</button>
+          </div>
+          <Suspense fallback={PanelsFallback}>
+            <Chain event={selected} signals={selectedSignals} trad={state.trad} crypto={state.crypto} now={state.now} />
+          </Suspense>
+        </div>
       )}
 
       <AssetStrip trad={state.trad} crypto={state.crypto} signals={state.signals} selectedSignals={selectedSignals} />
