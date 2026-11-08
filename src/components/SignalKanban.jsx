@@ -68,20 +68,20 @@ export default function SignalKanban({ signals = [], onPick, selectedId }) {
   };
 
   return (
-    <section className="grid h-full grid-cols-3 gap-3 p-3">
+    <section className="grid h-full grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] gap-3 p-3">
       {COLS.map((c) => (
         <div
           key={c.id}
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => drop(e, c.id)}
-          className="flex min-h-0 flex-col rounded-xl border-2 border-black bg-paper/60"
+          className="flex min-h-0 min-w-0 flex-col rounded-xl border-2 border-black bg-paper/60"
           style={{ boxShadow: '4px 4px 0 #111' }}
         >
           <header className="flex items-center justify-between border-b-2 border-black px-3 py-2" style={{ background: c.bg }}>
             <span className="text-sm font-black tracking-wide">{c.label}</span>
             <span className="num sb-chip px-2 py-0.5 text-xs">{grouped[c.id].length}</span>
           </header>
-          <div className="thin-scroll min-h-0 flex-1 space-y-2 overflow-y-auto p-2">
+          <div className="thin-scroll min-h-0 min-w-0 flex-1 space-y-2 overflow-y-auto p-2">
             {grouped[c.id].length === 0 && (
               <p className="py-6 text-center text-xs font-semibold text-mute">Drop cards here</p>
             )}
@@ -97,8 +97,8 @@ export default function SignalKanban({ signals = [], onPick, selectedId }) {
               >
                 <div className="flex items-center gap-2">
                   <span className="sb-verdict text-[11px]" style={{ background: c.bg }}>{s.action}</span>
-                  <span className="truncate text-sm font-black">{s.asset || cleanText(s.label)}</span>
-                  <span className="ml-auto text-base" title="sprouts = confidence">{sprout(s.conf ?? 0)}</span>
+                  <span className="min-w-0 flex-1 truncate text-sm font-black">{s.asset || cleanText(s.label)}</span>
+                  <span className="ml-auto shrink-0 text-base" title="sprouts = confidence">{sprout(s.conf ?? 0)}</span>
                 </div>
                 <p className="mt-1 line-clamp-2 text-xs leading-snug text-mute">{cleanText(s.why || s.label)}</p>
                 <div className="mt-2 flex items-center gap-2">

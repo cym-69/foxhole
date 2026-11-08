@@ -28,7 +28,7 @@ function HeadlinesChip() {
 
 function Chip({ label, mode, title }) {
   return (
-    <span title={title} className="sb-chip flex items-center gap-1.5 px-2.5 py-1 text-xs text-ink">
+    <span title={title} className="sb-chip flex shrink-0 items-center gap-1.5 px-2.5 py-1 text-xs text-ink">
       <span className={`h-2 w-2 rounded-full border border-black ${DOT[mode] || DOT.none}`} />
       {label}
     </span>
@@ -90,13 +90,13 @@ export default function TopBar({ state, online, onSetup, tvOpen, onTv }) {
     { label: 'X', mode: s.xfeed || 'none', title: s.xfeed === 'live' ? 'X feed poller live' : 'X feed poller error' },
   ] : [];
   return (
-    <header className="flex h-12 items-center gap-3 border-b-2 border-black bg-paper px-4">
-      <div className="flex items-center gap-2">
+    <header className="flex h-12 items-center gap-3 overflow-hidden border-b-2 border-black bg-paper px-4">
+      <div className="flex shrink-0 items-center gap-2">
         <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><rect x="2" y="2" width="28" height="28" rx="6" fill="#FFD23F" stroke="#111" strokeWidth="2.5" /><path d="M6 10l6 5h8l6-5-2 11-8 7-8-7z" fill="#111" /></svg>
-        <span className="text-lg font-black tracking-tight">FOXHOLE</span>
+        <span className="whitespace-nowrap text-lg font-black tracking-tight">FOXHOLE</span>
         <span className="sb-verdict hidden text-[10px] md:inline" style={{ background: '#FFD23F' }}>SIGNAL BOARD</span>
       </div>
-      <div className="ml-4 flex items-center gap-2">
+      <div className="ml-4 hidden min-w-0 flex-1 items-center gap-2 overflow-x-auto min-[1400px]:flex">
         {s && (
           <>
             {chips.map((c) => (
@@ -109,25 +109,25 @@ export default function TopBar({ state, online, onSetup, tvOpen, onTv }) {
         {!online && <span className="sb-chip px-2.5 py-1 text-xs" style={{ background: '#FF7A59' }}>Cannot reach the Foxhole server. Is it running?</span>}
       </div>
       {anyDemo && (
-        <span className="ml-1 sb-chip px-2 py-1 text-[11px]" style={{ background: '#FFD23F' }}>Demo data where live is missing. Do not trade on it.</span>
+        <span className="ml-1 hidden sb-chip px-2 py-1 text-[11px] shrink-0 min-[900px]:inline-block" style={{ background: '#FFD23F' }}>Demo data where live is missing. Do not trade on it.</span>
       )}
       {ai?.connected && ai.lastError && (
         <button onClick={onSetup} title={ai.lastError} className="sb-chip max-w-[320px] truncate px-2.5 py-1 text-xs" style={{ background: '#FFD23F' }}>
           {ai.paused ? 'AI paused for 5 minutes. ' : 'AI problem. '}{ai.lastError} Change model
         </button>
       )}
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ml-auto flex shrink-0 items-center gap-2 min-w-0">
         <LiveTicker />
         {ai?.connected ? (
-          <button onClick={onSetup} className="sb-btn flex items-center gap-1.5 px-3 py-1 text-xs font-black" style={{ background: '#C6E265' }} title={`Model: ${ai.model}`}>
+          <button onClick={onSetup} className="sb-btn flex items-center gap-1.5 px-3 py-1 text-xs font-black max-lg:hidden" style={{ background: '#C6E265' }} title={`Model: ${ai.model}`}>
             AI ON
           </button>
         ) : (
-          <button onClick={onSetup} className="sb-btn px-3 py-1 text-xs font-black" style={{ background: '#FFD23F' }}>
+          <button onClick={onSetup} className="sb-btn px-3 py-1 text-xs font-black max-lg:hidden" style={{ background: '#FFD23F' }}>
             Rules only. Connect AI
           </button>
         )}
-        <button onClick={onSetup} className="sb-btn px-3 py-1 text-xs font-bold">Settings</button>
+        <button onClick={onSetup} className="sb-btn px-3 py-1 text-xs font-bold max-lg:hidden">Settings</button>
         <button onClick={onTv} title="Live TV" className="sb-btn px-3 py-1 text-xs font-bold" style={tvOpen ? { background: '#111', color: '#fff' } : {}}>TV</button>
       </div>
     </header>

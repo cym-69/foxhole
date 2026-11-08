@@ -239,7 +239,7 @@ export default function App() {
   }
 
   return (
-    <div className="grid h-screen w-screen grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden">
+    <div className="grid h-screen w-screen grid-cols-[minmax(0,1fr)] grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-[60] focus:border-2 focus:border-black focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:font-bold focus:shadow-[2px_2px_0_#111]">
         Skip to map
       </a>

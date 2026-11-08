@@ -24,7 +24,7 @@
 
 html, body, #root { height: 100%; }
 body { background: var(--color-bg); color: var(--color-ink); font-family: var(--font-sans); overflow: hidden; background-image: radial-gradient(rgba(17,17,17,.14) 1px, transparent 1px); background-size: 22px 22px; }
-@media (min-width: 1100px) { body { min-width: 1100px; } }
+@media (min-width: 1100px) { body { min-width: 0; } }
 @media (max-width: 1099px) { body { overflow: auto; } #root { min-height: 100%; } .grid.h-screen { height: auto !important; min-height: 100vh; } }
 button { cursor: pointer; font: inherit; color: inherit; }
 .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
@@ -36,7 +36,7 @@ button { cursor: pointer; font: inherit; color: inherit; }
 /* Brutalist card: thick border + hard offset shadow, lifts on hover */
 .sb-card { background:#fff; border:2px solid #111; box-shadow:4px 4px 0 #111; border-radius:10px; }
 .sb-card:hover { box-shadow:6px 6px 0 #111; transform:translate(-1px,-1px); }
-.sb-chip { border:2px solid #111; border-radius:999px; background:#fff; font-weight:700; }
+.sb-chip { border:2px solid #111; border-radius:999px; background:#fff; font-weight:700; white-space:nowrap; }
 .sb-btn { border:2px solid #111; background:#fff; border-radius:8px; box-shadow:3px 3px 0 #111; transition:transform .12s, box-shadow .12s; }
 .sb-btn:hover { transform:translate(-1px,-1px); box-shadow:4px 4px 0 #111; }
 .sb-btn:active { transform:translate(1px,1px); box-shadow:1px 1px 0 #111; }
