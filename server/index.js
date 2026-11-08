@@ -54,7 +54,7 @@ function collect() {
   const fresh = all.filter((e) => Date.now() - e.ts < 72 * HOUR);
   const seen = new Set();
   const uniq = fresh.filter((e) => (seen.has(e.id) ? false : seen.add(e.id)));
-  if (cfg.demoForced || liveSources === 0) return { events: demoEvents(), demo: true, liveSources: 0 };
+  if (cfg.demoForced || (liveSources === 0 && uniq.length === 0)) return { events: demoEvents(), demo: true, liveSources: 0 };
   return { events: uniq, demo: false, liveSources };
 }
 
