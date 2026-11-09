@@ -1,3 +1,5 @@
+## Round 12: evidence-count confidence honesty — confidence now scales with independent linked-event evidence (High only at >=3 recent linked events; WATCH band computed from actual context siblings/sources), signals carry evidenceCount + evidenceLabel rendered in BestSignals/SignalCard/Chain.
+
 # Changelog
 
 - Round 11 value loop — momentum/density from GDELT history: per-asset momentum score + 24-bucket 6h volume spark (tone+mentions, honest 6h label, empty upstream shows No GDELT history upstream). Why: reviewer gap — TimelineVol/momentum route not exposing real history; now every asset shows real momentum density.

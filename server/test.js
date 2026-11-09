@@ -66,6 +66,32 @@ assert.equal(normSentiment({ data: { sentiment: 'positive', score: 72 } }).value
 
 console.log(`all tests passed (${r.events.length} events, ${r.signals.length} signals from ${demoEvents().length} demo events)`);
 
+// Round 12: evidence-count confidence honesty.
+// Single-source events can never read High; corroborated clusters can.
+import { watchSignalFor } from './engine.js';
+import { watchConf } from './explain.js';
+{
+  const lone = analyze([{ id: 'ev:lone', kind: 'conflict', layer: 'conflict', title: 'Clash in the Gulf', place: 'Gulf test', lat: 26, lng: 50, size: 0.9, sources: 1, ts: Date.now() - 3600000, src: 'test' }], { stats: {}, aiWhy: new Map(), sentiment: {}, now: Date.now() });
+  for (const s of lone.signals) assert.ok(s.level !== 'High', 'lone event never High: ' + s.level);
+  assert.ok(lone.signals.every((s) => s.evidenceCount >= 1 && s.evidenceLabel), 'lone signals carry evidence');
+  console.log('PASS: lone single-source event never High');
+  const cluster = analyze([
+    { id: 'ev:a', kind: 'conflict', layer: 'conflict', title: 'Attack near Riyadh', place: 'Riyadh', lat: 24, lng: 46, size: 0.9, sources: 5, ts: Date.now() - 3600000, src: 'test' },
+    { id: 'ev:b', kind: 'conflict', layer: 'conflict', title: 'Second attack near Riyadh', place: 'Riyadh', lat: 24.2, lng: 46.1, size: 0.9, sources: 5, ts: Date.now() - 7200000, src: 'test' },
+    { id: 'ev:c', kind: 'conflict', layer: 'conflict', title: 'Third attack near Riyadh', place: 'Riyadh', lat: 23.8, lng: 45.9, size: 0.9, sources: 5, ts: Date.now() - 5000000, src: 'test' },
+  ], { stats: {}, aiWhy: new Map(), sentiment: {}, now: Date.now() });
+  assert.ok(cluster.signals.some((s) => s.evidenceCount >= 3), 'cluster signals show >=3 evidence');
+  const hi = cluster.signals.filter((s) => s.evidenceCount >= 3 && s.level === 'High');
+  assert.ok(hi.length > 0, 'corroborated recent cluster can reach High');
+  console.log('PASS: 3-event cluster reaches High with evidenceCount>=3');
+  const w1 = watchSignalFor({ id: 'w:a', title: 'Quiet place', place: 'Quiet', regions: ['far'], sources: 1, lat: 0, lng: 0, size: 0.2, ts: Date.now() - 3600000 }, 1, []);
+  const w2 = watchSignalFor({ id: 'w:b', title: 'Busy place', place: 'Busy', regions: ['gulf'], sources: 20, lat: 26, lng: 50, size: 0.9, ts: Date.now() - 3600000 }, 1, [{ id: 'w:c', regions: ['gulf'], lat: 26.5, lng: 50.5 }, { id: 'w:d', regions: ['gulf'], lat: 25.5, lng: 49.5 }, { id: 'w:e', regions: ['gulf'], lat: 26.2, lng: 50.2 }]);
+  assert.ok(w2[0].conf > w1[0].conf, 'watch conf rises with siblings+sources');
+  assert.ok(w2[0].evidenceCount > w1[0].evidenceCount, 'watch evidenceCount reflects siblings');
+  assert.ok(watchConf({ siblings: 4, sources: 20, ageH: 1 }) > watchConf({ siblings: 1, sources: 1, ageH: 60 }), 'watchConf monotonic in evidence');
+  console.log('PASS: WATCH band varies with evidence, not fixed 0.2-0.3');
+}
+
 // 9. Box rules: a quake of M5.0+, an EONET storm, or a military cluster inside a box
 //    links to that box's own tickers plus ITA and GLD (added by the engine).
 const NOW = Date.UTC(2026, 0, 15, 12, 0, 0); // fixed clock, so age and freshness are the same on every run

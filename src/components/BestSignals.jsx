@@ -18,7 +18,7 @@ export default function BestSignals({ signals, top, ai, brief, onPick, onSetup, 
             <span className={`rounded border-2 border-black px-1.5 py-0.5 text-[11px] font-black ${actionBg(s.action)}`}>{s.action} {s.asset} {Math.round((s.conf || 0) * 100)}%</span>
             <span className="truncate text-sm font-black">{s.label}</span>
             <span className={`text-xs ${dirColor(s.dir)}`}>{arrow(s.dir)}</span>
-            <span className="ml-auto text-xs font-bold text-mute">{s.level}</span>
+            <span className="ml-auto text-xs font-bold text-mute">{s.evidenceLabel || s.level}</span>
           </div>
           <p className="mt-1 line-clamp-1 text-xs font-black leading-snug text-ink">{s.eventTitle ? `“${s.eventTitle}”` : s.ruleTitle}</p>
           {s.eventPlace ? <p className="mt-0.5 line-clamp-1 text-xs font-bold leading-snug text-mute">{s.eventPlace}</p> : null}

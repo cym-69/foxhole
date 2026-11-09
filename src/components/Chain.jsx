@@ -74,7 +74,7 @@ export default function Chain({ event, signals, trad, crypto, now, error }) {
                     <span className={`rounded px-1.5 py-0.5 text-[11px] font-semibold ${actionBg(s.action)}`}>{s.action}</span>
                     <span>{s.label}</span>
                     <span className={`text-xs ${dirColor(s.dir)}`}>{arrow(s.dir)}</span>
-                    <span className="ml-auto text-xs text-mute">{s.level}</span>
+                    <span className="ml-auto text-xs text-mute">{s.evidenceLabel || s.level}</span>
                   </div>
                 ))}
               </div>

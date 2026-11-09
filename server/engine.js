@@ -1,6 +1,7 @@
 import { RULES } from './rules.js';
 import { regionsOf } from './regions.js';
 import { ASSETS } from './assets.js';
+import { honestly, watchConf, siblingCount, levelOf as explainLevelOf } from './explain.js';
 
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
 export const levelOf = (c) => (c < 0.25 ? 'Low' : c < 0.42 ? 'Medium' : 'High');
@@ -91,8 +92,13 @@ export function analyze(rawEvents, ctx) {
       const agree = abs ? Math.abs(net) / abs : 0;
       const agreeing = list.filter((x) => Math.sign(x.eff.d) === dir);
       const best = (agreeing.length ? agreeing : list).sort((a, b) => b.conf - a.conf)[0];
-      const conf = clamp(best.conf * (0.5 + 0.5 * agree), 0, 0.95);
-      const level = levelOf(conf);
+      const rawConf = clamp(best.conf * (0.5 + 0.5 * agree), 0, 0.95);
+      // Round 12: evidence ceiling. Corroboration = other events in this
+      // batch firing the same asset; a lone event can never read High.
+      // Corroboration pool: signals already emitted for this asset by other events.
+      const pool = signals.filter((x) => x.asset === asset).concat(evSignals.filter((x) => x.asset === asset));
+      const h = honestly(ev, rawConf, pool, ageH);
+      const level = h.level;
       const action = dir === 0 || agree < 0.5 || level === 'Low' ? 'WATCH' : dir > 0 ? 'BUY' : 'SELL';
       const key = `${ev.id}:${best.rule.id}`;
       const template = best.rule.why.replace('{place}', ev.place || ev.title);
@@ -106,7 +112,8 @@ export function analyze(rawEvents, ctx) {
       evSignals.push({
         id: `${ev.id}:${best.rule.id}:${asset}`, eventId: ev.id, ruleId: best.rule.id, ruleTitle: best.rule.title,
         eventTitle: ev.title || '', eventPlace: ev.place || '', eventTs: ev.ts || 0,
-        asset, label: ASSETS[asset].label, dir, action, conf: Number(conf.toFixed(3)), level,
+        asset, label: ASSETS[asset].label, dir, action, conf: h.conf, level,
+        evidence: h.evidence, evidenceCount: h.evidence.count, evidenceLabel: h.evidence.label,
         window: best.rule.window, windowH: best.rule.windowH,
         why: ai || template, whySrc: ai ? 'ai' : 'rules', whyKey: key, whyBase: template,
         wrongIf: best.rule.wrongIf, cryptoLink,
@@ -138,7 +145,8 @@ export function analyze(rawEvents, ctx) {
     .sort((a, b) => b.score - a.score)
     .slice(0, 4);
   for (const { ev, ageH } of watch) {
-    const ws = watchSignalFor(ev, ageH);
+    const _sib = siblingCount(ev, context); void _sib;
+    const ws = watchSignalFor(ev, ageH, context);
     signals.push(...ws);
     ev.impact = Number(((ev.size ?? 0) * (0.6 + 0.4 * Math.min(1, ws.length / 5)) * freshF(ageH) * srcF(ev.sources ?? 1)).toFixed(3));
     ev.assets = ws.map((s) => ({ a: s.asset, d: s.dir }));
@@ -175,9 +183,12 @@ export function watchAssetsFor(ev) {
   return WATCH_DEFAULT;
 }
 
-export function watchSignalFor(ev, ageH) {
+export function watchSignalFor(ev, ageH, ctxList) {
   const hours = ageH != null && Number.isFinite(ageH) ? ageH : 12;
-  const conf = Number(clamp(0.2 + 0.1 * (0.5 + 0.5 * freshF(hours)), 0.2, 0.3).toFixed(3));
+  // Round 12: band from evidence, not a fixed 0.2-0.3 clamp.
+  const siblings = ctxList ? siblingCount(ev, ctxList) : 1;
+  const conf = watchConf({ siblings, sources: ev.sources ?? 1, ageH: hours });
+  const level = explainLevelOf(conf);
   const place = ev.place || ev.title || 'the affected area';
   const title = ev.title || place;
   return watchAssetsFor(ev).map((asset) => ({
@@ -193,7 +204,10 @@ export function watchSignalFor(ev, ageH) {
     dir: 1,
     action: 'WATCH',
     conf,
-    level: 'Low',
+    level,
+    evidence: { count: siblings, distinct: 1, sources: Number(ev.sources ?? 1), recent: hours <= 24, cap: 0.42, label: siblings + ' context sibling' + (siblings === 1 ? '' : 's') + ' \u00b7 ' + level + ' confidence' },
+    evidenceCount: siblings,
+    evidenceLabel: siblings + ' context sibling' + (siblings === 1 ? '' : 's') + ' \u00b7 ' + level + ' confidence',
     reasons: undefined,
     window: '1 to 3 days',
     windowH: 72,
