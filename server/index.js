@@ -4,7 +4,7 @@ import path from 'node:path';
 import { cfg, saveKey, ROOT } from './config.js';
 import { ASSETS, TRAD, CRYPTO } from './assets.js';
 import { usgs, eonet, cryptoNews } from './feeds/events.js';
-import { refreshGdelt } from './feeds/gdelt.js';
+import { refreshGdelt, momentumFromWindow } from './feeds/gdelt.js';
 import { demoEvents, DEMO_SENTIMENT } from './feeds/demo.js';
 import { fetchSentiment } from './feeds/crypto.js';
 import * as markets from './feeds/markets.js';
@@ -121,7 +121,7 @@ function buildState() {
     ai: { ...ai.publicInfo(), brief: ai.getBrief() },
     keys: { finnhub: !!cfg.finnhubKey, tmdb: !!cfg.tmdbKey },
     assets: ASSETS, events, context, signals: result.signals, top: result.top, trad, crypto,
-    headlines: headlineItems(), feed: headlineItems(),
+    headlines: headlineItems(), feed: headlineItems(), momentumDensity: momentumFromWindow(),
   };
 }
 

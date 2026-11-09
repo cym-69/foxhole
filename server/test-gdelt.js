@@ -1,7 +1,7 @@
 // Tests the GDELT event-file reader with made-up rows and a hand-built zip.
 import assert from 'node:assert/strict';
 import zlib from 'node:zlib';
-import { COL, kindOf, parseExport, aggregate, slugTitle, unzipFirst, stepBack } from './feeds/gdelt.js';
+import { COL, kindOf, parseExport, aggregate, slugTitle, unzipFirst, stepBack, momentumSnapshot } from './feeds/gdelt.js';
 import { analyze } from './engine.js';
 
 const now = new Date();
@@ -80,4 +80,15 @@ assert.throws(() => unzipFirst(Buffer.from('not a zip at all, just text padding 
 assert.equal(stepBack('20261011120000'), '20261011114500');
 assert.equal(stepBack('20261101000000'), '20261031234500');
 
-console.log('all GDELT tests passed');
+// momentum / density (Round 11)
+ const mEmpty = momentumSnapshot(new Map());
+ assert.equal(mEmpty.empty, true);
+ assert.equal(mEmpty.spanHours, 6);
+ const mRows = [{ name: 'Strait of Hormuz, Iran', url: 'https://x.com/oil-tanker-strait-hormuz', kind: 'conflict', mentions: 200, tone: -6 }, { name: 'Riyadh', url: 'https://x.com/aramco-oil-riyadh', kind: 'conflict', mentions: 120, tone: -4 }];
+ const win2 = new Map([['20261109140000', mRows]]);
+ const m2 = momentumSnapshot(win2);
+ assert.equal(m2.empty, false);
+ assert.ok(m2.assets.USO && m2.assets.USO.mentions > 0, 'USO momentum present');
+ assert.equal(m2.assets.USO.spark.length, 24);
+ assert.equal(m2.spanHours, 6);
+ console.log('all GDELT tests passed');

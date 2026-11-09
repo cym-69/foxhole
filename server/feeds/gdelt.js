@@ -6,7 +6,7 @@ import zlib from 'node:zlib';
 const UA = { 'User-Agent': 'Foxhole/0.1 (personal dashboard)' };
 const BASES = ['https://data.gdeltproject.org/gdeltv2/', 'http://data.gdeltproject.org/gdeltv2/'];
 const WINDOW_FILES = 24;   // 6 hours of files kept
-export const COL = { baseCode: 27, rootCode: 28, mentions: 31, sources: 32, geoType: 51, geoName: 52, lat: 56, lng: 57, added: 59, url: 60, minCols: 58 };
+export const COL = { baseCode: 27, rootCode: 28, mentions: 31, sources: 32, geoType: 51, geoName: 52, lat: 56, lng: 57, added: 59, url: 60, tone: 34, minCols: 58 };
 
 const LAYER = { conflict: 'conflict', blockade: 'trade', sanction: 'policy', strike: 'trade', drought: 'nature' };
 
@@ -64,6 +64,7 @@ export function parseExport(text) {
       kind, lat, lng, name: (c[COL.geoName] || '').split(',')[0].trim(),
       mentions: Number(c[COL.mentions]) || 0, sources: Number(c[COL.sources]) || 0,
       ts: parseTs((c[COL.added] || '').trim()), url,
+      tone: Number(c[COL.tone])||0,
     });
   }
   return rows;
@@ -181,3 +182,54 @@ export async function refreshGdelt() {
   if (!backfilled) { backfilled = true; await backfill(ts); }
   return aggregate([...win.values()].flat());
 }
+
+ // Round 11: per-asset momentum/density from real GDELT tone+volume history (6h window, 24x15min files).
+ // Honest: no fake 24h from 6h; empty snapshot when the window is empty (demo/offline).
+ const MOMENTUM_ASSETS = [
+   { asset: 'USO', re: /\b(oil|gas|energy|pipeline|refinery|opec|fuel|diesel|aramco)\b|riyadh|gulf|hormuz/i },
+   { asset: 'STNG', re: /\b(shipping|tanker|strait|blockade|port|houthi)\b|hormuz|suez|red sea/i },
+   { asset: 'GLD', re: /\b(war|missile|attack|military|nuclear|ceasefire|truce)\b|gaza|ukraine|russia|taiwan|korea/i },
+   { asset: 'WEAT', re: /\b(grain|wheat|corn|harvest|drought|flood|famine)\b|ukraine|black sea/i },
+   { asset: 'ITA', re: /\b(airline|airport|missile|drone|military|attack|defense)\b|taiwan|chip|semiconductor|nvidia/i },
+ ];
+ export function momentumSnapshot(winMap, now = Date.now()) {
+   const keys = winMap instanceof Map ? [...winMap.keys()].sort() : winMap && typeof winMap === 'object' ? Object.keys(winMap).sort() : [];
+   const rowsByFile = [];
+   if (winMap instanceof Map) { for (const k of keys) rowsByFile.push(winMap.get(k) || []); }
+   else if (winMap && typeof winMap === 'object') { for (const k of keys) rowsByFile.push(winMap[k] || []); }
+   if (!rowsByFile.length || rowsByFile.every((r) => !r.length)) {
+     return { at: now, spanHours: 6, buckets: 24, empty: true, rows: 0, assets: {}, note: 'No GDELT history upstream' };
+   }
+   const files = rowsByFile;
+   const buckets = Array.from({ length: 24 }, (_, i) => {
+     const fi = Math.max(0, files.length - 24 + i);
+     const rows = files[fi] || [];
+     let mentions = 0, toneW = 0;
+     for (const r of rows) { mentions += r.mentions || 0; toneW += (r.tone || 0) * (r.mentions || 0); }
+     return { i, mentions, tone: mentions ? toneW / mentions : 0, rows: rows.length };
+   });
+   const assets = {};
+   for (const { asset, re } of MOMENTUM_ASSETS) {
+     let mentions = 0, toneW = 0, rows = 0;
+     const spark = [];
+     for (let i = 0; i < 24; i++) {
+       const fi = Math.max(0, files.length - 24 + i);
+       const fr = files[fi] || [];
+       let m = 0;
+       for (const r of fr) {
+         const hay = `${r.name || ''} ${r.url || ''} ${r.kind || ''}`.toLowerCase();
+         if (!re.test(hay)) continue;
+         const men = r.mentions || 0;
+         m += men; toneW += (r.tone || 0) * men; mentions += men; rows++;
+       }
+       spark.push(m);
+     }
+     const toneAvg = mentions ? toneW / mentions : 0;
+     const score = mentions > 0 ? Number((Math.min(1, Math.log10(mentions + 1) / 4) * 100 + Math.max(-20, Math.min(20, toneAvg * 2))).toFixed(1)) : 0;
+     assets[asset] = { mentions, rows, tone: Number(toneAvg.toFixed(2)), score, spark, dir: toneAvg < -2 ? -1 : 1 };
+   }
+   const totalRows = files.reduce((n, f) => n + (f?.length || 0), 0);
+   return { at: now, spanHours: 6, bucketCount: 24, empty: false, rows: totalRows, assets, buckets, note: 'GDELT tone+volume, last 6h' };
+ }
+ export function momentumFromWindow(now = Date.now()) { return momentumSnapshot(win, now); }
+ 

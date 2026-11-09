@@ -2,6 +2,7 @@ import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } fro
 import TopBar from './components/TopBar.jsx';
 import BestSignals from './components/BestSignals.jsx';
 import Chokepoints from './components/Chokepoints.jsx';
+import TimelineVol from './components/TimelineVol.jsx';
 import EventList from './components/EventList.jsx';
 import AssetStrip from './components/AssetStrip.jsx';
 import FeedStream from './components/FeedStream.jsx';
@@ -245,6 +246,7 @@ export default function App() {
         Skip to map
       </a>
       <TopBar state={state} online={online} onSetup={() => setSetupOpen(true)} tvOpen={tvOpen} onTv={() => setTvOpen((v) => !v)} />
+      <TimelineVol momentum={state.momentumDensity} />
       <BestSignals signals={state.signals} top={state.top} ai={state.ai} brief={state.brief} onPick={select} onSetup={() => setSetupOpen(true)} now={state.now} />
       {!wide && (
         <div className="border-t-2 border-black max-h-[32vh] overflow-y-auto min-[480px]:hidden">
