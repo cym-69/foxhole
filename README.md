@@ -23,7 +23,7 @@ Open http://localhost:4180
 
 A setup window opens. Do two things in it:
 
-1. **Connect an AI** (optional but recommended). Pick Gemini, OpenRouter or Groq for a free one. Or point it at a local model or your own agent (Hermes, Kilo, Paseo, any OpenAI-style endpoint).
+1. **Connect an AI** (optional but recommended). Pick Gemini, OpenRouter or Groq for a free one. Or point it at a local model or your own agent (Hermes, Kilo, Paseo, any OpenAI-style endpoint). Custom API addresses must be valid `http://` or `https://` URLs.
 2. **Paste a free Finnhub key** for live stock and commodity prices. Without it, prices are demo values.
 
 Anything not live is marked "demo" in the top bar.
@@ -46,7 +46,7 @@ Anything not live is marked "demo" in the top bar.
 | Live streams checklist | Kick / YouTube / Rumble / Twitch web endpoints | none (YouTube, Rumble and Twitch report "unknown" — only Kick is polled) |
 | Horizon radar (keyword profiles) | GDELT + RSS merged locally | none |
 | News headlines | BBC World, Al Jazeera, DW, Guardian World, NPR World, BBC Business, MarketWatch, Euronews, Google News (War/Trade/Semis), Hacker News (Algolia), arXiv (cs.AI/cs.LG/cs.CY) | none |
-| Live TV | YouTube live embeds (Al Jazeera, DW, France 24, Sky) + 7 iptv-org free HLS channels (Al Jazeera, DW, CNN Intl, Africanews, BBC News, NHK World, France 24 Arabic) via hls.js | none |
+| Live TV | YouTube live embeds plus iptv-org free HLS channels played in-browser via hls.js (with native HLS fallback) | none |
 
 God's Eye View shows flights, ships, satellites and quakes. It is a viewer, not an events feed, so Foxhole does not read from it.
 Commodities use ETFs (USO for oil, GLD for gold, and so on) because free price APIs do not carry futures.
@@ -95,4 +95,4 @@ Stored only on your machine in the `data` folder. The server listens on 127.0.0.
 - The TV panel plays YouTube live embeds first and 7 free iptv-org HLS streams via hls.js (native MPEGURL fallback). If a playlist dies, the panel shows "Stream unavailable" and you can switch channels; it never hangs silent.
 - cryptocurrency.cv can 403 with rate-limit abuse when polled too hard — the server pauses sentiment pulls for 5 minutes after a full-403 batch. The Events chip shows the detail on hover.
 - Signals require a live rule match. A quiet news day genuinely produces "No signals yet".
-- Before a release, run `npm run lint`, `npm test`, and `npm run build`, then check the map at desktop and 390px widths in a browser. Check TV playback with CSP enforced; mounting a video element alone does not prove playback. The AI connection test uses a temporary data directory, leaving saved AI settings untouched.
+- Before a release, run `npm run lint`, `npm test`, and `npm run build`. Run `node tools/release-browser.mjs <base-url>` (CSP enforced, no `bypassCSP`) against a running app to check desktop/1050px/390px page overflow and console/page errors, named SSE events on `/stream`, and HLS TV playback progress. The AI connection test uses a temporary data directory, leaving saved AI settings untouched.
