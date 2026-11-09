@@ -12,6 +12,7 @@ import { fetchSats, parseTle, readCache } from './feeds/sats.js';
 import { satrecOf, satPosition } from '../src/lib/sats.js';
 import { PROFILES } from '../src/lib/profiles.js';
 import { parseFeedXml, parseHnJson, ingest, cleanTitle, eventToFeedItem } from './feeds/headlines.js';
+import { buildBrief } from './feeds/brief.js';
 
 const ctx = { stats: {}, aiWhy: new Map(), sentiment: { BTC: { label: 'bearish', score: -0.3 } } };
 const r = analyze(demoEvents(), ctx);
@@ -384,4 +385,27 @@ console.log('PASS: an event becomes a feed item with its kind, eventId and ticke
     assert.equal(body.error, 'Not found.', 'unknown /api/* route returns the JSON error body');
     console.log('PASS: unknown /api/* route returns 404 JSON, not SPA HTML');
   }
+}
+
+// Round 9: rules brief — no-AI synthesis from live top events/signals/chokepoints.
+{
+  const briefNow = Date.UTC(2026, 0, 15, 12, 0, 0);
+  const briefEvs = [
+    { id: 'brief:riyadh', title: 'Houthi attack damages aramco building in riyadh', place: 'Riyadh', ts: briefNow - 3600000, impact: 0.9 },
+    { id: 'brief:quake', title: 'M6.4 earthquake', place: 'Salomon Islands', ts: briefNow - 3 * 3600000, impact: 0.4 },
+  ];
+  const briefSigs = [{ eventId: 'brief:riyadh', asset: 'USO', action: 'BUY', conf: 0.46 }];
+  const briefBoxes = [{ id: 'hormuz', label: 'Hormuz', events: 2, topEvent: 'Tanker hit near the Strait of Hormuz' }];
+  const brief = buildBrief({ events: briefEvs, signals: briefSigs, boxes: briefBoxes, headlines: [], sentiment: {}, now: briefNow });
+  assert.equal(brief.src, 'rules', 'rules brief src is rules');
+  assert.ok(brief.text.includes('Houthi attack damages aramco building in riyadh'), 'rules brief quotes real top event title');
+  assert.ok(brief.text.includes('USO'), 'rules brief names the exposed asset');
+  assert.ok(brief.text.includes('1h ago'), 'rules brief shows event age');
+  assert.ok(brief.text.length < 400, 'rules brief stays under 400 chars');
+  const sents = brief.text.split('. ').filter((s) => s.trim());
+  assert.ok(sents.length >= 2 && sents.length <= 3, 'rules brief is 2-3 sentences');
+  const empty = buildBrief({ events: [], signals: [], boxes: [], headlines: [], sentiment: {}, now: briefNow });
+  assert.equal(empty.src, 'rules', 'empty rules brief src is still rules');
+  assert.ok(empty.text.length > 0, 'empty rules brief never crashes');
+  console.log('PASS: rules brief quotes event title + asset, 2-3 sentences, <400 chars, src=rules');
 }

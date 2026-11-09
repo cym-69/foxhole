@@ -1,5 +1,7 @@
 # Changelog
 
+- Round 9 value loop — rules brief: no-AI two-sentence synthesis from live top events/signals/chokepoints (src rules, honest label); AI key still deepens. Why: reviewer gap #3 — core question 'what matters now' went unanswered without a key.
+
 - 2026-11-08: Round 8 value loop — Chokepoints show events-in-box + aircraft (honest activity, not all-zero). Why: reviewer gap #4 — strip read all-zero live even where context events were firing; now each box counts context events in its widened box (topEvent title shown) alongside aircraft/AIS ships, with emerald highlight when events>0. Zeros remain truthful when no in-box activity.
 
 - 2026-11-08: Round 7 value loop — multi-event surface: top 3 linked events in Best Signals (was 1), top 4 unlinked context events now emit WATCH-level multi-event signals (conf 0.2-0.3, ruleId multi-event, honest 'no direct rule fired'), per-asset tails so 4 cards no longer share identical why text. Why: reviewer gaps — single-story surface with 58 context events never signaling, and templated boilerplate across assets. Value: every top event on the globe now touches assets; user sees 3 stories in 10s + differentiation.

@@ -1,0 +1,15 @@
+const { createRequire } = await import('node:module');
+const __req = createRequire(import.meta.url);
+const { chromium } = __req('C:/Users/debih/AppData/Roaming/npm/node_modules/playwright');
+const browser = await chromium.launch({ executablePath: 'C:/Users/debih/AppData/Local/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-win64/chrome-headless-shell.exe', headless: true });
+const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+page.on('pageerror', (e) => console.log('PAGEERROR ' + (e.message || e)));
+await page.goto('http://127.0.0.1:4180', { waitUntil: 'domcontentloaded', timeout: 30000 });
+await page.waitForTimeout(8000);
+await page.keyboard.press('Escape');
+await page.waitForTimeout(500);
+const brief = await page.locator('[data-testid="what-matters-brief"]').innerText().catch(() => '(brief missing)');
+console.log('BRIEF=' + brief.replace(/\s+/g, ' ').slice(0, 500));
+await page.screenshot({ path: 'C:/Users/debih/Desktop/foxhole-validate/screenshots/round9-after.png', fullPage: false });
+console.log('SHOT_OK');
+await browser.close();

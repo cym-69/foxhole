@@ -245,7 +245,7 @@ export default function App() {
         Skip to map
       </a>
       <TopBar state={state} online={online} onSetup={() => setSetupOpen(true)} tvOpen={tvOpen} onTv={() => setTvOpen((v) => !v)} />
-      <BestSignals signals={state.signals} top={state.top} ai={state.ai} onPick={select} onSetup={() => setSetupOpen(true)} now={state.now} />
+      <BestSignals signals={state.signals} top={state.top} ai={state.ai} brief={state.brief} onPick={select} onSetup={() => setSetupOpen(true)} now={state.now} />
       <Chokepoints boxes={live.shipBoxes || []} shipsStatus={live.sources?.ships?.status} />
 
       {isDemoBanner && (

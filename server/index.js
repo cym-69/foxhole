@@ -11,6 +11,7 @@ import * as markets from './feeds/markets.js';
 import { analyze } from './engine.js';
 import * as track from './track.js';
 import * as ai from './ai.js';
+import { buildBrief } from './feeds/brief.js';
 import { live, onChange, startLivePollers, liveEvents, addTestEvent, setContextEvents } from './feeds/live.js';
 import { startShips, shipBoxes, shipsSnapshot } from './feeds/ships.js';
 import { startSats, satsRows } from './feeds/sats.js';
@@ -113,6 +114,10 @@ function buildState() {
       livewatch: liveNowSnapshot().ok ? 'live' : 'error',
       xfeed: xFeedSnapshot().ok ? 'live' : 'error',
     },
+    // Round 9: rules brief is the fallback; a connected AI brief overrides it.
+    brief: ai.getBrief()
+      ? { text: ai.getBrief(), src: 'ai' }
+      : buildBrief({ events: result.events, signals: result.signals, boxes: shipBoxes(), headlines: headlineItems(), sentiment: sent, now: Date.now() }),
     ai: { ...ai.publicInfo(), brief: ai.getBrief() },
     keys: { finnhub: !!cfg.finnhubKey, tmdb: !!cfg.tmdbKey },
     assets: ASSETS, events, context, signals: result.signals, top: result.top, trad, crypto,

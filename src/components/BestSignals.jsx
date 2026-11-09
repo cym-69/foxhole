@@ -5,7 +5,7 @@ function seenLabel(s, now) {
   return s.eventTs ? `Seen ${ago(s.eventTs, now)}` : '';
 }
 
-export default function BestSignals({ signals, top, ai, onPick, onSetup, now }) {
+export default function BestSignals({ signals, top, ai, brief, onPick, onSetup, now }) {
   const picks = top.map((id) => signals.find((s) => s.id === id)).filter(Boolean).slice(0, 3);
   return (
     <section data-testid="best-signals-strip" aria-label="Best signals" className="grid grid-cols-1 gap-3 border-b-2 border-black bg-paper px-4 py-2.5 md:grid-cols-3 xl:grid-cols-[repeat(3,minmax(0,1fr))_1.25fr]">
@@ -26,16 +26,19 @@ export default function BestSignals({ signals, top, ai, onPick, onSetup, now }) 
           <p className="mt-0.5 line-clamp-2 text-xs font-bold leading-snug text-mute">{(s.why || '').slice(0, 140)}</p>
         </button>
       ))}
-      <div className="flex min-w-0 items-center rounded-[10px] border-2 border-dashed border-black bg-[#FFD23F] px-3 py-2 md:col-span-3 xl:col-span-1">
-        {ai?.brief ? (
-          <p className="line-clamp-3 text-xs leading-snug text-ink">{ai.brief}</p>
+      <div data-testid="what-matters-brief" className="flex min-w-0 flex-col justify-center gap-1 rounded-[10px] border-2 border-dashed border-black bg-[#FFD23F] px-3 py-2 md:col-span-3 xl:col-span-1">
+        <div className="flex items-center gap-2">
+          <span className="shrink-0 rounded border border-black/40 bg-white/60 px-1 py-0.5 text-[10px] font-black uppercase tracking-wide text-ink">{brief?.src === 'ai' ? 'AI brief' : 'Rules brief'}</span>
+          {!ai?.connected && (
+            <button onClick={onSetup} className="ml-auto shrink-0 text-[11px] font-bold text-ink underline underline-offset-2">Connect AI for deeper brief</button>
+          )}
+        </div>
+        {brief?.text ? (
+          <p className="line-clamp-3 text-xs leading-snug text-ink">{brief.text}</p>
         ) : ai?.connected ? (
           <p className="text-xs text-mute">{picks.length ? 'Writing your brief...' : 'Nothing to brief right now. No live event links to a tradable asset.'}</p>
         ) : (
-          <div className="flex items-center gap-3">
-            <p className="text-xs leading-snug text-mute">A two-sentence brief of what matters now appears here once an AI is connected.</p>
-            <button onClick={onSetup} className="sb-btn shrink-0 rounded-full px-3 py-1 text-xs font-bold" style={{ background: '#111', color: '#FFFDF5' }}>Connect</button>
-          </div>
+          <p className="text-xs leading-snug text-mute">A two-sentence brief of what matters now appears here once an AI is connected.</p>
         )}
       </div>
     </section>
