@@ -5,6 +5,9 @@ import { cfg } from '../config.js';
 
 const IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
 const TMDB_BASE = 'https://api.themoviedb.org/3';
+// Wikipedia free fallback: pick 2:3 near the standard poster ratio so the
+// thumbnail fits the fixed aspect box instead of being cropped into a blank.
+const WIKI_THUMB_W = 300;
 const TIMEOUT_MS = 15000;
 const TRACKING_STATUSES = ['watching', 'want', 'done'];
 
@@ -41,6 +44,22 @@ export function normalizeTmdbItem(raw, fallbackMediaType) {
       ? raw.genres.map((g) => g?.name).filter((n) => typeof n === 'string' && n)
       : [],
   };
+}
+
+// TMDB title search used by the tracking "add" lookup. Returns a normalized
+// item (with the real image.tmdb.org poster) or null when there is no key,
+// no query, or nothing matches. Never invents a poster: null poster is the
+// honest None signal that the UI renders as "No poster yet".
+export async function searchCinema(query, fetchImpl = fetch) {
+  const key = cfg.tmdbKey;
+  if (!key || typeof query !== 'string' || !query.trim()) return null;
+  try {
+    const url = `${TMDB_BASE}/search/movie?api_key=${key}&query=${encodeURIComponent(query.trim())}&page=1`;
+    const j = await fetchJson(url, fetchImpl);
+    const results = Array.isArray(j?.results) ? j.results : [];
+    if (!results.length) return null;
+    return normalizeTmdbItem(results[0], 'movie');
+  } catch { return null; }
 }
 
 export function sanitizeTracking(list) {
@@ -131,7 +150,7 @@ function normalizeList(json, fallbackMediaType, filterToMediaTypes = false) {
 export async function refreshWikipediaFallback(fetchImpl = fetch) {
   try {
     const year = new Date().getFullYear();
-    const q = `https://en.wikipedia.org/w/api.php?action=query&format=json&generator=search&gsrsearch=${encodeURIComponent(`${year} film`)}&gsrlimit=12&prop=pageimages|extracts&exintro=1&explaintext=1&exchars=400&piprop=thumbnail&pithumbsize=500`;
+    const q = `https://en.wikipedia.org/w/api.php?action=query&format=json&generator=search&gsrsearch=${encodeURIComponent(`${year} film`)}&gsrlimit=12&prop=pageimages|extracts&exintro=1&explaintext=1&exchars=400&piprop=thumbnail&pithumbsize=${WIKI_THUMB_W}`;
     const j = await fetchJson(q, fetchImpl);
     const pages = j?.query?.pages ? Object.values(j.query.pages) : [];
     const items = [];

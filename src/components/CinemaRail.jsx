@@ -31,11 +31,46 @@ function yearOf(item) {
   return typeof item?.release_date === 'string' && item.release_date.length >= 4 ? item.release_date.slice(0, 4) : null;
 }
 
+function Poster({ src, title, large }) {
+  const [failed, setFailed] = useState(false);
+  const url = failed ? null : safeUrl(src);
+  if (!url) {
+    return (
+      <div className={large ? 'grid h-24 w-16 place-items-center rounded bg-panel/80 text-[10px] uppercase tracking-wide text-mute' : 'grid h-14 w-10 shrink-0 place-items-center rounded bg-panel/80 text-[9px] uppercase tracking-wide text-mute'}>
+        No poster yet
+      </div>
+    );
+  }
+  if (large) {
+    return (
+      <img
+        src={url}
+        alt={title || 'Poster'}
+        className="h-24 w-16 rounded object-cover"
+        loading="lazy"
+        referrerPolicy="no-referrer"
+        onError={() => setFailed(true)}
+      />
+    );
+  }
+  return (
+    <img
+      src={url}
+      alt={title || 'Poster'}
+      className="h-14 w-10 shrink-0 rounded object-cover"
+      loading="lazy"
+      referrerPolicy="no-referrer"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 export default function CinemaRail() {
   const [snapshot, setSnapshot] = useState(null);
   const [error, setError] = useState(null);
   const [stored, setStored] = useState(() => readStoredTracking());
   const [draft, setDraft] = useState('');
+  const [looking, setLooking] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -87,10 +122,30 @@ export default function CinemaRail() {
     updateTracking(tracking.filter((entry) => !entry || entry.id !== id));
   };
 
-  const addEntry = () => {
+  const addEntry = async () => {
     const title = draft.trim();
-    if (!title) return;
-    updateTracking([...tracking, { id: Date.now(), media_type: 'movie', title, poster: null, status: 'want', note: '' }]);
+    if (!title || looking) return;
+    setLooking(true);
+    let item = null;
+    try {
+      const res = await fetch(`/api/cinema/search?title=${encodeURIComponent(title)}`);
+      const data = res && typeof res.json === 'function' ? await res.json() : null;
+      item = data && data.item && typeof data.item === 'object' ? data.item : null;
+    } catch { item = null; }
+    setLooking(false);
+    if (item && item.id !== null && item.id !== undefined) {
+      updateTracking([...tracking, {
+        id: Number(item.id),
+        media_type: item.media_type === 'tv' ? 'tv' : 'movie',
+        title: item.title || title,
+        poster: safeUrl(item.poster) || null,
+        status: 'want',
+        note: '',
+      }]);
+    } else {
+      // No TMDB key, no match, or lookup failed: title-only, said out loud.
+      updateTracking([...tracking, { id: Date.now(), media_type: 'movie', title, poster: null, status: 'want', note: 'No poster yet' }]);
+    }
     setDraft('');
   };
 
@@ -116,18 +171,22 @@ export default function CinemaRail() {
             {snapshot?.status === 'free-fallback' ? (
               <p role="status" className="mb-1 mt-1 text-[11px] font-bold leading-snug text-mute">Free Wikipedia {new Date().getFullYear()} films — add a TMDB key in Setup for live trending.</p>
             ) : null}
+            {snapshot?.status === 'live' ? (
+              <p role="status" className="mb-1 mt-1 text-[11px] font-bold leading-snug text-mute">Live TMDB trending.</p>
+            ) : null}
+            {snapshot?.status === 'invalid-key' ? (
+              <p role="alert" className="mb-1 mt-1 text-[11px] font-bold leading-snug text-[#E64A2E]">TMDB key rejected — check the key in Setup.</p>
+            ) : null}
+            {snapshot?.status === 'error' ? (
+              <p role="alert" className="mb-1 mt-1 text-[11px] font-bold leading-snug text-[#E64A2E]">Cinema live fetch failed — showing the last good lists.</p>
+            ) : null}
             <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
             {trending.map((item, i) => {
-              const poster = safeUrl(item.poster);
               const rate = rateOf(item);
               const year = yearOf(item);
               return (
                 <div key={`${item.id ?? i}-${i}`} className="w-20 shrink-0 rounded-md border border-line bg-panel/55 p-1.5">
-                  {poster ? (
-                    <img src={poster} alt="" className="w-16 rounded" loading="lazy" />
-                  ) : (
-                    <div className="grid h-24 w-16 place-items-center rounded bg-panel/80 text-[10px] uppercase tracking-wide text-mute">No poster</div>
-                  )}
+                  <Poster src={item.poster} title={item.title} large />
                   <div className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-mute">#{i + 1}</div>
                   <div className="truncate text-[12px] leading-snug text-ink">{item.title}</div>
                   <div className="mt-0.5 text-[11px] text-mute">
@@ -149,16 +208,11 @@ export default function CinemaRail() {
         ) : (
           <ul className="mt-2 flex flex-col gap-1.5">
             {inCinemas.slice(0, 8).map((item, i) => {
-              const poster = safeUrl(item.poster);
               const rate = rateOf(item);
               const year = yearOf(item);
               return (
                 <li key={`${item.id ?? i}-${i}`} className="flex items-center gap-2">
-                  {poster ? (
-                    <img src={poster} alt="" className="w-10 shrink-0 rounded" loading="lazy" />
-                  ) : (
-                    <div className="grid h-14 w-10 shrink-0 place-items-center rounded bg-panel/80 text-[9px] uppercase tracking-wide text-mute">—</div>
-                  )}
+                  <Poster src={item.poster} title={item.title} />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-[13px] font-bold leading-snug text-ink">{item.title}</div>
                     <div className="text-[11px] text-mute">
@@ -179,9 +233,12 @@ export default function CinemaRail() {
           <p className="mt-1 text-[12px] text-mute">Nothing tracked yet. Add a title below.</p>
         ) : (
           <ul className="mt-2 flex max-h-[220px] flex-col gap-1.5 overflow-y-auto">
-            {tracking.map((entry, i) => (
+            {tracking.map((entry, i) => {
+              const p = safeUrl(entry.poster);
+              return (
               <li key={`${entry.id ?? i}-${i}`} className="rounded-md border-2 border-black bg-white px-2 py-1.5 shadow-[2px_2px_0_#111]">
                 <div className="flex items-center gap-2">
+                  {p ? <img src={p} alt={entry.title || 'Poster'} className="h-14 w-10 shrink-0 rounded object-cover" loading="lazy" referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.style.display = 'none'; }} /> : <span className="grid h-14 w-10 shrink-0 place-items-center rounded bg-panel/80 text-[9px] uppercase tracking-wide text-mute">No poster yet</span>}
                   <span className="min-w-0 flex-1 truncate text-[13px] font-bold leading-snug text-ink">{entry.title}</span>
                   <span className="shrink-0 rounded-full border-2 border-black bg-[#FFD23F] px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-black">{entry.status}</span>
                   <button type="button" onClick={() => cycleStatus(entry.id, -1)} title="Previous status" aria-label="Previous status" className="rounded-full border-2 border-black bg-white px-1.5 py-0.5 text-[11px] font-black text-black hover:bg-[#C6E265]">−</button>
@@ -190,7 +247,8 @@ export default function CinemaRail() {
                 </div>
                 {entry.note ? <p className="mt-1 text-[11px] font-bold leading-snug text-mute">{entry.note}</p> : null}
               </li>
-            ))}
+              );
+            })}
           </ul>
         )}
         <div className="mt-2 flex gap-1.5">
@@ -201,7 +259,7 @@ export default function CinemaRail() {
             placeholder="Add a title to track…"
             className="min-w-0 flex-1 rounded-md border-2 border-black bg-white px-2 py-1 text-[12px] font-bold text-ink placeholder:text-mute"
           />
-          <button type="button" onClick={addEntry} className="shrink-0 rounded-full border-2 border-black bg-[#C6E265] px-2.5 py-0.5 text-[11px] font-black text-black">Add</button>
+          <button type="button" onClick={addEntry} disabled={looking} className="shrink-0 rounded-full border-2 border-black bg-[#C6E265] px-2.5 py-0.5 text-[11px] font-black text-black disabled:opacity-50">{looking ? 'Looking…' : 'Add'}</button>
         </div>
       </div>
     </div>

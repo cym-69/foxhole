@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { normalizeTmdbItem, sanitizeTracking, refreshCinema } from './feeds/cinema.js';
+import { normalizeTmdbItem, sanitizeTracking, refreshCinema, searchCinema } from './feeds/cinema.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const seed = JSON.parse(fs.readFileSync(path.join(here, 'config', 'cinema-tracking.json'), 'utf8'));
@@ -109,5 +109,26 @@ assert.deepEqual(missing.upcoming, []);
 assert.deepEqual(missing.airingToday, []);
 assert.equal(missing.tracking.length, 6);
 
+// S4: searchCinema — keyed lookup returns the real TMDB poster; no key means no lookup.
+process.env.TMDB_API_KEY = 'test-key';
+const found = await searchCinema('Some Film', async (url) => {
+  assert.ok(url.includes('/search/movie'), 'search hits /search/movie');
+  assert.ok(url.includes('api_key=test-key'));
+  assert.ok(url.includes('query=Some%20Film'));
+  return jsonResponse({ results: [{ id: 77, title: 'Some Film', poster_path: '/s.jpg', vote_average: 8.1, release_date: '2025-05-01' }] });
+});
+assert.ok(found, 'search returns an item');
+assert.equal(found.id, 77);
+assert.equal(found.poster, 'https://image.tmdb.org/t/p/w500/s.jpg');
+assert.equal(found.media_type, 'movie');
+assert.equal(found.title, 'Some Film');
+const none = await searchCinema('No Match', async () => jsonResponse({ results: [] }));
+assert.equal(none, null, 'no results is null, never an invented poster');
+assert.equal(await searchCinema('   ', async () => jsonResponse({ results: [] })), null, 'blank query is null');
+delete process.env.TMDB_API_KEY;
+let wikiOnly = true;
+const noKey = await searchCinema('Some Film', async () => { wikiOnly = false; return jsonResponse({ results: [] }); });
+assert.equal(noKey, null, 'no key means no lookup');
+assert.equal(wikiOnly, true);
 if (savedKey !== undefined) process.env.TMDB_API_KEY = savedKey;
 console.log('all cinema tests passed');
