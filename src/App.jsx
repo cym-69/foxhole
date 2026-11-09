@@ -246,6 +246,11 @@ export default function App() {
       </a>
       <TopBar state={state} online={online} onSetup={() => setSetupOpen(true)} tvOpen={tvOpen} onTv={() => setTvOpen((v) => !v)} />
       <BestSignals signals={state.signals} top={state.top} ai={state.ai} brief={state.brief} onPick={select} onSetup={() => setSetupOpen(true)} now={state.now} />
+      {!wide && mapLayers.feed && (
+        <div className="border-t-2 border-black max-h-[32vh] overflow-y-auto min-[480px]:hidden">
+          <FeedStream incoming={(state.headlines || live.feed || []).slice(-7)} wide={false} onPickEvent={() => {}} />
+        </div>
+      )}
       <Chokepoints boxes={live.shipBoxes || []} shipsStatus={live.sources?.ships?.status} />
 
       {isDemoBanner && (
@@ -304,12 +309,13 @@ export default function App() {
               <button key={p.label} onClick={() => globe.current?.flyTo(p.lat, p.lng, p.alt)} className="sb-chip px-3 py-1 text-xs text-ink">{p.label}</button>
             ))}
           </div>
-          {mapLayers.feed && (
+          {mapLayers.feed && wide && (
             <FeedStream incoming={live.feed} wide={wide} onPickEvent={(id) => {
               const ev = state?.events.find((e) => e.id === id) || state?.context.find((e) => e.id === id);
               if (ev) select(id);
             }} />
           )}
+
           {state.events.length === 0 && (
             <div className="pointer-events-none absolute inset-x-0 bottom-14 grid place-items-center text-center text-sm text-mute">
               <p>{state.context.length ? 'Quiet right now. Nothing live links to a tradable asset, so there are no signals.' : 'No live events yet.'}<br />{state.context.length ? 'The dim dots are real events with no trade link.' : 'New ones appear here as they come in.'}</p>

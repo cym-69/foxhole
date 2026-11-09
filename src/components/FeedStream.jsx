@@ -112,8 +112,30 @@ export default function FeedStream({ incoming = [], onPickEvent, wide = true }) 
     return () => clearInterval(id);
   }, [hover]);
 
-  if (!wide) return null;
   void tick; // keeps the age labels fresh
+  if (!wide) {
+    const items = incoming.slice(-5).slice().reverse();
+    if (!items.length) return null;
+    return (
+      <div data-feed-stream="" data-feed-compact="1" data-feed-queue={queue.current.length} data-feed-filter={filter} className="flex flex-col gap-1.5 px-2 py-1.5 min-[480px]:hidden">
+        <ul className="flex flex-col gap-1.5">
+          {items.map((it) => (
+            <li key={it.id} className="sb-card block w-full max-w-full px-2 py-1.5 text-left" style={{ borderLeft: `3px solid ${colorOf(it.kind)}` }}>
+              <div className="flex items-center justify-between gap-2 text-[10px] uppercase tracking-wide text-mute"><span className="truncate">{it.srcName}</span><span className="num shrink-0">{ageLabel(it.ts)}</span></div>
+              <p className="mt-0.5 line-clamp-2 text-[13px] leading-snug text-ink">{it.text}</p>
+              {assetChips(it).length > 0 && (
+                <div className="mt-1 flex flex-wrap gap-1" data-asset-chips>
+                  {assetChips(it).map((tg) => (
+                    <span key={tg.asset} data-asset-chip data-asset={tg.asset} data-dir={tg.dir} className="num inline-flex items-center gap-0.5 rounded border border-line bg-white px-1 py-0.5 text-[11px] font-bold text-ink"><span aria-hidden="true" style={{ color: tg.dir === 1 ? '#22A352' : tg.dir === -1 ? '#E64A2E' : '#7C8C84' }}>{TAG_ARROWS[tg.dir] || '•'}</span>{tg.asset}</span>
+                  ))}
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
 
   return (
     <div

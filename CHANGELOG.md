@@ -1,5 +1,7 @@
 # Changelog
 
+- Round 10b fix - mobile ticker chips: LiveTicker now shows on sm+ (was max-md:hidden), plus a compact FeedStream chip rail below 480px fed directly from /api/state headlines so chips render at 390px (390 verified: 12 visible chips, sw==cw==390). Original round10 screenshots untouched; mobile proof in round10b-before/after.png.
+
 - Round 10 value loop - news ticker now tags headlines with asset chips (USO/STNG/ITA/GLD/JETS, keyword-linked, honest) so every headline answers which assets it could move. Why: reviewer gap - news was text-only while the question is assets.
 
 - Round 9 value loop — rules brief: no-AI two-sentence synthesis from live top events/signals/chokepoints (src rules, honest label); AI key still deepens. Why: reviewer gap #3 — core question 'what matters now' went unanswered without a key.
