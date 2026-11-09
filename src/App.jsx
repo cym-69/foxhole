@@ -135,7 +135,7 @@ export default function App() {
 
   // Layer toggles (Quakes, Storms & Fires, Military Aircraft, Ships, Satellites, Feed) plus the
   // no-link checkbox. Saved in localStorage, read in an effect only.
-  const [mapLayers, setMapLayers] = useState({ quakes: true, storms: true, military: true, ships: true, sats: false, feed: true, noLink: true });
+  const [mapLayers, setMapLayers] = useState({ quakes: true, storms: true, military: true, ships: true, sats: true, feed: true, noLink: true });
   const [activeProfile, setActiveProfile] = useState(null);
   const saveLayers = (n) => { try { localStorage.setItem('foxhole.mapLayers', JSON.stringify(n)); } catch { /* intentional: storage may be unavailable */ } return n; };
   useEffect(() => {
