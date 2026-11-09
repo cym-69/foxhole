@@ -126,9 +126,38 @@ function normalizeList(json, fallbackMediaType, filterToMediaTypes = false) {
     .filter((item) => !filterToMediaTypes || item.media_type === 'movie' || item.media_type === 'tv');
 }
 
+// Free fallback when no TMDB key: current-year films from Wikipedia (no key needed).
+// Labelled 'free-fallback' so the UI never pretends this is TMDB trending.
+export async function refreshWikipediaFallback(fetchImpl = fetch) {
+  try {
+    const year = new Date().getFullYear();
+    const q = `https://en.wikipedia.org/w/api.php?action=query&format=json&generator=search&gsrsearch=${encodeURIComponent(`${year} film`)}&gsrlimit=12&prop=pageimages|extracts&exintro=1&explaintext=1&exchars=400&piprop=thumbnail&pithumbsize=500`;
+    const j = await fetchJson(q, fetchImpl);
+    const pages = j?.query?.pages ? Object.values(j.query.pages) : [];
+    const items = [];
+    const seen = new Set();
+    for (const pg of pages) {
+      const title = typeof pg?.title === 'string' ? pg.title.trim() : '';
+      if (!title || seen.has(title)) continue;
+      seen.add(title);
+      const thumb = typeof pg?.thumbnail?.source === 'string' && pg.thumbnail.source ? pg.thumbnail.source : null;
+      items.push(normalizeTmdbItem({ id: pg.pageid ?? null, title, overview: typeof pg.extract === 'string' ? pg.extract.slice(0, 400) : '', poster_path: null, vote_average: null }, 'movie'));
+      if (thumb) items[items.length - 1].poster = thumb;
+      if (items.length >= 12) break;
+    }
+    if (!items.length) return null;
+    return makeSnapshot('free-fallback', new Date().toISOString(), { trending: items });
+  } catch { return null; }
+}
+
 export async function refreshCinema(fetchImpl = fetch) {
   const key = cfg.tmdbKey;
   if (!key) {
+    const fallback = await refreshWikipediaFallback(fetchImpl);
+    if (fallback) {
+      lastSnapshot = fallback;
+      return lastSnapshot;
+    }
     lastSnapshot = makeSnapshot('missing-key', new Date().toISOString());
     return lastSnapshot;
   }

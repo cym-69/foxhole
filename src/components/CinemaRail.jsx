@@ -112,7 +112,11 @@ export default function CinemaRail() {
         ) : trending.length === 0 ? (
           <p className="mt-1 text-[12px] text-mute">No trending titles right now.</p>
         ) : (
-          <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+          <>
+            {snapshot?.status === 'free-fallback' ? (
+              <p role="status" className="mb-1 mt-1 text-[11px] font-bold leading-snug text-mute">Free Wikipedia {new Date().getFullYear()} films — add a TMDB key in Setup for live trending.</p>
+            ) : null}
+            <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
             {trending.map((item, i) => {
               const poster = safeUrl(item.poster);
               const rate = rateOf(item);
@@ -133,7 +137,8 @@ export default function CinemaRail() {
                 </div>
               );
             })}
-          </div>
+            </div>
+          </>
         )}
       </div>
 

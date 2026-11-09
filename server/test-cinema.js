@@ -93,14 +93,17 @@ assert.equal(live.tracking.length, 6);
 
 delete process.env.TMDB_API_KEY;
 let fetched = false;
-const missing = await refreshCinema(async () => {
+const missing = await refreshCinema(async (url) => {
   fetched = true;
+  if (typeof url === 'string' && url.includes('wikipedia.org')) {
+    return jsonResponse({ query: { pages: { 99: { pageid: 99, title: 'Test Film', extract: 'A test film.', thumbnail: { source: 'https://example.com/t.jpg' } } } } });
+  }
   return jsonResponse({ results: [] });
 });
-assert.equal(fetched, false, 'no fetch without a key');
+assert.equal(fetched, true, 'wikipedia fallback fetch without a key');
 assert.equal(missing.ok, false);
-assert.equal(missing.status, 'missing-key');
-assert.deepEqual(missing.trending, []);
+assert.equal(missing.status, 'free-fallback');
+assert.ok(missing.trending.length >= 1, 'fallback trending non-empty');
 assert.deepEqual(missing.nowPlaying, []);
 assert.deepEqual(missing.upcoming, []);
 assert.deepEqual(missing.airingToday, []);
