@@ -13,6 +13,7 @@ import * as track from './track.js';
 import * as ai from './ai.js';
 import { buildBrief } from './feeds/brief.js';
 import { live, onChange, startLivePollers, liveEvents, addTestEvent, setContextEvents } from './feeds/live.js';
+import { buildStream } from './feeds/stream.js';
 import { startShips, shipBoxes, shipsSnapshot } from './feeds/ships.js';
 import { startSats, satsRows } from './feeds/sats.js';
 import { startHeadlines, headlineItems, headlineStatus, onHeadline, pushTestHeadline, seedEvents, feedEvent } from './feeds/headlines.js';
@@ -218,6 +219,10 @@ function liveStatus() {
 app.get('/api/health', (_req, res) => res.json({ ok: true, ts: Date.now(), sources: liveStatus(), headlines: headlineStatus() }));
 app.get('/api/live', (_req, res) => res.json({ sources: liveStatus(), aircraft: live.aircraft.data, headlines: headlineStatus() }));
 app.get('/api/sats', (_req, res) => res.json(satsRows()));
+app.get('/api/events/stream', (_req, res) => {
+  try { const { col } = compute(); const st = buildState(); res.json(buildStream({ events: col.events, context: st.context, headlines: headlineItems() })); }
+  catch (e) { res.status(500).json({ error: e.message }); }
+});
 // Cinema tracker (TMDB-backed when TMDB_API_KEY is set; honest empty lists otherwise).
 app.get('/api/cinema/trending', (_req, res) => res.json(cinemaSnapshot()));
 app.get('/api/cinema/now', (_req, res) => res.json(cinemaSnapshot()));

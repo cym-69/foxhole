@@ -1,4 +1,5 @@
 import { RULES } from '../rules.js';
+import { fetchNws } from './nws.js';
 const UA = { 'User-Agent': 'Foxhole/1.0 (personal project)' };
 const MAX_BACKOFF = 10 * 60 * 1000;
 
@@ -6,6 +7,7 @@ export const live = {
   quakes: { status: 'waiting', lastUpdated: null, error: '', data: [] },
   eonet: { status: 'waiting', lastUpdated: null, error: '', data: [] },
   aircraft: { status: 'waiting', lastUpdated: null, error: '', data: [] },
+  nws: { status: 'waiting', lastUpdated: null, error: '', data: [] },
 };
 
 const listeners = new Set();
@@ -101,6 +103,7 @@ export function liveEvents() {
       : 0.3;
     out.push({ id: 'eonet:' + e.id, kind, layer: 'nature', title: e.title, place: e.title, lat: e.lat, lng: e.lon, size, sources: 1, ts, src: 'eonet' });
   }
+  for (const e of (live.nws?.data || [])) { if (e && e.id) out.push({ ...e }); }
   const boxes = RULES.filter((r) => r.match.box).map((r) => ({ id: r.id, box: r.match.box, title: r.title }));
   for (const b of boxes) {
     if (b.id === 'box-gulf-mexico' || b.id === 'box-midwest') continue;
@@ -149,4 +152,5 @@ export function startLivePollers() {
   poll('quakes', 60000, fetchQuakes);
   poll('eonet', 300000, fetchEonet);
   poll('aircraft', 15000, fetchAircraft);
+  poll('nws', 180000, fetchNws);
 }
