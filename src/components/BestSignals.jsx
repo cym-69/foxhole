@@ -15,7 +15,8 @@ export default function BestSignals({ signals, top, ai, onPick, onSetup }) {
             <span className={`text-xs ${dirColor(s.dir)}`}>{arrow(s.dir)}</span>
             <span className="ml-auto text-xs font-bold text-mute">{s.level}</span>
           </div>
-          <p className="mt-1 line-clamp-2 text-xs font-bold leading-snug text-mute">{s.why}</p>
+          <p className="mt-1 line-clamp-1 text-xs font-black leading-snug text-ink">{s.eventTitle ? `“${s.eventTitle}”` : s.ruleTitle}</p>
+          <p className="mt-0.5 line-clamp-2 text-xs font-bold leading-snug text-mute">{s.why}</p>
         </button>
       ))}
       <div className="flex min-w-0 items-center rounded-[10px] border-2 border-dashed border-black bg-[#FFD23F] px-3 py-2">
