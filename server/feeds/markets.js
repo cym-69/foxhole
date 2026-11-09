@@ -1,10 +1,56 @@
 import { cfg } from '../config.js';
 import { ASSETS, TRAD, CRYPTO } from '../assets.js';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const UA = { 'User-Agent': 'Foxhole/0.1 (personal dashboard)' };
 const HIST = 60;
 const store = new Map(); // sym -> { price, pct, vol, ts, hist[], demo }
 const DEMO_BASE = { USO: 72, UNG: 14, GLD: 235, CPER: 28, WEAT: 5.6, CORN: 18.5, ITA: 160, JETS: 24, SOXX: 230, TSM: 190, STNG: 58, ZIM: 19, SPY: 560, BTC: 68000, ETH: 3400, SOL: 160, USDT: 1 };
+
+// Persist the last HIST points per symbol so the Markets chart keeps real
+// history across restarts instead of starting flat at every boot. Atomic
+// write, throttled (at most once per 30 s), corrupt/missing cache ignored.
+const CACHE_DIR = process.env.FOXHOLE_MARKET_CACHE_DIR || path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'cache');
+const CACHE_FILE = path.join(CACHE_DIR, 'markets.json');
+const PERSIST_MS = 30000;
+let lastPersist = 0;
+let persistTimer = null;
+let cacheFile = CACHE_FILE;
+function setCacheFile(dir) { cacheFile = path.join(dir, 'markets.json'); lastPersist = 0; }
+function loadCache() {
+  try {
+    const j = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
+    if (!j || typeof j !== 'object') return;
+    for (const [sym, entry] of Object.entries(j)) {
+      if (!ASSETS[sym]) continue;
+      const hist = Array.isArray(entry?.hist) ? entry.hist.filter((v) => typeof v === 'number' && Number.isFinite(v)).slice(-HIST) : [];
+      if (!hist.length || typeof entry.price !== 'number' || !Number.isFinite(entry.price)) continue;
+      const prefill = typeof entry.prefill === 'number' && Number.isFinite(entry.prefill) ? entry.prefill : hist[0];
+      store.set(sym, { price: entry.price, pct: typeof entry.pct === 'number' ? entry.pct : 0, vol: entry.vol ?? null, ts: typeof entry.ts === 'number' ? entry.ts : Date.now(), hist, prefill, demo: entry.demo === true });
+    }
+  } catch { /* intentional: missing/corrupt cache -> start empty */ }
+}
+function persistSoon() {
+  if (persistTimer) return;
+  persistTimer = setTimeout(() => { persistTimer = null; persist(); }, Math.max(0, PERSIST_MS - (Date.now() - lastPersist)));
+  if (persistTimer.unref) persistTimer.unref();
+}
+function persist() {
+  if (Date.now() - lastPersist < 5000 && lastPersist) return;
+  lastPersist = Date.now();
+  const o = {};
+  for (const [sym, q] of store) o[sym] = { price: q.price, pct: q.pct, vol: q.vol, ts: q.ts, hist: q.hist.slice(-HIST), prefill: q.prefill, demo: q.demo };
+  try {
+    fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
+    const tmp = cacheFile + '.tmp';
+    fs.writeFileSync(tmp, JSON.stringify(o));
+    fs.renameSync(tmp, cacheFile);
+  } catch { /* intentional: cache write failures never break price polling */ }
+}
+loadCache();
+export const _marketsCache = { setCacheFile, loadCache, persist, storeCount: () => store.size };
 
 export const status = { markets: { mode: 'demo', note: 'Add a free Finnhub key for live prices.' }, cryptoPrices: { mode: 'demo', note: '' } };
 
@@ -20,6 +66,7 @@ function push(sym, price, pct, vol, demo) {
   // price — the prefill point itself stays the x=0 anchor.
   const prefill = hist.length === 1 ? price : prev?.prefill ?? price;
   store.set(sym, { price, pct, vol, ts: Date.now(), hist, prefill, demo });
+  persistSoon();
 }
 
 function demoStep(sym) {

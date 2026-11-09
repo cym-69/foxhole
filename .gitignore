@@ -4,6 +4,7 @@ data
 dist/
 archive/
 evidence/
+cache/
 *.log
 *.err
 *.out
