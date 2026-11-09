@@ -1,5 +1,7 @@
 # Changelog
 
+- Round 10c fix - reviewer FAIL: compact rail now unconditional on narrow ({!wide}, no mapLayers gate) and ticker uses hidden min-[480px]:inline-flex (was max-sm:hidden = 640px Tailwind sm, invisible at 480). Headless verify (no clicks): 390px chipsTotal 14 visible 14, hasCompactRail true, sw==cw==390; 480px tickerVisible true; 1280px tickerVisible true, 11 chips visible.
+
 - Round 10b fix - mobile ticker chips: LiveTicker now shows on sm+ (was max-md:hidden), plus a compact FeedStream chip rail below 480px fed directly from /api/state headlines so chips render at 390px (390 verified: 12 visible chips, sw==cw==390). Original round10 screenshots untouched; mobile proof in round10b-before/after.png.
 
 - Round 10 value loop - news ticker now tags headlines with asset chips (USO/STNG/ITA/GLD/JETS, keyword-linked, honest) so every headline answers which assets it could move. Why: reviewer gap - news was text-only while the question is assets.

@@ -246,7 +246,7 @@ export default function App() {
       </a>
       <TopBar state={state} online={online} onSetup={() => setSetupOpen(true)} tvOpen={tvOpen} onTv={() => setTvOpen((v) => !v)} />
       <BestSignals signals={state.signals} top={state.top} ai={state.ai} brief={state.brief} onPick={select} onSetup={() => setSetupOpen(true)} now={state.now} />
-      {!wide && mapLayers.feed && (
+      {!wide && (
         <div className="border-t-2 border-black max-h-[32vh] overflow-y-auto min-[480px]:hidden">
           <FeedStream incoming={(state.headlines || live.feed || []).slice(-7)} wide={false} onPickEvent={() => {}} />
         </div>
