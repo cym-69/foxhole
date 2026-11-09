@@ -13,6 +13,7 @@ import * as track from './track.js';
 import * as ai from './ai.js';
 import { buildBrief } from './feeds/brief.js';
 import { live, onChange, startLivePollers, liveEvents, addTestEvent, setContextEvents } from './feeds/live.js';
+import { collectEvents } from './collect.js';
 import { buildStream } from './feeds/stream.js';
 import { askAi } from './ai-ask.js';
 import { startShips, shipBoxes, shipsSnapshot } from './feeds/ships.js';
@@ -50,14 +51,7 @@ async function refreshSentiment() {
 }
 
 function collect() {
-  const all = [];
-  let liveSources = 0;
-  for (const k of ['usgs', 'eonet', 'cryptocv', 'gdelt']) if (src[k].ok) { liveSources++; all.push(...src[k].ev); }
-  all.push(...liveEvents());
-  const fresh = all.filter((e) => Date.now() - e.ts < 72 * HOUR);
-  const seen = new Set();
-  const uniq = fresh.filter((e) => (seen.has(e.id) ? false : seen.add(e.id)));
-  const out = cfg.demoForced || (liveSources === 0 && uniq.length === 0) ? { events: demoEvents(), demo: true, liveSources: 0 } : { events: uniq, demo: false, liveSources };
+  const out = collectEvents({ primary: src, liveEvents, demoEvents, demoForced: cfg.demoForced, now: Date.now(), maxAgeMs: 72 * HOUR });
   try { setContextEvents(out.events); } catch { /* context store is best-effort */ }
   return out;
 }
