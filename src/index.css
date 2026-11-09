@@ -76,6 +76,11 @@ button { cursor: pointer; font: inherit; color: inherit; }
 .fx-flow { stroke-dasharray: 5 9; animation: fx-flow 1.1s linear infinite; stroke: #111; }
 @keyframes fx-flow { to { stroke-dashoffset: -28; } }
 
+.rs-handle { width: 6px; min-width: 6px; margin: 0 -3px; position: relative; z-index: 20; background: repeating-linear-gradient(to bottom, transparent 0 8px, rgba(17,17,17,.25) 8px 10px); border: 0; }
+.rs-handle:hover, .rs-handle:focus-visible { background: #FFD23F; outline-offset: 0; }
+.rs-handle:active { background: #111; }
+.rs-root > div { min-height: 0; }
+@media (max-width: 899px) { .rs-handle { display: none; } }
 @media (prefers-reduced-motion: reduce) {
   .fx-flow { animation: none; }
   .fx-dot { transition: none; }
