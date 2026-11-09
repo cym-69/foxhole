@@ -28,7 +28,8 @@ function loadCache() {
       const hist = Array.isArray(entry?.hist) ? entry.hist.filter((v) => typeof v === 'number' && Number.isFinite(v)).slice(-HIST) : [];
       if (!hist.length || typeof entry.price !== 'number' || !Number.isFinite(entry.price)) continue;
       const prefill = typeof entry.prefill === 'number' && Number.isFinite(entry.prefill) ? entry.prefill : hist[0];
-      store.set(sym, { price: entry.price, pct: typeof entry.pct === 'number' ? entry.pct : 0, vol: entry.vol ?? null, ts: typeof entry.ts === 'number' ? entry.ts : Date.now(), hist, prefill, demo: entry.demo === true });
+      const histTs = Array.isArray(entry?.histTs) ? entry.histTs.filter((v) => typeof v === 'number' && Number.isFinite(v)).slice(-HIST) : [];
+      store.set(sym, { price: entry.price, pct: typeof entry.pct === 'number' ? entry.pct : 0, vol: entry.vol ?? null, ts: typeof entry.ts === 'number' ? entry.ts : Date.now(), hist, histTs: histTs.length === hist.length ? histTs : [], prefill, demo: entry.demo === true });
     }
   } catch { /* intentional: missing/corrupt cache -> start empty */ }
 }
@@ -41,7 +42,7 @@ function persist() {
   if (Date.now() - lastPersist < 5000 && lastPersist) return;
   lastPersist = Date.now();
   const o = {};
-  for (const [sym, q] of store) o[sym] = { price: q.price, pct: q.pct, vol: q.vol, ts: q.ts, hist: q.hist.slice(-HIST), prefill: q.prefill, demo: q.demo };
+  for (const [sym, q] of store) o[sym] = { price: q.price, pct: q.pct, vol: q.vol, ts: q.ts, hist: q.hist.slice(-HIST), histTs: (q.histTs || []).slice(-HIST), prefill: q.prefill, demo: q.demo };
   try {
     fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
     const tmp = cacheFile + '.tmp';
@@ -57,15 +58,17 @@ export const status = { markets: { mode: 'demo', note: 'Add a free Finnhub key f
 function push(sym, price, pct, vol, demo) {
   const prev = store.get(sym);
   const hist = prev?.hist ? [...prev.hist] : [];
+  const histTs = Array.isArray(prev?.histTs) ? [...prev.histTs] : [];
   hist.push(price);
-  if (hist.length > HIST) hist.shift();
+  histTs.push(Date.now());
+  if (hist.length > HIST) { hist.shift(); histTs.shift(); }
   // Prefill marker: the first observation for a symbol is the live price at
   // server start. Repeating it in hist[] would paint a flat segment that
   // looks like real movement is missing. MarketsChart hides runs of the
   // prefill value by rendering the series starting at the first distinct
   // price — the prefill point itself stays the x=0 anchor.
   const prefill = hist.length === 1 ? price : prev?.prefill ?? price;
-  store.set(sym, { price, pct, vol, ts: Date.now(), hist, prefill, demo });
+  store.set(sym, { price, pct, vol, ts: Date.now(), hist, histTs: histTs.length === hist.length ? histTs : [], prefill, demo });
   persistSoon();
 }
 
@@ -129,13 +132,34 @@ export async function refreshCrypto() {
   }
 }
 
+// Honest deltas: live quotes only. d1h vs the price ~1h ago in hist[];
+// session vs the first observed tick in hist[]. Demo never yields a delta.
+function delta1h(q) {
+  const hist = Array.isArray(q.hist) ? q.hist : [];
+  const ts = Array.isArray(q.histTs) ? q.histTs : [];
+  if (hist.length < 2 || ts.length !== hist.length) return null;
+  const target = Date.now() - 3600e3;
+  let ref = null;
+  for (let i = 0; i < ts.length; i++) {
+    if (ts[i] <= target) ref = hist[i];
+    else break;
+  }
+  if (ref == null || !(ref > 0)) return null;
+  return ((q.price - ref) / ref) * 100;
+}
+function deltaSession(q) {
+  const hist = Array.isArray(q.hist) ? q.hist : [];
+  if (hist.length < 2 || !(hist[0] > 0)) return null;
+  return ((q.price - hist[0]) / hist[0]) * 100;
+}
+
 export const getQuote = (sym) => store.get(sym) || null;
 export const isLivePrice = (sym) => store.get(sym)?.demo === false;
 export function snapshot(syms) {
   const o = {};
   for (const s of syms) {
     const q = store.get(s);
-    if (q) o[s] = { sym: s, label: ASSETS[s].label, kind: ASSETS[s].kind, price: q.price, pct: q.pct, vol: q.vol, hist: q.hist, prefill: q.prefill, demo: q.demo, ts: q.ts };
+    if (q) o[s] = { sym: s, label: ASSETS[s].label, kind: ASSETS[s].kind, price: q.price, pct: q.pct, vol: q.vol, hist: q.hist, histTs: q.histTs || [], prefill: q.prefill, demo: q.demo, ts: q.ts, d24h: q.demo ? null : (typeof q.pct === 'number' ? q.pct : null), d1h: q.demo ? null : delta1h(q), session: q.demo ? null : deltaSession(q) };
   }
   return o;
 }

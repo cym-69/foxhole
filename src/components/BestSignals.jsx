@@ -1,11 +1,13 @@
 import { actionBg, arrow, dirColor } from '../lib/format.js';
 import { ago } from '../lib/format.js';
+import { quoteDeltas, BLOCKED_LABEL, fmtDelta } from '../lib/deltas.js';
 
 function seenLabel(s, now) {
   return s.eventTs ? `Seen ${ago(s.eventTs, now)}` : '';
 }
 
-export default function BestSignals({ signals, top, ai, brief, onPick, onSetup, now }) {
+export default function BestSignals({ signals, top, ai, brief, onPick, onSetup, now, trad, crypto }) {
+  const quotes = { ...(trad || {}), ...(crypto || {}) };
   const picks = top.map((id) => signals.find((s) => s.id === id)).filter(Boolean).slice(0, 3);
   return (
     <section data-testid="best-signals-strip" aria-label="Best signals" className="grid grid-cols-1 gap-3 border-b-2 border-black bg-paper px-4 py-2.5 md:grid-cols-3 xl:grid-cols-[repeat(3,minmax(0,1fr))_1.25fr]">
@@ -24,6 +26,16 @@ export default function BestSignals({ signals, top, ai, brief, onPick, onSetup, 
           {s.eventPlace ? <p className="mt-0.5 line-clamp-1 text-xs font-bold leading-snug text-mute">{s.eventPlace}</p> : null}
           {seenLabel(s, now) ? <p className="mt-0.5 line-clamp-1 text-xs font-bold leading-snug text-mute">{seenLabel(s, now)}</p> : null}
           <p className="mt-0.5 line-clamp-2 text-xs font-bold leading-snug text-mute">{(s.why || '').slice(0, 140)}</p>
+          {(() => {
+            const q = quotes[s.asset];
+            const d = quoteDeltas(q);
+            const live = d.d24h != null;
+            return (
+              <span data-testid="signal-price-delta" data-asset-delta={s.asset} className={"mt-0.5 inline-block rounded border border-black/30 px-1 py-0.5 text-[10px] font-black " + (live ? (d.d24h >= 0 ? 'bg-[#C6E265] text-up' : 'bg-[#FF7A59] text-down') : 'bg-[#E6E6E6] text-mute')}>
+                {live ? "24h " + fmtDelta(d.d24h) + (d.d1h != null ? " · 1h " + fmtDelta(d.d1h) : "") : BLOCKED_LABEL}
+              </span>
+            );
+          })()}
         </button>
       ))}
       <div data-testid="what-matters-brief" className="flex min-w-0 flex-col justify-center gap-1 rounded-[10px] border-2 border-dashed border-black bg-[#FFD23F] px-3 py-2 md:col-span-3 xl:col-span-1">

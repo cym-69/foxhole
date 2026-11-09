@@ -2,6 +2,7 @@
 // (used by MarketsChart.jsx). Pure-function tests — no DOM, no server needed.
 // Run: node server/test-markets.js
 import { buildSeriesPts } from '../src/lib/markets-window.js';
+import { quoteDeltas } from '../src/lib/deltas.js';
 
 export function runTests() {
   const F = [];
@@ -53,6 +54,18 @@ export function runTests() {
   ok('one tick: [] (series hidden until 2 ticks)', buildSeriesPts([100], undefined).length === 0);
   ok('mixed: non-numbers are filtered out', buildSeriesPts([100, 'x', null, 101], undefined).join(',').endsWith(',100,101'));
   ok('non-array hist: []', buildSeriesPts(null, 99).length === 0);
+
+  // 7. Round 13 honesty: deltas only for live quotes, never demo
+  {
+    const live = quoteDeltas({ demo: false, price: 100, pct: 2.5, hist: [100, 101], histTs: [Date.now() - 7200e3, Date.now() - 1000] });
+    ok('live quote: d24h from vendor pct', live.d24h === 2.5);
+    ok('live quote: d1h vs 1h-ago ref', typeof live.d1h === 'number');
+    ok('live quote: session vs first tick', typeof live.session === 'number');
+    const demo = quoteDeltas({ demo: true, price: 100, pct: 5, hist: [100, 105] });
+    ok('demo quote: no d24h (never fake)', demo.d24h === null);
+    ok('demo quote: no d1h (never fake)', demo.d1h === null);
+    ok('empty quote: no deltas', quoteDeltas(null).d24h === null && quoteDeltas(null).d1h === null);
+  }
 
   // Verdict
   const fails = F.filter((l) => l.startsWith('FAIL'));

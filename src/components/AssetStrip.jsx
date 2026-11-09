@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import Spark from './Spark.jsx';
-import { arrow, dirColor, pct, price } from '../lib/format.js';
+import { arrow, dirColor, price } from '../lib/format.js';
+import { quoteDeltas, BLOCKED_LABEL, fmtDelta } from '../lib/deltas.js';
 import { REDUCED, SPRING_LAYOUT, fadeUp, staggerParent } from '../lib/motion.js';
 
 function Gauge({ value }) {
@@ -15,7 +16,10 @@ function Gauge({ value }) {
 }
 
 function Card({ q, hit, pressure, isCrypto }) {
-  const up = (q.pct ?? 0) >= 0;
+  const d = quoteDeltas(q);
+  const live = d.d24h != null;
+  const up = live ? d.d24h >= 0 : (q.pct ?? 0) >= 0;
+  const dUp = (d.d24h ?? 0) >= 0;
   const gaugeValue = isCrypto ? (typeof q.sentiment?.value === 'number' ? q.sentiment.value : 0) : pressure;
   const sentiment = q.sentiment;
   const sentimentLabel = typeof sentiment?.label === 'string' && sentiment.label.trim()
@@ -36,11 +40,15 @@ function Card({ q, hit, pressure, isCrypto }) {
           {q.sym}
           {hit && <span className={`text-[10px] ${dirColor(hit)}`}>{arrow(hit)}</span>}
         </span>
-        <span className="sb-chip num px-1.5 text-xs" style={{ background: up ? '#C6E265' : '#FF7A59' }}>{pct(q.pct)}</span>
+        <span data-testid="price-delta" data-asset-delta={q.sym} className="sb-chip num px-1.5 text-xs" style={live ? { background: dUp ? '#C6E265' : '#FF7A59' } : { background: '#E6E6E6' }} title={live ? `24h change ${fmtDelta(d.d24h)}${d.d1h != null ? ` · 1h ${fmtDelta(d.d1h)}` : ''}` : 'Live price unavailable — Stooq is bot-blocked (404), so no real delta exists.'}>{live ? `24h ${fmtDelta(d.d24h)}` : BLOCKED_LABEL}</span>
       </div>
       <div className="mt-0.5 flex items-center justify-between">
-        <span className="num text-[13px] font-black">{price(q.price)}</span>
+        <span className="num text-[13px] font-black">{live ? price(q.price) : BLOCKED_LABEL}</span>
         <Spark values={q.hist} color={up ? '#22A352' : '#E64A2E'} w={60} h={18} />
+      </div>
+      <div className="mt-0.5 flex items-center justify-between text-[10px] font-bold">
+        <span data-testid="delta-1h" className={d.d1h != null ? ((d.d1h ?? 0) >= 0 ? 'text-up' : 'text-down') : 'text-mute'}>{d.d1h != null ? `1h ${fmtDelta(d.d1h)}` : (live ? '1h —' : BLOCKED_LABEL)}</span>
+        <span data-testid="delta-24h" className={live ? (dUp ? 'text-up' : 'text-down') : 'text-mute'}>{live ? `24h ${fmtDelta(d.d24h)}` : BLOCKED_LABEL}</span>
       </div>
       <div className="mt-1.5 flex items-center gap-2" title={isCrypto ? 'Crypto sentiment from cryptocurrency.cv' : 'Net push from active events on this asset'}>
         <Gauge value={gaugeValue} />

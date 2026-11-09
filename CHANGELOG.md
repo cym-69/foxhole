@@ -1,3 +1,5 @@
+## Round 13: price deltas honesty — per-asset 1h/24h deltas only from live quotes (CoinGecko/Finnhub live); demo or missing prices show 'price unavailable (Stooq blocked)' and never render demo pct as movement. Server tracks histTs per tick and exposes d1h/d24h/session in /api/state quotes; BestSignals picks + AssetStrip cards + SignalCard share quoteDeltas() from src/lib/deltas.js. Why: signals implied movement with no price delta shown; Stooq is bot-blocked so honest labeling beats fake numbers.
+
 ## Round 12: evidence-count confidence honesty — confidence now scales with independent linked-event evidence (High only at >=3 recent linked events; WATCH band computed from actual context siblings/sources), signals carry evidenceCount + evidenceLabel rendered in BestSignals/SignalCard/Chain.
 
 # Changelog

@@ -1,4 +1,5 @@
-import { actionBg, ago, arrow, dirColor, pct, price } from '../lib/format.js';
+import { actionBg, ago, arrow, dirColor, price } from '../lib/format.js';
+import { quoteDeltas, BLOCKED_LABEL, fmtDelta } from '../lib/deltas.js';
 
 const ASSET_TAILS = {
   USO: 'Oil tends to rise on supply risk.',
@@ -28,7 +29,7 @@ export default function SignalCard({ s, q, now }) {
       {(q || s.eventTs) ? (
         <p className="mt-2 text-[12px] font-bold leading-snug">
           {s.eventTs ? <>Seen <time dateTime={new Date(s.eventTs).toISOString()} title={new Date(s.eventTs).toLocaleString()}>{ago(s.eventTs, now)}</time>. </> : null}
-          {q ? <span className="num">{s.asset} {price(q.price)} · <span className={q.pct >= 0 ? 'text-up' : 'text-down'}>{pct(q.pct)}</span>{q.demo ? ' (demo)' : ''}</span> : null}
+          {q ? <span className="num">{s.asset} {price(q.price)} · <span className={(quoteDeltas(q).d24h ?? 0) >= 0 ? 'text-up' : 'text-down'}>{quoteDeltas(q).d24h != null ? `24h ${fmtDelta(quoteDeltas(q).d24h)}` : BLOCKED_LABEL}</span>{q.demo ? ' (demo)' : ''}</span> : null}
         </p>
       ) : null}
       <dl className="mt-2.5 space-y-1.5 text-[13px] leading-snug">
