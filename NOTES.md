@@ -25,3 +25,11 @@
 
 ## Decisions
 - See CHANGELOG.md entries. No dependencies added.
+
+## Final re-audit (2026-11-08)
+- #1 market history persistence: SHIPPED (db7ddb4). Verified: 13 symbols persist round-trip, reload restores hist; tests/lint/build green.
+- #2 stale README min-width note: FIXED in same commit (sw==cw at 1280/1050/390, cache/ gitignored).
+- #6 SSE unbounded clients Set: SHIPPED ee5a1d2 (cap 128, 429 beyond), tests green.
+- #3 analyze() micro-opt: skipped — /api/state p99 463ms under burst is rate-limiter, not engine; no evidence for rewrite.
+- #4/#5: no action (honesty constraints; stack current, 0 vulns).
+- Remaining: ships/TMDB/AI need user keys (by design); stress C-G (poller churn, state blowout, 30-min soak) still future work. Top items are now minor: stop condition met.
