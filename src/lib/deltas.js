@@ -25,7 +25,8 @@ export function quoteDeltas(q, now = Date.now()) {
 }
 
 /* Display helper: the honest blocked label when no honest delta exists. */
-export const BLOCKED_LABEL = 'price unavailable (Stooq blocked)';
+/* Provider-agnostic: Finnhub/CoinGecko are the live vendors; Stooq is no longer used. */
+export const BLOCKED_LABEL = 'price unavailable';
 export function isLiveQuote(q) { return !!q && q.demo !== true && typeof q.price === 'number'; }
 export function fmtDelta(n) {
   if (n == null || Number.isNaN(n)) return '-';

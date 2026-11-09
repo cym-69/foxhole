@@ -6,6 +6,7 @@ import TimelineVol from './components/TimelineVol.jsx';
 import EventList from './components/EventList.jsx';
 import AssetStrip from './components/AssetStrip.jsx';
 import FeedStream from './components/FeedStream.jsx';
+import LiveTicker from './components/LiveTicker.jsx';
 import ResizableSplit from './components/ResizableSplit.jsx';
 import { fetchState } from './api.js';
 import { LAYERS } from './lib/icons.js';
@@ -264,7 +265,7 @@ export default function App() {
 
       {wide ? (
       <ResizableSplit>
-      <main id="main" className="grid min-h-0 grid-cols-[340px_minmax(0,1fr)_360px]">
+      <main id="main" className="grid min-h-0 grid-cols-[minmax(0,1fr)]">
         <div className="flex min-h-0 flex-col border-r-2 border-black">
           <div className="flex flex-wrap items-center gap-1 border-b-2 border-black px-2 py-1.5">
             {[['signals', 'Signals'], ['cinema', 'Cinema'], ['horizon', 'Horizon'], ['live', `Live${liveCount > 0 ? ` ${liveCount}` : ''}`], ['x', 'X']].map(([id, label]) => (
@@ -286,7 +287,7 @@ export default function App() {
           <Suspense fallback={GlobeFallback}>
             <Globe3D ref={globe} events={visible.filter((e) => mapLayerOn(e, mapLayers))} context={visibleCtx} selectedId={selectedId} onSelect={(id) => (id ? select(id) : setSelectedId(null))} aircraft={mapLayers.military ? live.aircraft : []} ships={mapLayers.ships ? live.ships : []} shipNames={live.shipNames} sats={mapLayers.sats ? sats : []} pulse={live.pulse} />
           </Suspense>
-          <div className="absolute left-4 top-3 flex flex-col gap-1.5 pr-[220px]">
+          <div className="absolute left-4 top-3 flex max-w-full flex-col gap-1.5 pr-2">
             <div className="flex flex-wrap items-center gap-2 text-xs text-mute">
               {PROFILES.map((p) => (
                 <button key={p.id} data-profile={p.id} onClick={() => applyProfile(p.id)} aria-pressed={activeProfile === p.id} className="sb-chip px-3 py-1" style={{ background: activeProfile === p.id ? '#111' : '#fff', color: activeProfile === p.id ? '#fff' : '#111' }}>{p.label}</button>
@@ -314,10 +315,12 @@ export default function App() {
             ))}
           </div>
           {mapLayers.feed && wide && (
-            <FeedStream incoming={live.feed} wide={wide} onPickEvent={(id) => {
-              const ev = state?.events.find((e) => e.id === id) || state?.context.find((e) => e.id === id);
-              if (ev) select(id);
-            }} />
+            <div className="relative flex min-h-0 flex-col border-t-2 border-black bg-paper/95">
+              <FeedStream incoming={live.feed} wide={wide} onPickEvent={(id) => {
+                const ev = state?.events.find((e) => e.id === id) || state?.context.find((e) => e.id === id);
+                if (ev) select(id);
+              }} />
+            </div>
           )}
 
           {state.events.length === 0 && (
@@ -412,7 +415,12 @@ export default function App() {
         </div>
       )}
 
-      <AssetStrip trad={state.trad} crypto={state.crypto} signals={state.signals} selectedSignals={selectedSignals} />
+      <div data-testid="bottom-dock" className="flex min-h-0 flex-col border-t-2 border-black bg-paper">
+        <AssetStrip trad={state.trad} crypto={state.crypto} signals={state.signals} selectedSignals={selectedSignals} />
+        <div className="shrink-0 border-t border-black/15 px-4 py-1">
+          <LiveTicker />
+        </div>
+      </div>
       <Suspense fallback={null}>
         <Lines lines={lines} />
         <Setup open={setupOpen} state={state} onClose={closeSetup} onChanged={load} />

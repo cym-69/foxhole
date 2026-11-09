@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import LiveTicker from './LiveTicker.jsx';
 import { fetchHealth } from '../api.js';
 
 const DOT = { live: 'bg-up', demo: 'bg-warn', error: 'bg-down', none: 'bg-mute', 'missing-key': 'bg-mute', degraded: 'bg-warn', paused: 'bg-down', checking: 'bg-mute' };
@@ -117,7 +116,7 @@ export default function TopBar({ state, online, onSetup, tvOpen, onTv }) {
         </button>
       )}
       <div className="ml-auto flex shrink-0 items-center gap-2 min-w-0">
-        <LiveTicker />
+        <span data-testid="ticker-reserved" className="sr-only">Ticker · bottom row</span>
         {ai?.connected ? (
           <button onClick={onSetup} className="sb-btn flex items-center gap-1.5 px-3 py-1 text-xs font-black max-lg:hidden" style={{ background: '#C6E265' }} title={`Model: ${ai.model}`}>
             AI ON

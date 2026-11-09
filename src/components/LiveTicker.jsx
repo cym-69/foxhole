@@ -86,7 +86,17 @@ function normalizeStreamItem(raw, now) {
 
 function eventsFromStream(list, now) {
   const rows = (Array.isArray(list) ? list : []).map((e) => normalizeStreamItem(e, now)).filter(Boolean);
-  const deduped = dedupeItems(rows);
+  // Also collapse near-duplicates (same story from overlapping providers) by
+  // normalized title, keeping the highest-impact copy — honest, never fabricated.
+  const byTitle = new Map();
+  for (const r of rows) {
+    const key = String(r.title || '').trim().toLowerCase().replace(/\s+/g, ' ').slice(0, 110) + '|' + (r.provider === 'unknown' ? '' : r.provider);
+    const prev = byTitle.get(key);
+    const score = (r.impact == null ? -Infinity : r.impact) + (r.ts || 0) / 1e15;
+    const pScore = prev ? ((prev.impact == null ? -Infinity : prev.impact) + (prev.ts || 0) / 1e15) : -Infinity;
+    if (!prev || score > pScore) byTitle.set(key, r);
+  }
+  const deduped = dedupeItems([...byTitle.values()]);
   // Prioritize: high-impact first (numeric impact desc), then newest.
   deduped.sort((a, b) => {
     const ia = a.impact == null ? -Infinity : a.impact;

@@ -113,6 +113,8 @@ export default function FeedStream({ incoming = [], onPickEvent, wide = true }) 
   }, [hover]);
 
   void tick; // keeps the age labels fresh
+  // Empty queue: render nothing in-region (no spacer collapsing the globe).
+  if (wide && !shown.length && !queue.current.length) return null;
   if (!wide) {
     const tagged = incoming.filter((it) => (it?.tags || []).length > 0 || (it?.tickers || []).length > 0);
     const items = (tagged.length ? tagged : incoming).slice(-5).slice().reverse();
@@ -144,13 +146,8 @@ export default function FeedStream({ incoming = [], onPickEvent, wide = true }) 
       data-feed-hover={hover ? '1' : '0'}
       data-feed-queue={queue.current.length}
       data-feed-filter={filter}
-      className="absolute left-4 top-[104px] w-[300px] overflow-hidden"
-      style={{
-        height: '55%',
-        WebkitMaskImage: 'linear-gradient(to bottom, #000 0%, #000 35%, transparent 100%)',
-        maskImage: 'linear-gradient(to bottom, #000 0%, #000 35%, transparent 100%)',
-        pointerEvents: 'none',
-      }}
+      className="flex min-w-0 flex-col overflow-hidden"
+      style={{ pointerEvents: 'none' }}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
@@ -167,7 +164,7 @@ export default function FeedStream({ incoming = [], onPickEvent, wide = true }) 
           >{t.label}</button>
         ))}
       </div>
-      <ul className="flex flex-col gap-2">
+      <ul className="feed-scroll thin-scroll flex min-w-0 flex-col gap-2 overflow-y-auto pr-1">
         <AnimatePresence initial={false}>
           {shown.map((it) => {
             const news = !it.eventId && /^https?:\/\//i.test(it.url || '');
