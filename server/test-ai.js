@@ -57,6 +57,13 @@ try {
   await assert.rejects(listModels({ kind: 'openai', baseUrl: base + '/down/v1' }), /bad key/);
   await assert.rejects(listModels({ kind: 'anthropic' }), /key/);
 
+
+  // baseUrl validation (PRODUCT_GOAL #4: inputs validated)
+  await assert.rejects(connect({ kind: 'openai', baseUrl: 'file:///etc/passwd', model: 'm' }), /http:\/\/|https:\/\//);
+  await assert.rejects(connect({ kind: 'openai', baseUrl: 'javascript:alert(1)', model: 'm' }), /http:\/\/|https:\/\//);
+  await assert.rejects(connect({ kind: 'openai', baseUrl: 'not a url !!', model: 'm' }), /valid URL/);
+  await assert.rejects(listModels({ kind: 'openai', baseUrl: 'ftp://x/models' }), /http:\/\/|https:\/\//);
+
   // change model later without retyping the key
   await connect({ ...mk('/plain/v1'), apiKey: 'secret' });
   await connect({ useSaved: true, model: 'other-model' });

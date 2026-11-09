@@ -3,6 +3,17 @@ import path from 'node:path';
 import { DATA_DIR } from './config.js';
 
 const FILE = path.join(DATA_DIR, 'ai.json');
+
+function normalizeBaseUrl(raw) {
+  const v = String(raw || '').trim();
+  if (!v) return '';
+  let u;
+  try { u = new URL(v); } catch { throw new Error('The API address is not a valid URL.'); }
+  if (u.protocol !== 'http:' && u.protocol !== 'https:') {
+    throw new Error('The API address must start with http:// or https://.');
+  }
+  return u.toString().replace(/\/+$/, '');
+}
 let conf = null;
 try { conf = JSON.parse(fs.readFileSync(FILE, 'utf8')); } catch { /* intentional: missing file → defaults */ }
 let lastError = '';
@@ -78,7 +89,7 @@ export async function connect(next) {
   const c = {
     kind: next.kind === 'anthropic' ? 'anthropic' : 'openai',
     preset: String(next.preset || 'custom'),
-    baseUrl: String(next.baseUrl || '').trim(),
+    baseUrl: normalizeBaseUrl(next.baseUrl),
     apiKey: String(next.apiKey || '').trim(),
     model: String(next.model || '').trim(),
   };
@@ -87,7 +98,8 @@ export async function connect(next) {
   if (c.kind === 'anthropic' && !c.apiKey) throw new Error('Paste your API key.');
   await call(c, 'Reply with the single word OK.', 'Test', 400);
   conf = { ...c, verified: true };
-  fs.writeFileSync(FILE, JSON.stringify(conf, null, 2));
+  fs.writeFileSync(FILE, JSON.stringify(conf, null, 2), { mode: 0o600 });
+  try { fs.chmodSync(FILE, 0o600); } catch { /* intentional: chmod is a no-op on Windows */ }
   lastError = ''; failures = 0; pausedUntil = 0;
   return publicInfo();
 }
@@ -99,7 +111,7 @@ export async function listModels(src) {
   const saved = src.useSaved && conf ? conf : null;
   const kind = (saved?.kind || src.kind) === 'anthropic' ? 'anthropic' : 'openai';
   const apiKey = String(saved?.apiKey ?? src.apiKey ?? '').trim();
-  const baseUrl = String(saved?.baseUrl ?? src.baseUrl ?? '').trim().replace(/\/+$/, '');
+  const baseUrl = normalizeBaseUrl(saved?.baseUrl ?? src.baseUrl ?? '');
   let r;
   if (kind === 'anthropic') {
     if (!apiKey) throw new Error('Paste your API key to see the models.');
