@@ -121,6 +121,7 @@ function buildState() {
     ai: { ...ai.publicInfo(), brief: ai.getBrief() },
     keys: { finnhub: !!cfg.finnhubKey, tmdb: !!cfg.tmdbKey },
     assets: ASSETS, events, context, signals: result.signals, top: result.top, trad, crypto,
+    headlines: headlineItems(), feed: headlineItems(),
   };
 }
 

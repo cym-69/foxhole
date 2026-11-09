@@ -50,8 +50,16 @@ function matchesFilter(it, filter) {
 const colorOf = (kind) => KIND_COLOR[kind] || '#7C8C84';
 const ageLabel = (ts) => {
   const m = Math.max(0, Math.round((Date.now() - ts) / 60000));
-  return m < 1 ? 'now' : `${m}m`;
+  return m < 1 ? 'now' : `${m}m ago`;
 };
+
+const TAG_ARROWS = { 1: '▲', '-1': '▼', 0: '•' };
+function assetChips(it) {
+  const list = Array.isArray(it?.tags) && it.tags.length
+    ? it.tags
+    : (it?.tickers || []).map((t) => ({ asset: t, dir: 0 }));
+  return list.slice(0, 3);
+}
 
 export default function FeedStream({ incoming = [], onPickEvent, wide = true }) {
   const [shown, setShown] = useState([]);
@@ -147,11 +155,18 @@ export default function FeedStream({ incoming = [], onPickEvent, wide = true }) 
                   <span className="num shrink-0">{ageLabel(it.ts)}</span>
                 </div>
                 <p className="mt-1 line-clamp-2 text-[13px] leading-snug text-ink">{it.text}</p>
-                {!!(it.tickers || []).length && (
-                  <div className="mt-1 flex flex-wrap gap-1">
-                    {it.tickers.slice(0, 6).map((t) => (
-                      <span key={t} className="num rounded border border-line px-1 text-[10px] text-mute">{t}</span>
-                    ))}
+                {assetChips(it).length > 0 && (
+                  <div className="mt-1 flex flex-wrap gap-1" data-asset-chips>
+                    {assetChips(it).map((tg) => {
+                      const id = String(tg.asset || tg);
+                      const dir = tg.dir == null ? 0 : tg.dir;
+                      const color = dir === 1 ? '#22A352' : dir === -1 ? '#E64A2E' : '#7C8C84';
+                      return (
+                        <span key={id} data-asset-chip data-asset={id} data-dir={dir} title={`${id} ${dir === 1 ? 'up' : dir === -1 ? 'down' : 'watch'}`} className="num inline-flex items-center gap-0.5 rounded border border-line bg-white px-1 text-[10px] font-bold text-ink">
+                          <span aria-hidden="true" style={{ color }}>{TAG_ARROWS[dir] || '•'}</span>{id}
+                        </span>
+                      );
+                    })}
                   </div>
                 )}
               </>

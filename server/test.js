@@ -11,7 +11,7 @@ import { startShips, stopShips, shipClass, buildSubscription, SHIP_BOXES, shipBo
 import { fetchSats, parseTle, readCache } from './feeds/sats.js';
 import { satrecOf, satPosition } from '../src/lib/sats.js';
 import { PROFILES } from '../src/lib/profiles.js';
-import { parseFeedXml, parseHnJson, ingest, cleanTitle, eventToFeedItem } from './feeds/headlines.js';
+import { parseFeedXml, parseHnJson, ingest, cleanTitle, eventToFeedItem, headlineTags } from './feeds/headlines.js';
 import { buildBrief } from './feeds/brief.js';
 
 const ctx = { stats: {}, aiWhy: new Map(), sentiment: { BTC: { label: 'bearish', score: -0.3 } } };
@@ -344,7 +344,14 @@ assert.equal(feedItem.srcName, 'Conflict', 'conflict events are labelled Conflic
 assert.equal(feedItem.eventId, 'demo:hormuz', 'event id is carried');
 assert.deepEqual(feedItem.tickers, ['USO', 'STNG'], 'linked tickers are carried');
 assert.equal(feedItem.text, 'Hormuz tension', 'event title becomes the text');
+assert.deepEqual(feedItem.tags, [{ asset: 'USO', dir: 1 }, { asset: 'STNG', dir: 1 }], 'event tags carry asset + dir');
+assert.deepEqual(headlineTags('Oil hits the gulf as hormuz tensions rise'), [{ asset: 'USO', dir: 1 }, { asset: 'STNG', dir: 1 }], 'oil/gulf/hormuz -> USO/STNG');
+assert.deepEqual(headlineTags('Airlines cancel flights amid aviation strike'), [{ asset: 'ITA', dir: 1 }, { asset: 'JETS', dir: -1 }], 'airline/flight/aviation -> ITA/JETS');
+assert.deepEqual(headlineTags('Gold flows to safe haven on war fears'), [{ asset: 'GLD', dir: 1 }], 'gold/haven/war -> GLD');
+assert.deepEqual(headlineTags('M5.4 earthquake rocks region'), [{ asset: 'GLD', dir: 1 }, { asset: 'USO', dir: 0 }], 'quake -> GLD/USO watch');
+assert.deepEqual(headlineTags('Slightly Better Interpolating Spline'), [], 'honest empty tags when no keyword matches');
 console.log('PASS: an event becomes a feed item with its kind, eventId and tickers');
+console.log('PASS: headlineTags keywords -> USO/STNG/ITA/GLD/JETS only with dirs, empty when no match');
 
 // Slice 2: HN Algolia JSON parsing
 {

@@ -1,5 +1,7 @@
 # Changelog
 
+- Round 10 value loop - news ticker now tags headlines with asset chips (USO/STNG/ITA/GLD/JETS, keyword-linked, honest) so every headline answers which assets it could move. Why: reviewer gap - news was text-only while the question is assets.
+
 - Round 9 value loop — rules brief: no-AI two-sentence synthesis from live top events/signals/chokepoints (src rules, honest label); AI key still deepens. Why: reviewer gap #3 — core question 'what matters now' went unanswered without a key.
 
 - 2026-11-08: Round 8 value loop — Chokepoints show events-in-box + aircraft (honest activity, not all-zero). Why: reviewer gap #4 — strip read all-zero live even where context events were firing; now each box counts context events in its widened box (topEvent title shown) alongside aircraft/AIS ships, with emerald highlight when events>0. Zeros remain truthful when no in-box activity.

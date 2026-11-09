@@ -42,6 +42,7 @@ export default function LiveTicker() {
   if (error && liveItems.length === 0) {
     return (
       <span
+        data-testid="live-ticker"
         role="alert"
         title={`Live ticker failed to load: ${error}`}
         className="sb-chip inline-flex max-w-[170px] shrink-0 items-center gap-1.5 truncate bg-zinc-600 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-white max-md:hidden"
@@ -54,6 +55,7 @@ export default function LiveTicker() {
 
   return (
     <span
+      data-testid="live-ticker"
       title={title || 'Watchlist poller is live, but none of the 8 channels checked are streaming right now.'}
       className="sb-chip inline-flex max-w-[170px] shrink-0 items-center gap-1.5 truncate bg-red-600 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-white max-md:hidden"
       style={{ boxShadow: '3px 3px 0 #111' }}

@@ -71,6 +71,33 @@ export function cleanTitle(raw) {
   t = t.replace(/\s+/g, ' ').trim();
   return t.length > 160 ? t.slice(0, 159).trimEnd() + '\u2026' : t;
 }
+
+// Round 10: keyword -> asset tags (only ids present in server/assets.js).
+// Only these five ids are emitted for news headlines; directions follow the
+// honest product rules in server/rules.js (oil up, airlines down on disruption,
+// gold up on fear/war). No tag is added unless a keyword actually appears.
+const TAG_IDS = new Set(['USO', 'STNG', 'ITA', 'GLD', 'JETS']);
+const TAG_RULES = [
+  { re: /\b(?:oil|crude|opec|aramco|riyadh|gulf|hormuz)\b/i, tags: [{ asset: 'USO', dir: 1 }, { asset: 'STNG', dir: 1 }] },
+  { re: /\b(?:airline|airlines|flight|flights|aviation)\b/i, tags: [{ asset: 'ITA', dir: 1 }, { asset: 'JETS', dir: -1 }] },
+  { re: /\b(?:gold|haven|safe[\s-]+haven)\b/i, tags: [{ asset: 'GLD', dir: 1 }] },
+  { re: /\b(?:quake|earthquake|tremor)\b/i, tags: [{ asset: 'GLD', dir: 1 }, { asset: 'USO', dir: 0 }] },
+  { re: /\b(?:missile|kremlin|war|conflict)\b/i, tags: [{ asset: 'GLD', dir: 1 }] },
+];
+export function headlineTags(text) {
+  const t = String(text || '');
+  const seen = new Set();
+  const out = [];
+  for (const rule of TAG_RULES) {
+    if (!rule.re.test(t)) continue;
+    for (const tg of rule.tags) {
+      if (seen.has(tg.asset) || !TAG_IDS.has(tg.asset)) continue;
+      seen.add(tg.asset);
+      out.push({ asset: tg.asset, dir: tg.dir });
+    }
+  }
+  return out.slice(0, 3);
+}
 function asArray(v) { return Array.isArray(v) ? v : (v == null ? [] : [v]); }
 function firstText(v) { const a = asArray(v); return a.length ? a[0] : ''; }
 function atomLink(entry) {
@@ -133,8 +160,9 @@ export function parseFeedXml(xml, src) {
 }
 
 // One feed item, newest last in the list.
-function makeItem({ id, ts, src, srcName, kind, text, url, eventId, tickers }) {
-  return { id: String(id), ts: Number(ts) || Date.now(), src: src || 'test', srcName: srcName || 'Foxhole', kind: kind || 'news', text: cleanTitle(text), url: url || '', eventId: eventId || null, tickers: tickers || [] };
+function makeItem({ id, ts, src, srcName, kind, text, url, eventId, tickers, tags }) {
+  const cleaned = cleanTitle(text);
+  return { id: String(id), ts: Number(ts) || Date.now(), src: src || 'test', srcName: srcName || 'Foxhole', kind: kind || 'news', text: cleaned, url: url || '', eventId: eventId || null, tickers: tickers || [], tags: tags || headlineTags(cleaned) };
 }
 
 // Item from a live event: same shape, same code path as news.
@@ -150,6 +178,7 @@ export function eventToFeedItem(e) {
     url: '',
     eventId: e.id,
     tickers: (e.assets || []).map((a) => a.a),
+    tags: ((e.assets || []).filter((a) => a && TAG_IDS.has(a.a)).map((a) => ({ asset: a.a, dir: a.d == null ? 0 : (a.d > 0 ? 1 : a.d < 0 ? -1 : 0) })).slice(0, 3)),
   });
 }
 
@@ -173,6 +202,7 @@ export function pushTestHeadline(body) {
     ts: Date.now(),
     src: 'test', srcName: b.srcName || 'Test', kind: b.kind || 'news',
     text: b.text || 'Test headline', url: /^https?:\/\//i.test(String(b.url || '')) ? b.url : '', eventId: null, tickers: b.tickers || [],
+    tags: b.tags || (Array.isArray(b.tickers) && b.tickers.length ? b.tickers.filter((t) => TAG_IDS.has(t)).map((t) => ({ asset: t, dir: 1 })) : undefined),
   });
   publish(item);
   return item;
