@@ -1,6 +1,7 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import TopBar from './components/TopBar.jsx';
 import BestSignals from './components/BestSignals.jsx';
+import Chokepoints from './components/Chokepoints.jsx';
 import EventList from './components/EventList.jsx';
 import AssetStrip from './components/AssetStrip.jsx';
 import FeedStream from './components/FeedStream.jsx';
@@ -245,6 +246,7 @@ export default function App() {
       </a>
       <TopBar state={state} online={online} onSetup={() => setSetupOpen(true)} tvOpen={tvOpen} onTv={() => setTvOpen((v) => !v)} />
       <BestSignals signals={state.signals} top={state.top} ai={state.ai} onPick={select} onSetup={() => setSetupOpen(true)} />
+      <Chokepoints boxes={live.shipBoxes || []} shipsStatus={live.sources?.ships?.status} />
 
       {isDemoBanner && (
         <div role="status" className="border-t-2 border-black bg-[#FFD23F] px-3 py-1 text-center text-[11px] font-bold text-black">

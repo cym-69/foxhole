@@ -158,7 +158,15 @@ export function shipBoxes() {
       else if (v.cls === 1) cargo++;
       else other++;
     }
-    return { id: b.id, tankers, cargo, other };
+    // Free fallback without an AIS key: live aircraft are real chokepoint activity.
+    // Boxes are tight: widen by 3° for the fallback count so it moves (labelled aircraft, not ships).
+    let aircraft = 0;
+    if (!vessels.size) {
+      for (const a of live.aircraft?.data || []) {
+        if (a.lat >= b.box[0] - 3 && a.lat <= b.box[1] + 3 && a.lon >= b.box[2] - 3 && a.lon <= b.box[3] + 3) aircraft++;
+      }
+    }
+    return { id: b.id, tankers, cargo, other, aircraft, src: vessels.size ? 'ais' : 'aircraft' };
   });
 }
 
