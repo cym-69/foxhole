@@ -105,6 +105,7 @@ export function analyze(rawEvents, ctx) {
       const st = stats[best.rule.id];
       evSignals.push({
         id: `${ev.id}:${best.rule.id}:${asset}`, eventId: ev.id, ruleId: best.rule.id, ruleTitle: best.rule.title,
+        eventTitle: ev.title || '', eventPlace: ev.place || '', eventTs: ev.ts || 0,
         asset, label: ASSETS[asset].label, dir, action, conf: Number(conf.toFixed(3)), level,
         window: best.rule.window, windowH: best.rule.windowH,
         why: ai || template, whySrc: ai ? 'ai' : 'rules', whyKey: key, whyBase: template,

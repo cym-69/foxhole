@@ -10,6 +10,11 @@ export default function SignalCard({ s }) {
         <span className={`text-xs ${dirColor(s.dir)}`}>{arrow(s.dir)}</span>
         <span className="ml-auto text-xs text-mute">{s.level} confidence</span>
       </div>
+      {s.eventTitle ? (
+        <p className="mt-2 text-[13px] font-medium leading-snug" title={s.eventPlace ? `Event: ${s.eventPlace}` : undefined}>
+          “{s.eventTitle}”
+        </p>
+      ) : null}
       <dl className="mt-2.5 space-y-1.5 text-[13px] leading-snug">
         <div className="flex gap-2"><dt className="w-[74px] shrink-0 text-mute">Window</dt><dd>{s.window}</dd></div>
         <div className="flex gap-2"><dt className="w-[74px] shrink-0 text-mute">Why</dt><dd>{s.why}</dd></div>
