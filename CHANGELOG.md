@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-11-08: Round 7 value loop — multi-event surface: top 3 linked events in Best Signals (was 1), top 4 unlinked context events now emit WATCH-level multi-event signals (conf 0.2-0.3, ruleId multi-event, honest 'no direct rule fired'), per-asset tails so 4 cards no longer share identical why text. Why: reviewer gaps — single-story surface with 58 context events never signaling, and templated boilerplate across assets. Value: every top event on the globe now touches assets; user sees 3 stories in 10s + differentiation.
+
 - 2026-11-08: Round 1 value loop — each signal now carries the real event headline it fired on (eventTitle/eventPlace from server/engine.js, shown as a quoted headline on SignalCard). Why: a signal without the news behind it reads as a formula; attribution is the #1 trust gap from the first-time-user value test.
 
 - 2026-11-08: Cap concurrent SSE clients at 128 (server/index.js, 429 beyond). Defense-in-depth for the unbounded clients Set; behavior unchanged for normal use. Stress B already showed no leak at 25 + reconnect waves.

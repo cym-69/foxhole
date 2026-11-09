@@ -66,7 +66,9 @@ function compute() {
     ? Object.fromEntries(Object.entries(DEMO_SENTIMENT).map(([k, v]) => [k, { ...v, value: v.score }]))
     : sentiment;
   const btc = markets.getQuote('BTC');
-  const result = analyze(col.events, { stats: track.getStats(), aiWhy: ai.aiWhyCache, sentiment: sent, btcVol: btc?.vol });
+  // Round 7: product builds surface top unlinked events as WATCH-level multi-event signals.
+  // analyze() without ctx.watch stays linked-only (test invariants); buildState enables watch.
+  const result = analyze(col.events, { stats: track.getStats(), aiWhy: ai.aiWhyCache, sentiment: sent, btcVol: btc?.vol, watch: true });
   cached = { t: Date.now(), v: { col, result, sent } };
   return cached.v;
 }

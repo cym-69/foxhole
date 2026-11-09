@@ -1,7 +1,17 @@
 import { actionBg, ago, arrow, dirColor, pct, price } from '../lib/format.js';
 
+const ASSET_TAILS = {
+  USO: 'Oil tends to rise on supply risk.',
+  STNG: 'Tanker rates firm on rerouting.',
+  ITA: 'Airlines slip on route risk.',
+  GLD: 'Haven bid lifts gold.',
+  JETS: 'Airlines fall on route disruption.',
+};
+
 export default function SignalCard({ s, q, now }) {
   const rec = s.record.n >= 1 ? `Rule record: ${s.record.hits} of ${s.record.n} hit` : 'Rule record: none yet';
+  const tail = ASSET_TAILS[s.asset] || '';
+  const why = tail && !(s.why || '').includes(tail) ? `${s.why} ${tail}` : (s.why || '');
   return (
     <div className="sb-card p-3">
       <div className="flex items-center gap-2">
@@ -23,7 +33,7 @@ export default function SignalCard({ s, q, now }) {
       ) : null}
       <dl className="mt-2.5 space-y-1.5 text-[13px] leading-snug">
         <div className="flex gap-2"><dt className="w-[74px] shrink-0 text-mute">Window</dt><dd>{s.window}</dd></div>
-        <div className="flex gap-2"><dt className="w-[74px] shrink-0 text-mute">Why</dt><dd>{s.why}</dd></div>
+        <div className="flex gap-2"><dt className="w-[74px] shrink-0 text-mute">Why</dt><dd>{why}</dd></div>
         <div className="flex gap-2"><dt className="w-[74px] shrink-0 text-mute">Crypto link</dt><dd>{s.cryptoLink}</dd></div>
         <div className="flex gap-2"><dt className="w-[74px] shrink-0 text-down">Wrong if</dt><dd>{s.wrongIf}</dd></div>
       </dl>

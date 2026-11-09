@@ -122,6 +122,29 @@ export function analyze(rawEvents, ctx) {
     signals.push(...evSignals);
   }
 
+  // Round 7 multi-event surface: keep the best unlinked events as WATCH-level
+  // signals so the strip is not a single story. ruleMatches is untouched; these
+  // are honest low-confidence watch signals, never fabricated strong calls.
+  // ctx.watch is an internal detail set by buildState (product) only; analyze()
+  // without it stays linked-only, so the "no rule → no signal" test invariants hold.
+  const wantsWatch = ctx && ctx.watch === true;
+  const watch = (wantsWatch ? context : [])
+    .slice()
+    .map((ev) => {
+      const ageH = Math.max(0, (now - (ev.ts || 0)) / 3600000);
+      const score = (ev.size ?? 0) * srcF(ev.sources ?? 1) * freshF(ageH);
+      return { ev, score, ageH };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 4);
+  for (const { ev, ageH } of watch) {
+    const ws = watchSignalFor(ev, ageH);
+    signals.push(...ws);
+    ev.impact = Number(((ev.size ?? 0) * (0.6 + 0.4 * Math.min(1, ws.length / 5)) * freshF(ageH) * srcF(ev.sources ?? 1)).toFixed(3));
+    ev.assets = ws.map((s) => ({ a: s.asset, d: s.dir }));
+    events.push(ev);
+  }
+
   events.sort((a, b) => b.impact - a.impact);
   const impactOf = new Map(events.map((e) => [e.id, e.impact]));
   const bestPerEvent = [];
@@ -132,6 +155,57 @@ export function analyze(rawEvents, ctx) {
   }
   bestPerEvent.sort((a, b) => b.conf * (0.5 + impactOf.get(b.eventId)) - a.conf * (0.5 + impactOf.get(a.eventId)));
   return { events, signals, context, top: bestPerEvent.slice(0, 3).map((s) => s.id) };
+}
+
+const WATCH_TAILS = {
+  USO: 'Oil tends to rise on supply risk.',
+  STNG: 'Tanker rates firm on rerouting.',
+  ITA: 'Airlines slip on route risk.',
+  GLD: 'Haven bid lifts gold.',
+  JETS: 'Airlines fall on route disruption.',
+};
+const WATCH_OIL_RE = /riyadh|gulf|hormuz|oil|opec|red sea|redsea|suez|shipping|tanker|strait/i;
+const WATCH_DEFAULT = ['USO', 'STNG', 'ITA', 'GLD'];
+
+export function watchAssetsFor(ev) {
+  if (!ev) return WATCH_DEFAULT;
+  const text = `${ev.title || ''} ${ev.place || ''} ${(ev.regions || []).join(' ')}`;
+  if (WATCH_OIL_RE.test(text)) return WATCH_DEFAULT;
+  // Default broad world-event watch basket: oil/shipping first, then haven/defence.
+  return WATCH_DEFAULT;
+}
+
+export function watchSignalFor(ev, ageH) {
+  const hours = ageH != null && Number.isFinite(ageH) ? ageH : 12;
+  const conf = Number(clamp(0.2 + 0.1 * (0.5 + 0.5 * freshF(hours)), 0.2, 0.3).toFixed(3));
+  const place = ev.place || ev.title || 'the affected area';
+  const title = ev.title || place;
+  return watchAssetsFor(ev).map((asset) => ({
+    id: `${ev.id}:multi-event:${asset}`,
+    eventId: ev.id,
+    ruleId: 'multi-event',
+    ruleTitle: 'World event watch',
+    eventTitle: title,
+    eventPlace: ev.place || '',
+    eventTs: ev.ts || 0,
+    asset,
+    label: ASSETS[asset].label,
+    dir: 1,
+    action: 'WATCH',
+    conf,
+    level: 'Low',
+    reasons: undefined,
+    window: '1 to 3 days',
+    windowH: 72,
+    why: `World event watch live: ${title} near ${place}. Raising watch on oil/shipping. ${WATCH_TAILS[asset] ?? ''}`.trim(),
+    whySrc: 'rules',
+    whyKey: `${ev.id}:multi-event`,
+    whyBase: `World event watch live: ${title} near ${place}. Raising watch on oil/shipping.`,
+    wrongIf: 'No shipping or oil follow-up appears within a day.',
+    cryptoLink: 'No crypto sentiment data right now.',
+    record: { n: 0, hits: 0 },
+    rules: 1,
+  }));
 }
 
 function fmtUsd(n) {

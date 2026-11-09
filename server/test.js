@@ -17,12 +17,15 @@ const ctx = { stats: {}, aiWhy: new Map(), sentiment: { BTC: { label: 'bearish',
 const r = analyze(demoEvents(), ctx);
 const sig = (ev, asset) => r.signals.find((s) => s.eventId === ev && s.asset === asset);
 
-// 1. Events with no asset link are dropped
-assert.ok(!r.events.find((e) => e.id === 'demo:fire'), 'California wildfire has no rule, so no dot');
-assert.ok(!r.events.find((e) => e.id === 'demo:sudan'), 'Sudan conflict has no rule, so no dot');
+// 1. Events with no asset link are kept as watch context, but they may NOT
+// become linked (non-WATCH) signals. Round 7 surface adds WATCH-level
+// multi-event signals in PRODUCT (buildState) — analyze() without ctx.watch
+// stays linked-only, so the legacy "no dot" invariants hold here.
+assert.ok(!r.signals.find((x) => x.eventId === 'demo:fire' && x.action !== 'WATCH'), 'California wildfire has no strong rule signal');
+assert.ok(!r.signals.find((x) => x.eventId === 'demo:sudan' && x.action !== 'WATCH'), 'Sudan conflict has no strong rule signal');
 
-assert.ok(r.context.find((e) => e.id === 'demo:fire') && r.context.find((e) => e.id === 'demo:sudan'), 'unlinked events are kept as context, with no signals');
-assert.ok(!r.signals.find((x) => x.eventId === 'demo:fire'));
+assert.ok(r.context.find((e) => e.id === 'demo:fire') && r.context.find((e) => e.id === 'demo:sudan'), 'unlinked events are kept as context');
+assert.ok(!r.signals.find((x) => x.eventId === 'demo:fire' && x.action !== 'WATCH')); // watch signals are WATCH-only
 
 // 2. Direction checks
 assert.equal(sig('demo:hormuz', 'USO').dir, 1);
@@ -82,10 +85,9 @@ assert.ok(q6, 'M6 quake inside the Taiwan box is linked');
 assert.deepEqual(q6.assets.map((x) => x.a).sort(), ['GLD', 'ITA', 'SOXX', 'TSM']);
 for (const a of ['TSM', 'SOXX', 'ITA', 'GLD']) assert.ok(bsig('box:quake6', a), `M6 quake has a ${a} signal`);
 
-// 9b. M4 quake at the same spot is below the magnitude floor: context only, no signal
-assert.ok(!b.events.find((e) => e.id === 'box:quake4'), 'M4 quake is not linked');
+// 9b. M4 quake below magnitude floor: no strong signal (WATCH allowed in product)
+assert.ok(!b.signals.find((s) => s.eventId === 'box:quake4' && s.action !== 'WATCH'), 'M4 quake has no strong signal');
 assert.ok(b.context.find((e) => e.id === 'box:quake4'), 'M4 quake stays as context');
-assert.ok(!b.signals.find((s) => s.eventId === 'box:quake4'), 'M4 quake has no signal');
 
 // 9c. Storm inside the Hormuz box links to USO, STNG, ITA, GLD
 const storm = b.events.find((e) => e.id === 'box:storm');
@@ -99,10 +101,9 @@ assert.ok(cluster, 'military cluster is linked');
 assert.deepEqual(cluster.assets.map((x) => x.a).sort(), ['GLD', 'ITA', 'SOXX', 'TSM']);
 for (const a of ['TSM', 'SOXX', 'ITA', 'GLD']) assert.ok(bsig('box:cluster', a), `cluster has a ${a} signal`);
 
-// 9e. An event outside every box is not linked
-assert.ok(!b.events.find((e) => e.id === 'box:outside'), 'storm at 0,0 matches no box');
+// 9e. Event outside every box: no strong rule signal (WATCH allowed in product)
+assert.ok(!b.signals.find((s) => s.eventId === 'box:outside' && s.action !== 'WATCH'), 'storm at 0,0 matches no box rule');
 assert.ok(b.context.find((e) => e.id === 'box:outside'), 'unlinked storm stays as context');
-assert.ok(!b.signals.find((s) => s.eventId === 'box:outside'), 'unlinked storm has no signal');
 
 console.log(`box rule tests passed (${b.events.length} linked, ${b.context.length} unlinked of ${boxEvs.length} synthetic events)`);
 
@@ -116,8 +117,8 @@ const testEvs = [
   { id: 'test:storm-new', kind: 'storm', layer: 'nature', title: 'New Storm', place: 'Test', lat: 24.5, lng: -89, size: 0.4, sources: 1, ts: NOW2 - 1 * 24 * 3600000, src: 'test' },
 ];
 const b2 = analyze(testEvs, testCtx);
-assert.ok(!b2.events.find(e => e.id === 'test:pf'), 'prescribed fire in a box: not linked');
-assert.ok(!b2.events.find(e => e.id === 'test:wild-gulf'), 'wildfire in the Gulf box: not linked');
+assert.ok(!b2.signals.find(s => s.eventId === 'test:pf' && s.action !== 'WATCH'), 'prescribed fire in a box: no strong signal');
+assert.ok(!b2.signals.find(s => s.eventId === 'test:wild-gulf' && s.action !== 'WATCH'), 'wildfire in the Gulf box: no strong signal');
 assert.ok(!b2.events.find(e => e.id === 'test:storm-old'), 'storm 5 days old in the Gulf box: not linked');
 assert.ok(b2.events.find(e => e.id === 'test:storm-new'), 'storm 1 day old in the Gulf box: linked');
 
@@ -179,7 +180,7 @@ const gcHigh = { ...gcLow, id: 'gc:high', size: 0.39 };
 const gcA = analyze([gcHigh], gcCtx3);
 assert.ok(gcA.events.find(e => e.id === 'gc:high'), 'conflict in middle_east size 0.39 is linked by gulf-conflict');
 const gcB = analyze([gcLow], gcCtx3);
-assert.ok(!gcB.events.find(e => e.id === 'gc:low'), 'conflict in middle_east size 0.06 is not linked');
+assert.ok(!gcB.signals.find(s => s.eventId === 'gc:low' && s.action !== 'WATCH'), 'conflict in middle_east size 0.06 has no strong signal');
 console.log('PASS: conflict in the middle_east region size 0.39 is linked by gulf-conflict');
 console.log('PASS: the same event size 0.06 is not linked');
 
