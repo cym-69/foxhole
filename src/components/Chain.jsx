@@ -68,7 +68,7 @@ export default function Chain({ event, signals, trad, crypto, now, error }) {
 
             <Step label="Signals" last>
               <div className="space-y-2.5">
-                {signals[0] && <SignalCard s={signals[0]} />}
+                {signals[0] && <SignalCard s={signals[0]} q={trad[signals[0].asset] || crypto[signals[0].asset]} now={now} />}
                 {signals.slice(1).map((s) => (
                   <div key={s.id} className="sb-card flex items-center gap-2 px-3 py-2 text-[13px]">
                     <span className={`rounded px-1.5 py-0.5 text-[11px] font-semibold ${actionBg(s.action)}`}>{s.action}</span>

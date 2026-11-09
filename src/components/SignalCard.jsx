@@ -1,6 +1,6 @@
-import { actionBg, arrow, dirColor } from '../lib/format.js';
+import { actionBg, ago, arrow, dirColor, pct, price } from '../lib/format.js';
 
-export default function SignalCard({ s }) {
+export default function SignalCard({ s, q, now }) {
   const rec = s.record.n >= 1 ? `Rule record: ${s.record.hits} of ${s.record.n} hit` : 'Rule record: none yet';
   return (
     <div className="sb-card p-3">
@@ -13,6 +13,12 @@ export default function SignalCard({ s }) {
       {s.eventTitle ? (
         <p className="mt-2 text-[13px] font-medium leading-snug" title={s.eventPlace ? `Event: ${s.eventPlace}` : undefined}>
           “{s.eventTitle}”
+        </p>
+      ) : null}
+      {(q || s.eventTs) ? (
+        <p className="mt-2 text-[12px] font-bold leading-snug">
+          {s.eventTs ? <>Seen <time dateTime={new Date(s.eventTs).toISOString()} title={new Date(s.eventTs).toLocaleString()}>{ago(s.eventTs, now)}</time>. </> : null}
+          {q ? <span className="num">{s.asset} {price(q.price)} · <span className={q.pct >= 0 ? 'text-up' : 'text-down'}>{pct(q.pct)}</span>{q.demo ? ' (demo)' : ''}</span> : null}
         </p>
       ) : null}
       <dl className="mt-2.5 space-y-1.5 text-[13px] leading-snug">
