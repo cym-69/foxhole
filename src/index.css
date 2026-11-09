@@ -84,4 +84,16 @@ button { cursor: pointer; font: inherit; color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   .fx-flow { animation: none; }
   .fx-dot { transition: none; }
+  .ticker-track { animation: none; }
+}
+
+/* S6 live ticker marquee: seamless slow scroll of real market + event items.
+   Track holds two identical copies; translateX(-50%) loops seamlessly.
+   Pause on hover/focus; reduced-motion users get a static, readable row. */
+.ticker-track { animation: ticker-scroll 60s linear infinite; }
+.ticker-viewport:hover .ticker-track,
+.ticker-viewport:focus-within .ticker-track { animation-play-state: paused; }
+@keyframes ticker-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track { animation: none; }
 }
