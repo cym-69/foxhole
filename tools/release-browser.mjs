@@ -11,8 +11,13 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const OUT = path.resolve(HERE, '../evidence');
 fs.mkdirSync(OUT, { recursive: true });
 
-const require = createRequire('C:/Users/debih/AppData/Roaming/npm/');
-const { chromium } = require('playwright');
+let chromium;
+try {
+  ({ chromium } = await import('playwright'));
+} catch {
+  const require = createRequire('C:/Users/debih/AppData/Roaming/npm/');
+  ({ chromium } = require('playwright'));
+}
 
 let pass = 0;
 let fail = 0;
