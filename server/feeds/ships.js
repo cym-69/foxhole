@@ -1,5 +1,5 @@
 import WebSocket from 'ws';
-import { live } from './live.js';
+import { live, getContextEvents } from './live.js';
 
 const DEFAULT_AIS_URL = 'wss://stream.aisstream.io/v0/stream';
 const TTL = 15 * 60 * 1000;       // drop a vessel not updated for 15 minutes
@@ -163,10 +163,25 @@ export function shipBoxes() {
     let aircraft = 0;
     if (!vessels.size) {
       for (const a of live.aircraft?.data || []) {
-        if (a.lat >= b.box[0] - 3 && a.lat <= b.box[1] + 3 && a.lon >= b.box[2] - 3 && a.lon <= b.box[3] + 3) aircraft++;
+        if (a.lat >= b.box[0][0] - 3 && a.lat <= b.box[1][0] + 3 && a.lon >= b.box[0][1] - 3 && a.lon <= b.box[1][1] + 3) aircraft++;
       }
     }
-    return { id: b.id, tankers, cargo, other, aircraft, src: vessels.size ? 'ais' : 'aircraft' };
+    // Context events inside the widened box: honest activity in prime space even when aircraft=0.
+    // Top event = first by size among in-box events; null when none (zeros are truthful).
+    let events = 0;
+    let topEvent = null;
+    try {
+      const inside = getContextEvents().filter((e) => {
+        if (typeof e.lat !== "number" || typeof e.lng !== "number") return false;
+        return e.lat >= b.box[0][0] - 3 && e.lat <= b.box[1][0] + 3 && e.lng >= b.box[0][1] - 3 && e.lng <= b.box[1][1] + 3;
+      });
+      events = inside.length;
+      if (inside.length) {
+        const top = [...inside].sort((a, b) => (b.size || 0) - (a.size || 0))[0];
+        topEvent = String(top.title || "").slice(0, 80) || null;
+      }
+    } catch { /* keep events=0, topEvent=null if context events unavailable in test runtime */ }
+    return { id: b.id, tankers, cargo, other, aircraft, events, topEvent, src: vessels.size ? 'ais' : 'aircraft' };
   });
 }
 

@@ -224,7 +224,7 @@ for (let i = 0; i < 10; i++) if (cls[i]) fakeShip.h.message(Buffer.from(JSON.str
 // invalid position (lat 999) must be dropped
 fakeShip.h.message(Buffer.from(JSON.stringify(p(9_999_999_999, 'BAD', 999, 999)), 'utf8'));
 const hormuz = shipBoxes().find((b) => b.id === 'hormuz');
-assert.deepEqual(hormuz, { id: 'hormuz', tankers: 3, cargo: 5, other: 2, aircraft: 0, src: 'ais' }, 'Hormuz counts by class');
+assert.equal(hormuz.id, 'hormuz'); assert.equal(hormuz.tankers, 3); assert.equal(hormuz.cargo, 5); assert.equal(hormuz.other, 2); assert.equal(hormuz.aircraft, 0); assert.equal(hormuz.src, 'ais'); assert.equal(typeof hormuz.events, 'number'); assert.ok(hormuz.topEvent === null || typeof hormuz.topEvent === 'string');
 assert.ok(!shipBoxes().some((b) => b.tankers + b.cargo + b.other === 11), 'invalid position dropped');
 
 // A vessel is removed after 15 minutes but kept at 14.

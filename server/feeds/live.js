@@ -134,6 +134,17 @@ export function addTestEvent(body) {
   return ev;
 }
 
+// GDELT/demo-inclusive event list published by server/index.js collect().
+// shipBoxes reads this (falling back to liveEvents) so Chokepoints counts
+// the same conflict/policy events the context layer surfaces, not only nature.
+let contextEvents = [];
+export function setContextEvents(list) {
+  try { contextEvents = Array.isArray(list) ? list.map((e) => ({ ...e })) : []; } catch { contextEvents = []; }
+}
+export function getContextEvents() {
+  return Array.isArray(contextEvents) && contextEvents.length ? contextEvents.map((e) => ({ ...e })) : liveEvents();
+}
+
 export function startLivePollers() {
   poll('quakes', 60000, fetchQuakes);
   poll('eonet', 300000, fetchEonet);
