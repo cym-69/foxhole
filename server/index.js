@@ -14,6 +14,7 @@ import * as ai from './ai.js';
 import { buildBrief } from './feeds/brief.js';
 import { live, onChange, startLivePollers, liveEvents, addTestEvent, setContextEvents } from './feeds/live.js';
 import { buildStream } from './feeds/stream.js';
+import { askAi } from './ai-ask.js';
 import { startShips, shipBoxes, shipsSnapshot } from './feeds/ships.js';
 import { startSats, satsRows } from './feeds/sats.js';
 import { startHeadlines, headlineItems, headlineStatus, onHeadline, pushTestHeadline, seedEvents, feedEvent } from './feeds/headlines.js';
@@ -320,6 +321,19 @@ app.post('/api/ai/models', async (req, res) => {
   catch (e) { res.status(400).json({ error: e.message || 'Could not load the models.' }); }
 });
 app.post('/api/ai/disconnect', (_req, res) => { cached.t = 0; res.json(ai.disconnect()); });
+app.post('/api/ai/ask', async (req, res) => {
+  const t0 = Date.now();
+  const q = String(req.body?.question || '').trim();
+  if (!q) return res.status(400).json({ error: 'Question is required.' });
+  if (q.length > 500) return res.status(400).json({ error: 'Question is too long (max 500 chars).' });
+  try {
+    const st = buildState();
+    const ans = await askAi(q, { now: st.now, events: st.events, context: st.context, headlines: st.headlines, trad: st.trad, crypto: st.crypto, momentumDensity: st.momentumDensity });
+    const ms = Date.now() - t0;
+    console.log('askAi latency ' + ms + 'ms q=' + JSON.stringify(q.slice(0, 80)));
+    return res.json({ ...ans, latencyMs: ms });
+  } catch (e) { return res.status(500).json({ error: e.message || 'Ask failed.' }); }
+});
 app.post('/api/cinema/key', async (req, res) => {
   const k = String(req.body?.tmdb || '').trim();
   if (!k) return res.status(400).json({ error: 'Paste your TMDB API key.' });
