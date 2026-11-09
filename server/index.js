@@ -221,8 +221,10 @@ app.get('/api/x/feed', (_req, res) => res.json(xFeedSnapshot()));
 
 // Live stream (Server-Sent Events). Snapshot on connect, then small change messages.
 const clients = new Set();
+const MAX_SSE_CLIENTS = 128; // defense-in-depth cap; a single loopback user never approaches this
 const sse = (res, event, data) => res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
 app.get('/stream', (req, res) => {
+  if (clients.size >= MAX_SSE_CLIENTS) { res.writeHead(429); res.end('Too Many Requests'); return; }
   res.set({ 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
   res.flushHeaders();
   const client = { res, seen: new Set() };
