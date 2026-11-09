@@ -1,5 +1,7 @@
 # Changelog
 
+- Round 10d fix - compact rail now selects TAGGED headlines (filter tags/tickers>0, take 5 from last 30, fallback all): pre-fix slice(-5) landed on untagged Guardian/NPR tail (before: 390 chipsTotal=1 proofo: GLD only, api tail5 all empty). After: 390 chipsTotal=14 visible 14, sw==cw==390; 480 tickerVisible true; 1280 chips 11 visible. Live /api/state: 13 headlines, 5 tagged (Saudis/Sudan USO-STNG-ITA, aircraft ITA-GLD, M5.7/M6.4 USO-STNG-ITA) vs tail5 tickers all []. Ticker >=480 kept (hidden min-[480px]:inline-flex).
+
 - Round 10c fix - reviewer FAIL: compact rail now unconditional on narrow ({!wide}, no mapLayers gate) and ticker uses hidden min-[480px]:inline-flex (was max-sm:hidden = 640px Tailwind sm, invisible at 480). Headless verify (no clicks): 390px chipsTotal 14 visible 14, hasCompactRail true, sw==cw==390; 480px tickerVisible true; 1280px tickerVisible true, 11 chips visible.
 
 - Round 10b fix - mobile ticker chips: LiveTicker now shows on sm+ (was max-md:hidden), plus a compact FeedStream chip rail below 480px fed directly from /api/state headlines so chips render at 390px (390 verified: 12 visible chips, sw==cw==390). Original round10 screenshots untouched; mobile proof in round10b-before/after.png.

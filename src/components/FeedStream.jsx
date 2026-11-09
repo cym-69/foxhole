@@ -114,7 +114,8 @@ export default function FeedStream({ incoming = [], onPickEvent, wide = true }) 
 
   void tick; // keeps the age labels fresh
   if (!wide) {
-    const items = incoming.slice(-5).slice().reverse();
+    const tagged = incoming.filter((it) => (it?.tags || []).length > 0 || (it?.tickers || []).length > 0);
+    const items = (tagged.length ? tagged : incoming).slice(-5).slice().reverse();
     if (!items.length) return null;
     return (
       <div data-feed-stream="" data-feed-compact="1" data-feed-queue={queue.current.length} data-feed-filter={filter} className="flex flex-col gap-1.5 px-2 py-1.5 min-[480px]:hidden">

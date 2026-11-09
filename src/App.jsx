@@ -248,7 +248,7 @@ export default function App() {
       <BestSignals signals={state.signals} top={state.top} ai={state.ai} brief={state.brief} onPick={select} onSetup={() => setSetupOpen(true)} now={state.now} />
       {!wide && (
         <div className="border-t-2 border-black max-h-[32vh] overflow-y-auto min-[480px]:hidden">
-          <FeedStream incoming={(state.headlines || live.feed || []).slice(-7)} wide={false} onPickEvent={() => {}} />
+          <FeedStream incoming={(state.headlines || live.feed || []).slice(-30)} wide={false} onPickEvent={() => {}} />
         </div>
       )}
       <Chokepoints boxes={live.shipBoxes || []} shipsStatus={live.sources?.ships?.status} />
