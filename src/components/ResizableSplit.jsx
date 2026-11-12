@@ -107,7 +107,7 @@ export default function ResizableSplit({ children }) {
   const layout = computeLayout(leftPct, rightPct, containerWidth());
   const cols = layout.left + 'px 6px minmax(0,1fr) 6px ' + layout.right + 'px';
   return (
-    <div className="rs-root grid min-h-0" style={{ gridTemplateColumns: cols }} ref={rootRef}>
+    <div id="main" className="rs-root grid min-h-0" style={{ gridTemplateColumns: cols }} ref={rootRef}>
       <div className="min-w-0 overflow-hidden" style={{ minHeight: 0 }}>{left}</div>
       <SplitHandle side="left" label="Resize left pane" valueNow={layout.left} minNow={layout.minLeft} maxNow={layout.maxLeft} onStep={setL} onReset={reset} getTotal={containerWidth} />
       <div className="min-w-0 min-h-0 overflow-hidden" style={{ minHeight: 0 }}>{center}</div>

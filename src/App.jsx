@@ -265,7 +265,6 @@ export default function App() {
 
       {wide ? (
       <ResizableSplit>
-      <main id="main" className="grid min-h-0 grid-cols-[minmax(0,1fr)]">
         <div className="flex min-h-0 flex-col border-r-2 border-black">
           <div className="flex flex-wrap items-center gap-1 border-b-2 border-black px-2 py-1.5">
             {[['signals', 'Signals'], ['cinema', 'Cinema'], ['horizon', 'Horizon'], ['live', `Live${liveCount > 0 ? ` ${liveCount}` : ''}`], ['x', 'X']].map(([id, label]) => (
@@ -352,7 +351,6 @@ export default function App() {
             </div>
           )}
         </div>
-      </main>
       </ResizableSplit>
       ) : (
       <main id="main" className="grid min-h-0 grid-rows-[minmax(0,1fr)_auto] overflow-hidden max-[1099px]:grid-rows-[minmax(0,1fr)_minmax(0,1fr)] min-[1100px]:block border-t-2 border-black">
